@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "node-bitcoin-rpc": "^1.1.3",
+    "node-ipc": "^9.1.1",
+    "socket.io": "^2.3.0",
+    "typescript": "^3.7.2",
+    "uniqid": "^5.1.0"
+  },
+  "scripts": {
+    "start": "tsc | node start.js"
+  },
+  "devDependencies": {
+    "@types/socket.io": "^2.1.4",
+    "@types/uniqid": "^4.1.3",
+    "@types/node": "^12.11.1"
+  },
+  "name": "carver-blockchain-framework-server",
+  "description": "",
+  "version": "1.0.0",
+  "main": "config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bulwark-crypto/carver-blockchain-framework-server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bulwark-crypto/carver-blockchain-framework-server/issues"
+  },
+  "homepage": "https://github.com/bulwark-crypto/carver-blockchain-framework-server#readme"
+}
