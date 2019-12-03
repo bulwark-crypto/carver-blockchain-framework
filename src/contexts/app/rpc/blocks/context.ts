@@ -18,7 +18,7 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
     }
 
     if (response.height !== state.height + 1) {
-        throw errors.heightMustBeSequential;
+        throw commonLanguage.heightMustBeSequential;
     }
 
     return withState(state)
@@ -33,7 +33,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: 'GET_BLOCK', event, callback: withQueryGetBlock });
 }
 
-const errors = {
+const commonLanguage = {
     heightMustBeSequential: 'Blocks must be sent in sequential order'
 }
 
@@ -44,5 +44,5 @@ const initialState = {
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context
