@@ -8,7 +8,7 @@ export interface ReducerParams {
 }
 export interface Context {
     initialState: any;
-    errors: any
+    commonLanguage: any
     reducer: <T>(params: ReducerParams) => T;
 }
 export interface State {

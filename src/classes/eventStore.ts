@@ -140,9 +140,9 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
             const reducerResults = withState(stateStore.state).reduce({ event, callback: context.reducer });
             stateStore.state = reducerResults.state;
         } catch (err) {
-            if (context.errors) {
+            if (context.commonLanguage) {
                 // We'll get a description of the error, find the matching key and re-throw an object exception
-                const matchingErrors = Object.entries(context.errors).find(errorEntry => {
+                const matchingErrors = Object.entries(context.commonLanguage).find(errorEntry => {
                     const [type, description] = errorEntry;
                     return err === description;
                 })

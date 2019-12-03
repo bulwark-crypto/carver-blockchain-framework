@@ -14,7 +14,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: 'NEW_TX_FOUND', event, callback: withNewTxFound });
 }
 
-const errors = {
+const commonLanguage = {
     heightMustBeSequential: 'Blocks must be sent in sequential order',
     unableToFetchTx: 'Unable to fetch TX'
 }
@@ -27,5 +27,5 @@ const initialState = {
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context

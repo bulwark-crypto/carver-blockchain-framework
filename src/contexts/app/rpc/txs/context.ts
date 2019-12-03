@@ -26,7 +26,7 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
 const withHandleRequestGetTx: Reducer = ({ state, event }) => {
     const { response, error } = event.payload;
     if (error) {
-        throw errors.unableToFetchTx;
+        throw commonLanguage.unableToFetchTx;
     }
 
     return withState(state)
@@ -45,7 +45,7 @@ const withRpcNewBlockReached: Reducer = ({ state, event }) => {
     }
 
     if (height !== state.height + 1) {
-        throw errors.heightMustBeSequential;
+        throw commonLanguage.heightMustBeSequential;
     }
 
 
@@ -62,7 +62,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: 'REQUEST:GET_TX', event, callback: withHandleRequestGetTx });
 }
 
-const errors = {
+const commonLanguage = {
     heightMustBeSequential: 'Blocks must be sent in sequential order',
     unableToFetchTx: 'Unable to fetch TX'
 }
@@ -75,5 +75,5 @@ const initialState = {
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context
