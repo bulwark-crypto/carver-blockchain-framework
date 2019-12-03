@@ -15,7 +15,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     const bindServer = () => {
         const http = require('http')
-        const port = 3001
+        const port = 3001 //@todo move to config
 
         const getNewSession = async ({ sourceIdentifier }: GetNewSessionParams) => {
             const id = uniqid();

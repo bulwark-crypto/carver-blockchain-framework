@@ -126,7 +126,7 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
 
         if (request) {
             request.forEach((event: Event) => {
-                console.log('emit:', event);
+                //console.log('emit:', event);
                 emitter.emit(event.type, event);
             });
         }

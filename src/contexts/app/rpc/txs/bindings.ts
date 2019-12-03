@@ -11,7 +11,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
 
     withContext(rpcTxs)
-        .streamEventsFromContext({ type: 'RPC_BLOCKS:NEW_BLOCK_REACHED', context: rpcBlocks })
+        .streamEventsFromContext({ type: 'NEW_BLOCK_REACHED', context: rpcBlocks })
         .handleRequest('REQUEST:GET_TX', async (tx) => {
             const rawTransaction = await rpc.call('getrawtransaction', [tx, 1]);
             return rawTransaction

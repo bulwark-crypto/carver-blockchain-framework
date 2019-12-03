@@ -23,7 +23,7 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
 
     return withState(state)
         .set({ height: response.height })
-        .emit('RPC_BLOCKS:NEW_BLOCK_REACHED', response)
+        .emit('NEW_BLOCK_REACHED', response)
         .reduce({ event, callback: withCheckLatestBlock });
 }
 

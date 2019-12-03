@@ -2,22 +2,29 @@ import { createContextStore } from './classes/contextStore'
 import { createEvent, CreateEventParams } from './classes/interfaces/events'
 import { Context } from './classes/interfaces/context'
 
+import appContext from './contexts/app/reducer'
+
+import apiRestContext from './contexts/app/api/rest/context'
 import apiRestBindings from './contexts/app/api/rest/bindings'
+
+import apiSocketContext from './contexts/app/api/socket/context'
 import apiSessionBindings from './contexts/app/api/session/bindings'
+
 import apiSocketBindings from './contexts/app/api/socket/bindings'
 
+import rpcGetInfoContext from './contexts/app/rpc/getInfo/context'
 import rpcGetInfoBindings from './contexts/app/rpc/getInfo/bindings'
+
+import rpcBlocksContext from './contexts/app/rpc/blocks/context'
 import rpcBlocksBindings from './contexts/app/rpc/blocks/bindings'
+
+import rpcTxsContext from './contexts/app/rpc/txs/context'
 import rpcTxsBindings from './contexts/app/rpc/txs/bindings'
 
-import appContext from './contexts/app/reducer'
-import rpcContext from './contexts/app/rpc/getInfo/context'
-import rpcBlocksContext from './contexts/app/rpc/blocks/context'
-import rpcTxsContext from './contexts/app/rpc/txs/context'
+import utxosContext from './contexts/app/sync/utxos/context'
+import utxosBindings from './contexts/app/sync/utxos/bindings'
 
 import apiSessionContext from './contexts/app/api/session/context'
-import apiRestContext from './contexts/app/api/rest/context'
-import apiSocketContext from './contexts/app/api/socket/context'
 
 import { withContext } from './classes/logic/withContext'
 
@@ -33,38 +40,43 @@ const start = async () => {
   });
 
   //@todo we can nest these inside the app context
-  const rpcGetInfo = await contextStore.register({
-    context: rpcContext,
+  await contextStore.register({
+    context: rpcGetInfoContext,
     id: 'RPC:GETINFO'
   });
 
-  const rpcBlocks = await contextStore.register({
+  await contextStore.register({
     context: rpcBlocksContext,
     id: 'RPC:GETINFO'
   });
 
-  const rpcTxs = await contextStore.register({
+  await contextStore.register({
     context: rpcTxsContext,
     id: 'RPC:TXS'
   });
 
-  const apiRest = await contextStore.register({
+  await contextStore.register({
     context: apiRestContext,
     id: 'API:REST'
   });
 
-  const apiSocket = await contextStore.register({
+  await contextStore.register({
     context: apiSocketContext,
     id: 'API:SOCKET'
   });
 
-  const apiSession = await contextStore.register({
+  await contextStore.register({
     context: apiSessionContext,
     id: 'API:SESSION'
   });
 
+  await contextStore.register({
+    context: utxosContext,
+    id: 'UTXOS'
+  });
+
   // Bind all contexts 
-  const contextBindings = [rpcGetInfoBindings, rpcBlocksBindings, rpcTxsBindings, apiRestBindings, apiSessionBindings, apiSocketBindings];
+  const contextBindings = [rpcGetInfoBindings, rpcBlocksBindings, rpcTxsBindings, apiRestBindings, apiSessionBindings, apiSocketBindings, utxosBindings];
   for await (const contextBinding of contextBindings) {
     await contextBinding.bindContexts(contextStore as any);
   }

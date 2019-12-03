@@ -85,7 +85,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             console.log(`Websocket User Connected: ${id}`, carverUser);
 
             socket.on('emit', async ({ type, payload }) => {
-                console.log('emit to carverUser:', type, id, payload)
+                //console.log('emit to carverUser:', type, id, payload)
                 // Pass down this event to the context (with the socket identifier so we know which context triggered this event). 
                 // The single socket context management is done internally by "apiSession" context
                 withContext(carverUser).emit(type, payload);

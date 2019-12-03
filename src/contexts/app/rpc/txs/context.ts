@@ -21,6 +21,20 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
 }
 
 /**
+ * Event payload will contain requested tx (in event.payload.response)
+ */
+const withHandleRequestGetTx: Reducer = ({ state, event }) => {
+    const { response, error } = event.payload;
+    if (error) {
+        throw errors.unableToFetchTx;
+    }
+
+    return withState(state)
+        .set({ isBusyFetchingTxs: false })
+        .emit('NEW_TX_FOUND', response) // New tx added
+        .reduce({ event, callback: withFetchNextTx })
+}
+/**
  * Add new txs to fetch
  */
 const withRpcNewBlockReached: Reducer = ({ state, event }) => {
@@ -42,19 +56,15 @@ const withRpcNewBlockReached: Reducer = ({ state, event }) => {
         })
         .reduce({ event, callback: withFetchNextTx })
 }
-const withHandleRequestGetTx: Reducer = ({ state, event }) => {
-    return withState(state)
-        .set({ isBusyFetchingTxs: false })
-        .reduce({ event, callback: withFetchNextTx })
-}
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: 'RPC_BLOCKS:NEW_BLOCK_REACHED', event, callback: withRpcNewBlockReached })
+        .reduce({ type: 'NEW_BLOCK_REACHED', event, callback: withRpcNewBlockReached })
         .reduce({ type: 'REQUEST:GET_TX', event, callback: withHandleRequestGetTx });
 }
 
 const errors = {
-    heightMustBeSequential: 'Blocks must be sent in sequential order'
+    heightMustBeSequential: 'Blocks must be sent in sequential order',
+    unableToFetchTx: 'Unable to fetch TX'
 }
 
 const initialState = {
