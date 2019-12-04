@@ -6,7 +6,7 @@ import { Event } from './interfaces/events'
 import { createEventStore } from '../classes/eventStore'
 
 interface RegisterContextParams {
-    context: Context;
+    context: any;
     id: string;
 }
 interface CreateContextStoreOptions {
@@ -17,7 +17,7 @@ interface ContextStore {
     id: string;
     parent?: ContextStore;
     register: <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
-    get: <EventType, TypeOfEventType>(context: Context, id?: string) => Promise<RegisteredContext>;
+    get: (context: any, id?: string) => Promise<RegisteredContext>;
     getParent: (id: string) => ContextStore;
 }
 

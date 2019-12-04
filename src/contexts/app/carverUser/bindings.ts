@@ -2,7 +2,7 @@ import { RegisteredContext } from '../../../classes/eventStore';
 import { withContext } from '../../../classes/logic/withContext';
 import { createContextStore, ContextStore } from '../../../classes/contextStore';
 
-import blocksWidgetContext from '../../widgets/blocks/reducer'
+import blocksWidgetContext from '../../widgets/blocks/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'
 
 import carverUserContext from './context'

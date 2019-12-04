@@ -61,7 +61,7 @@ const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: 'APP:INITIALIZED', event, callback: withAppInitialized })
+        .reduce({ type: 'INITIALIZED', event, callback: withAppInitialized })
         .reduce({ type: 'RPC_GETINFO', event, callback: withQueryRpcGetinfo });
 }
 

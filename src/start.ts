@@ -81,7 +81,7 @@ const start = async () => {
     await contextBinding.bindContexts(contextStore as any);
   }
 
-  await withContext(app).emit('APP:INITIALIZE')
+  await withContext(app).emit(appContext.commonLanguage.commands.INITIALIZE)
 }
 
 start();

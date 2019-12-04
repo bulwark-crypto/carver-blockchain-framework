@@ -14,7 +14,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     const app = await contextStore.get(appContext);
 
     withContext(rpcGetInfo)
-        .streamEventsFromContext({ type: 'APP:INITIALIZED', context: app })
+        .streamEventsFromContext({ type: appContext.commonLanguage.events.INITIALIZED, context: app })
         .handleQuery('RPC_GETINFO', async () => {
             const info = await rpc.call('getinfo');
             return info;
