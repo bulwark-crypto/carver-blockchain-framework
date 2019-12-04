@@ -17,22 +17,22 @@ const checkRpcErrors = (err: string) => {
     switch (typeof err) {
         case 'string':
             if (err.indexOf('ECONNREFUSED') === 0) {
-                throw errors.ConnectionRefused;
+                throw commonLanguage.ConnectionRefused;
             }
             switch (err) {
                 case 'Timed out':
                     // These are BITCOIND_TIMEOUT errors and should be ignored as we'll get another error after
                     return;
                 case 'socket hang up':
-                    throw errors.SocketHangUp;
+                    throw commonLanguage.SocketHangUp;
             }
-            throw errors.UnhandledRpcError;
+            throw commonLanguage.UnhandledRpcError;
         case 'number':
             switch (err) {
                 case 401:
-                    throw errors.UnauthorizedCallResponseCode;
+                    throw commonLanguage.UnauthorizedCallResponseCode;
                 default:
-                    throw errors.UnhandledResponseCode;
+                    throw commonLanguage.UnhandledResponseCode;
             }
     }
 
@@ -65,7 +65,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: 'RPC_GETINFO', event, callback: withQueryRpcGetinfo });
 }
 
-const errors = {
+const commonLanguage = {
     // Connection issues
     ConnectionRefused: 'Could not connect to RPC. Check your config host/port. (This is not a username/password issue).',
     SocketHangUp: 'RPC stocket hung up (Timeout). This usually occurs if the chain is still syncing. Please try again later.',
@@ -89,5 +89,5 @@ const initialState = {
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context

@@ -3,7 +3,7 @@ import { withState, Reducer } from '../../../classes/logic/withState'
 
 const withInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
-        throw errors.isAlreadyInitialized;
+        throw commonLanguage.isAlreadyInitialized;
     }
 
     const { id } = event.payload;
@@ -15,7 +15,7 @@ const withRequestStats: Reducer = ({ state, event }) => {
 }
 const withConnected: Reducer = ({ state, event }) => {
     if (state.isConnected) {
-        throw errors.isAlreadyConnected;
+        throw commonLanguage.isAlreadyConnected;
     }
 
 
@@ -68,7 +68,7 @@ const reducer: Reducer = ({ state, event }) => {
         ;
 }
 
-const errors = {
+const commonLanguage = {
     isAlreadyInitialized: 'You can only initialize state once',
     isAlreadyConnected: 'You can only emit CONNECTED once',
 }
@@ -84,5 +84,5 @@ const initialState = {
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context

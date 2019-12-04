@@ -3,7 +3,7 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withContinueInitialized: Reducer = ({ state }) => {
     if (state.isInitialized) {
-        throw errors.isAlreadyInitialized;
+        throw commonLanguage.isAlreadyInitialized;
     }
     return withState(state).set({ isInitialized: true }).emit('APP:INITIALIZED');
 }
@@ -13,7 +13,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: 'CONTINUE:INITIALIZE', event, callback: withContinueInitialized });
 }
 
-const errors = {
+const commonLanguage = {
     isAlreadyInitialized: 'You can only initialize state once'
 }
 
@@ -22,5 +22,5 @@ const initialState = {}
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context

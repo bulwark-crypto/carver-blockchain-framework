@@ -3,7 +3,7 @@ import { withState, Reducer } from '../../../classes/logic/withState'
 
 const withInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
-        throw errors.isAlreadyInitialized;
+        throw commonLanguage.isAlreadyInitialized;
     }
     const { type, payload } = event;
     const { id, variant } = payload;
@@ -40,7 +40,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: 'LATEST_BLOCK_DETAILS', event, callback: withQueryLatestBlockDetails });
 }
 
-const errors = {
+const commonLanguage = {
     isAlreadyInitialized: 'You can only initialize state once'
 }
 
@@ -49,5 +49,5 @@ const initialState = {}
 export default {
     initialState,
     reducer,
-    errors
+    commonLanguage
 } as Context
