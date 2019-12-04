@@ -1,8 +1,8 @@
 import { withContext } from '../../classes/logic/withContext';
 import { ContextStore } from '../../classes/contextStore';
 
-import blocksWidgetContext from './blocks/reducer'
-import rpcGetInfoContext from '../app/rpc/getInfo/reducer'
+import blocksWidgetContext from './blocks/context'
+import rpcGetInfoContext from '../app/rpc/getInfo/context'
 
 const bindContexts = async (contextStore: ContextStore, id: string) => {
     const blocksWidget = await contextStore.get(blocksWidgetContext, id);
