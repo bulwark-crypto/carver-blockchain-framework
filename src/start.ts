@@ -2,7 +2,7 @@ import { createContextStore } from './classes/contextStore'
 import { createEvent, CreateEventParams } from './classes/interfaces/events'
 import { Context } from './classes/interfaces/context'
 
-import appContext from './contexts/app/reducer'
+import appContext from './contexts/app/context'
 
 import apiRestContext from './contexts/app/api/rest/context'
 import apiRestBindings from './contexts/app/api/rest/bindings'
@@ -81,7 +81,7 @@ const start = async () => {
     await contextBinding.bindContexts(contextStore as any);
   }
 
-  await withContext(app).emit(appContext.commonLanguage.commands.INITIALIZE)
+  await withContext(app).emit(appContext.commonLanguage.commands.Initialize)
 }
 
 start();

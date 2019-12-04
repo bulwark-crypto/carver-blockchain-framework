@@ -6,7 +6,7 @@ import { rpc } from '../../../../classes/libs/rpcInstance';
 
 import { config } from '../../../../../config'
 
-import appContext from '../../reducer'
+import appContext from '../../context'
 import rpcGetInfoContext from './context'
 
 const bindContexts = async (contextStore: ContextStore) => {
@@ -14,8 +14,8 @@ const bindContexts = async (contextStore: ContextStore) => {
     const app = await contextStore.get(appContext);
 
     withContext(rpcGetInfo)
-        .streamEventsFromContext({ type: appContext.commonLanguage.events.INITIALIZED, context: app })
-        .handleQuery('RPC_GETINFO', async () => {
+        .streamEventsFromContext({ type: appContext.commonLanguage.events.Initialized, context: app })
+        .handleQuery(rpcGetInfoContext.commonLanguage.queries.LatestRpcGetInfo, async () => {
             const info = await rpc.call('getinfo');
             return info;
         });
