@@ -13,12 +13,20 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
     const app = await contextStore.get(appContext);
 
+    // Queries to handle
     withContext(rpcGetInfo)
-        .streamEventsFromContext({ type: appContext.commonLanguage.events.Initialized, context: app })
         .handleQuery(rpcGetInfoContext.commonLanguage.queries.LatestRpcGetInfo, async () => {
             const info = await rpc.call('getinfo');
             return info;
         });
+
+    // Proxy event APP:INITIALIZED->RPCGETINFO:INITIALIZE (no payload)
+    withContext(app).streamEvents({
+        type: appContext.commonLanguage.events.Initialized, callback: async (event) => {
+            await withContext(rpcGetInfo).emit(rpcGetInfoContext.commonLanguage.commands.Initialize); // event will be emitted to frontend with id (id, type, payload)
+        }
+    })
+
 }
 
 export default {

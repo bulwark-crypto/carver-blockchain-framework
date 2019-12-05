@@ -1,7 +1,7 @@
 import { Context } from '../../classes/interfaces/context'
 import { withState, Reducer } from '../../classes/logic/withState'
 
-const withInitializeApplication: Reducer = ({ state }) => {
+const withCommandInitialize: Reducer = ({ state }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.IsAlreadyInitialized;
     }
@@ -10,7 +10,7 @@ const withInitializeApplication: Reducer = ({ state }) => {
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withInitializeApplication });
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize });
 }
 
 const commonLanguage = {
