@@ -52,7 +52,7 @@ const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
         .set({
             getInfo: response
         })
-        .emit('RPC_GETINFO:UPDATED', response);
+        .emit(commonLanguage.events.Updated, response);
 }
 
 const withInitialize: Reducer = ({ state, event }) => {
@@ -74,7 +74,7 @@ const commonLanguage = {
         Initialize: 'INITIALIZED', //@todo this should be APP:INITIALIZED->INITIALIZE
     },
     events: {
-
+        Updated: 'UPDATED'
     },
     queries: {
         LatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
