@@ -17,7 +17,7 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
 
     return withState(state)
         .set({ isBusyFetchingTxs: true })
-        .request('REQUEST:GET_TX', tx)
+        .request(commonLanguage.queries.GetRawTransaction, tx)
 }
 
 /**
@@ -26,12 +26,12 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
 const withHandleRequestGetTx: Reducer = ({ state, event }) => {
     const { response, error } = event.payload;
     if (error) {
-        throw commonLanguage.unableToFetchTx;
+        throw commonLanguage.errors.unableToFetchTx;
     }
 
     return withState(state)
         .set({ isBusyFetchingTxs: false })
-        .emit('NEW_TX_FOUND', response) // New tx added
+        .emit(commonLanguage.events.NewTxFound, response) // New tx added
         .reduce({ event, callback: withFetchNextTx })
 }
 /**
@@ -45,7 +45,7 @@ const withRpcNewBlockReached: Reducer = ({ state, event }) => {
     }
 
     if (height !== state.height + 1) {
-        throw commonLanguage.heightMustBeSequential;
+        throw commonLanguage.errors.heightMustBeSequential;
     }
 
 
@@ -58,13 +58,24 @@ const withRpcNewBlockReached: Reducer = ({ state, event }) => {
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: 'NEW_BLOCK_REACHED', event, callback: withRpcNewBlockReached })
-        .reduce({ type: 'REQUEST:GET_TX', event, callback: withHandleRequestGetTx });
+        .reduce({ type: commonLanguage.commands.NewBlockReached, event, callback: withRpcNewBlockReached })
+        .reduce({ type: commonLanguage.queries.GetRawTransaction, event, callback: withHandleRequestGetTx });
 }
 
 const commonLanguage = {
-    heightMustBeSequential: 'Blocks must be sent in sequential order',
-    unableToFetchTx: 'Unable to fetch TX'
+    commands: {
+        NewBlockReached: 'NEW_BLOCK_REACHED'
+    },
+    events: {
+        NewTxFound: 'NEW_TX_FOUND'
+    },
+    queries: {
+        GetRawTransaction: 'GET_RAW_TRANSACTIOn'
+    },
+    errors: {
+        heightMustBeSequential: 'Blocks must be sent in sequential order',
+        unableToFetchTx: 'Unable to fetch TX'
+    }
 }
 
 const initialState = {
@@ -76,4 +87,4 @@ export default {
     initialState,
     reducer,
     commonLanguage
-} as Context
+}

@@ -10,12 +10,21 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcTxs = await contextStore.get(rpcTxsContext);
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
 
+    // Queries to handle
     withContext(rpcTxs)
-        .streamEventsFromContext({ type: 'NEW_BLOCK_REACHED', context: rpcBlocks })
-        .handleRequest('REQUEST:GET_TX', async (tx) => {
+        .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async (tx) => {
             const rawTransaction = await rpc.call('getrawtransaction', [tx, 1]);
             return rawTransaction
         });
+
+    withContext(rpcBlocks)
+        // Proxy event RPC:
+        .streamEvents({
+            type: rpcBlocksContext.commonLanguage.events.NewBlockReached, callback: async (event) => {
+                await withContext(rpcTxs).emit(rpcTxsContext.commonLanguage.commands.NewBlockReached, event.payload);
+            }
+        });
+
 }
 
 export default {
