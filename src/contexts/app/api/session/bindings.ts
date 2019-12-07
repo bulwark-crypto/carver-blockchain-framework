@@ -36,16 +36,16 @@ const bindContexts = async (contextStore: ContextStore) => {
             console.log(`Initializing New Carver User ${id}`);
 
             await withContext(carverUser)
-                .handleRequest('REQUEST:STATS', async () => {
+                .handleRequest(carverUserContext.commonLanguage.queries.GetNetworkStatus, async () => {
                     return {
                         usersOnline: apiSession.stateStore.state.activeSessions.length,
                     }
                 })
                 .streamEvents({
-                    type: 'WIDGET:EMITTED', callback: forwardEventToSocket
+                    type: carverUserContext.commonLanguage.events.Widgets.Emitted, callback: forwardEventToSocket
                 })
                 .streamEvents({
-                    type: 'WIDGET:REMOVED', callback: async (event: Event) => {
+                    type: carverUserContext.commonLanguage.events.Widgets.Removed, callback: async (event: Event) => {
                         //@todo remove from context store
                         await forwardEventToSocket(event);
                     }

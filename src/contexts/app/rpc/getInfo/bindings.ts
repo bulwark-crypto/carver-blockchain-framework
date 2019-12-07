@@ -15,7 +15,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     // Queries to handle
     withContext(rpcGetInfo)
-        .handleQuery(rpcGetInfoContext.commonLanguage.queries.LatestRpcGetInfo, async () => {
+        .handleQuery(rpcGetInfoContext.commonLanguage.queries.GetLatestRpcGetInfo, async () => {
             const info = await rpc.call('getinfo');
             return info;
         });

@@ -1,36 +1,7 @@
 import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 
-const withInitialize: Reducer = ({ state, event }) => {
-    if (state.isInitialized) {
-        throw commonLanguage.isAlreadyInitialized;
-    }
-
-    const { id } = event.payload;
-
-    return withState(state).set({ id, isInitialized: true });
-}
-const withRequestStats: Reducer = ({ state, event }) => {
-    return withState(state)
-}
-const withConnected: Reducer = ({ state, event }) => {
-    if (state.isConnected) {
-        throw commonLanguage.isAlreadyConnected;
-    }
-
-
-    //@todo emit 
-    return withState(state)
-        .request('REQUEST:STATS')
-        .set({ isConnected: true })
-}
-const withWidgetsAdd: Reducer = ({ state, event }) => {
-    const widget = event.payload;
-
-    return withState(state)
-        .request('REQUEST:NEW_WIDGET_CONTEXT', { ...widget, id: state.widgetContexts.length })
-}
-const withRequestNewWidgetContext: Reducer = ({ state, event }) => {
+const withQueryGetNewWidgetContext: Reducer = ({ state, event }) => {
     const { response, error } = event.payload;
 
     //@todo also  checkRpcErrors
@@ -43,34 +14,90 @@ const withRequestNewWidgetContext: Reducer = ({ state, event }) => {
         .set({ widgetContexts: [...state.widgetContexts, response] })
 
 }
-const withWidgetEmitted: Reducer = ({ state, event }) => {
+const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
     //@todo add rate limit
 
     return withState(state)
-        .emit('WIDGET:EMITTED', event.payload);
+        .emit(commonLanguage.events.Widgets.Emitted, event.payload);
 }
-const withWidgetsRemove: Reducer = ({ state, event }) => {
+const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
     const { id } = event.payload;
 
     return withState(state)
-        .emit('WIDGET:REMOVED', { id });
+        .emit(commonLanguage.events.Widgets.Removed, { id });
 }
 
+const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
+    const widget = event.payload;
+
+    return withState(state)
+        .request(commonLanguage.queries.GetNewWidgetContext, { ...widget, id: state.widgetContexts.length })
+}
+
+const withQueryGetNetworkStats: Reducer = ({ state, event }) => {
+    //@todo the event payload here will contain network status (ex: users online)
+    return withState(state)
+}
+
+const withCommandConnect: Reducer = ({ state, event }) => {
+    if (state.isConnected) {
+        throw commonLanguage.errors.isAlreadyConnected;
+    }
+
+
+    //@todo emit 
+    return withState(state)
+        .request(commonLanguage.queries.GetNetworkStatus)
+        .set({ isConnected: true })
+}
+
+const withCommandInitialize: Reducer = ({ state, event }) => {
+    if (state.isInitialized) {
+        throw commonLanguage.errors.isAlreadyInitialized;
+    }
+
+    const { id } = event.payload;
+
+    return withState(state).set({ id, isInitialized: true });
+}
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: 'INITIALIZE', event, callback: withInitialize })
-        .reduce({ type: 'CONNECTED', event, callback: withConnected })
-        .reduce({ type: 'REQUEST:STATS', event, callback: withRequestStats })
-        .reduce({ type: 'WIDGETS:ADD', event, callback: withWidgetsAdd })
-        .reduce({ type: 'WIDGETS:REMOVE', event, callback: withWidgetsRemove })
-        .reduce({ type: 'WIDGET:EMITTED', event, callback: withWidgetEmitted })
-        .reduce({ type: 'REQUEST:NEW_WIDGET_CONTEXT', event, callback: withRequestNewWidgetContext })
-        ;
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
+        .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
+
+        .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
+        .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
+        .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
+
+        .reduce({ type: commonLanguage.queries.GetNetworkStatus, event, callback: withQueryGetNetworkStats })
+        .reduce({ type: commonLanguage.queries.GetNewWidgetContext, event, callback: withQueryGetNewWidgetContext });
 }
 
 const commonLanguage = {
-    isAlreadyInitialized: 'You can only initialize state once',
-    isAlreadyConnected: 'You can only emit CONNECTED once',
+    commands: {
+        Initialize: 'INITIALIZE',
+        Connect: 'CONNECT',
+
+        Widgets: {
+            Add: 'WIDGETS:ADD',
+            Remove: 'WIDGETS:REMOVE',
+            Emit: 'WIDGETS:EMIT',
+        }
+    },
+    events: {
+        Widgets: {
+            Emitted: 'WIDGETS:EMITTED',
+            Removed: 'WIDGETS:REMOVED',
+        }
+    },
+    queries: {
+        GetNetworkStatus: 'GET_NETWORK_STATUS',
+        GetNewWidgetContext: 'GET_NEW_WIDGET_CONTEXT',
+    },
+    errors: {
+        isAlreadyInitialized: 'You can only initialize state once',
+        isAlreadyConnected: 'You can only emit CONNECTED once',
+    }
 }
 
 const initialState = {
@@ -85,4 +112,4 @@ export default {
     initialState,
     reducer,
     commonLanguage
-} as Context
+}

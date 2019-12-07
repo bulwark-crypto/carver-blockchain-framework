@@ -8,23 +8,27 @@ import blocksWidgetBindings from '../../widgets/blocks/bindings'
 import carverUserContext from './context'
 
 const bindContexts = async (contextStore: ContextStore, id: string = null) => {
-    const widgetsContextStore = createContextStore({ id: 'USER', parent: contextStore });
+    // Fetch user's widget context store
+    const userWidgetsContextStore = createContextStore({ id: 'USER', parent: contextStore });
 
     const carverUser = await contextStore.get(carverUserContext, id)
 
     withContext(carverUser)
-        .handleRequest('REQUEST:NEW_WIDGET_CONTEXT', async ({ id, variant }) => { // .on('',...)
-            const blocksWidget = await widgetsContextStore.register({ id, context: blocksWidgetContext })
-            await blocksWidgetBindings.bindContexts(widgetsContextStore, id);
+        .handleRequest(carverUserContext.commonLanguage.queries.GetNewWidgetContext, async ({ id, variant }) => {
+
+            //@todo create widgets based on variant
+            const blocksWidget = await userWidgetsContextStore.register({ id, context: blocksWidgetContext })
+            await blocksWidgetBindings.bindContexts(userWidgetsContextStore, id);
 
             await withContext(blocksWidget)
+                // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
                 .streamEvents({
                     type: '*', callback: async (event) => {
                         console.log('This will catch all widget events', event);
-                        withContext(carverUser).emit('WIDGET:EMITTED', { id, ...event }); // event will be emitted to frontend with id (id, type, payload)
+                        withContext(carverUser).emit(carverUserContext.commonLanguage.commands.Widgets.Emit, { id, ...event }); // event will be emitted to frontend with id (id, type, payload)
                     }
                 })
-                .emit('INITIALIZE', { id, variant })
+                .emit(carverUserContext.commonLanguage.commands.Initialize, { id, variant })
 
             return {
                 id

@@ -18,10 +18,10 @@ const bindContexts = async (contextStore: ContextStore) => {
         });
 
     withContext(rpcBlocks)
-        // Proxy event RPC:
+        // Proxy event RPC:NEW_BLOCK_REACHED->RPC_TXS:NEW_BLOCK
         .streamEvents({
             type: rpcBlocksContext.commonLanguage.events.NewBlockReached, callback: async (event) => {
-                await withContext(rpcTxs).emit(rpcTxsContext.commonLanguage.commands.NewBlockReached, event.payload);
+                await withContext(rpcTxs).emit(rpcTxsContext.commonLanguage.commands.NewBlock, event.payload);
             }
         });
 

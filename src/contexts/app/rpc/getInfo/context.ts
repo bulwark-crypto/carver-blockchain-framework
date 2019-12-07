@@ -56,13 +56,13 @@ const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
 }
 
 const withInitialize: Reducer = ({ state, event }) => {
-    return withState(state).query(commonLanguage.queries.LatestRpcGetInfo);
+    return withState(state).query(commonLanguage.queries.GetLatestRpcGetInfo);
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withInitialize })
-        .reduce({ type: commonLanguage.queries.LatestRpcGetInfo, event, callback: withQueryRpcGetinfo });
+        .reduce({ type: commonLanguage.queries.GetLatestRpcGetInfo, event, callback: withQueryRpcGetinfo });
 }
 
 const initialState = {
@@ -77,7 +77,7 @@ const commonLanguage = {
         Updated: 'UPDATED'
     },
     queries: {
-        LatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
+        GetLatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
     },
     errors: {
         // Connection issues

@@ -37,7 +37,7 @@ const withHandleRequestGetTx: Reducer = ({ state, event }) => {
 /**
  * Add new txs to fetch
  */
-const withRpcNewBlockReached: Reducer = ({ state, event }) => {
+const withRpcNewBlock: Reducer = ({ state, event }) => {
     const { tx, height } = event.payload;
 
     if (height <= state.height) {
@@ -58,19 +58,19 @@ const withRpcNewBlockReached: Reducer = ({ state, event }) => {
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.commands.NewBlockReached, event, callback: withRpcNewBlockReached })
+        .reduce({ type: commonLanguage.commands.NewBlock, event, callback: withRpcNewBlock })
         .reduce({ type: commonLanguage.queries.GetRawTransaction, event, callback: withHandleRequestGetTx });
 }
 
 const commonLanguage = {
     commands: {
-        NewBlockReached: 'NEW_BLOCK_REACHED'
+        NewBlock: 'NEW_BLOCK'
     },
     events: {
         NewTxFound: 'NEW_TX_FOUND'
     },
     queries: {
-        GetRawTransaction: 'GET_RAW_TRANSACTIOn'
+        GetRawTransaction: 'GET_RAW_TRANSACTION'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',
