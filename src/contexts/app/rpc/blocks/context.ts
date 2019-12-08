@@ -24,7 +24,7 @@ const withCheckLatestBlock: Reducer = ({ state, event }) => {
 
     // Take the height from rpc getblock response
     const { blocks } = event.payload;
-    if (state.height > 100 || state.height >= blocks) {
+    if (state.height > 1000 || state.height >= blocks) {
         return state;
     }
 

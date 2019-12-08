@@ -3,7 +3,6 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withFetchNextTx: Reducer = ({ state, event }) => {
     if (state.isBusyFetchingTxs) {
-        console.log('events tx queue', state.txsQueue.length);
         return state;
     }
 
