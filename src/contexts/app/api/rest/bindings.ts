@@ -27,7 +27,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
             // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
             console.log('request new session!');
-            await withContext(apiSession).emit('REQUEST:API:SESSION:RESERVE_SOCKET', reservePayload)
+            await withContext(apiSession).emit(apiSessionContext.commonLanguage.commands.ReserveNewSocket, reservePayload)
 
             const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id);
             return newSession;

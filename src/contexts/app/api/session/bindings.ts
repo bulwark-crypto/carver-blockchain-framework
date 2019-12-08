@@ -19,7 +19,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     const usersContextStore = createContextStore({ id: 'SESSION', parent: contextStore });
 
     withContext(apiSession)
-        .handleRequest('REQUEST:NEW_USER_CONTEXT', async ({ id }) => {
+        .handleRequest(apiSessionContext.commonLanguage.queries.GetNewUserContext, async ({ id }) => {
 
             const carverUser = await usersContextStore.register({ id, context: carverUserContext })
             await carverUserBindings.bindContexts(usersContextStore, id);
@@ -66,7 +66,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             try {
                 // Request new session connection. If this succeeds then connection was established successfuly.
                 const id = getSocketSessionId(socket);
-                await withContext(apiSession).emit('REQUEST:API:SESSION:CONNECT', { id });
+                await withContext(apiSession).emit(apiSessionContext.commonLanguage.commands.Connect, { id });
             } catch (error) {
                 return next(error);
             }

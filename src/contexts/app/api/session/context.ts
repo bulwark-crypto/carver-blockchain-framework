@@ -31,23 +31,23 @@ const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
     const { id } = event.payload
     console.log('(apiSession) client connected', id);
 
-    return withState(state).request('REQUEST:NEW_USER_CONTEXT', { id });
-}
-const withRequestApiSessionEmit: Reducer = ({ state, event }) => {
-    const { id } = event.payload;
-
-    console.log('(apiSession) emit', id, event);
-    return state;
+    return withState(state).request(commonLanguage.queries.GetNewUserContext, { id });
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: 'REQUEST:API:SESSION:RESERVE_SOCKET', event, callback: withRequestApiSessionReserveSocket })
-        .reduce({ type: 'REQUEST:API:SESSION:CONNECT', event, callback: withRequestApiSessionConnect })
-        .reduce({ type: 'REQUEST:API:SESSION:EMIT', event, callback: withRequestApiSessionEmit });
+        .reduce({ type: commonLanguage.commands.ReserveNewSocket, event, callback: withRequestApiSessionReserveSocket })
+        .reduce({ type: commonLanguage.commands.Connect, event, callback: withRequestApiSessionConnect });
 }
 
-const errors = {
+const commonLanguage = {
+    commands: {
+        ReserveNewSocket: 'RESERVE_NEW_SOCKET',
+        Connect: 'CONNECT',
+    },
+    queries: {
+        GetNewUserContext: 'GET_NEW_USER_CONTEXT'
+    }
 }
 
 const initialState = {
@@ -57,5 +57,5 @@ const initialState = {
 export default {
     initialState,
     reducer,
-    errors
-} as Context
+    commonLanguage
+}
