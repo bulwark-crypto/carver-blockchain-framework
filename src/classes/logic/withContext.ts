@@ -30,6 +30,8 @@ const withContext = (context: RegisteredContext) => {
         return contextChain;
     }
 
+    // The old way of streaming events to context
+    /*
     contextChain.streamEventsFromContext = ({ type, context: streamFromContext }: StreamEventsFromContextParams) => {
         // Events will be streamed from the source into our context
         const callback = async (event: Event) => {
@@ -38,7 +40,7 @@ const withContext = (context: RegisteredContext) => {
 
         streamFromContext.eventStore.replayEventsToCallback({ type, callback });
         return contextChain;
-    }
+    }*/
 
     contextChain.streamEvents = ({ type, callback }: StreamEventsParams) => {
         context.eventStore.replayEventsToCallback({ type, callback });

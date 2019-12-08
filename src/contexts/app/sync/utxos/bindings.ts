@@ -10,8 +10,13 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcTxs = await contextStore.get(rpcTxsContext);
     const utxos = await contextStore.get(utxosContext);
 
-    withContext(utxos)
-        .streamEventsFromContext({ type: 'NEW_TX_FOUND', context: rpcTxs })
+    withContext(rpcTxs)
+        .streamEvents({
+            type: rpcTxsContext.commonLanguage.events.NewTxFound, callback: async (event) => {
+                await withContext(utxos).emit(utxosContext.commonLanguage.commands.ParseTx, event.payload);
+            }
+        });
+    //.streamEventsFromContext({ type: rpcTxsContext.commonLanguage.events.NewTxFound, context: rpcTxs })
 }
 
 export default {
