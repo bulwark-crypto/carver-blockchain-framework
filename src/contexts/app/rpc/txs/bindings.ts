@@ -12,13 +12,13 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     // Queries to handle
     withContext(rpcTxs)
-        .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, height }) => {
+        .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, block }) => {
             const rawTransaction = await rpc.call('getrawtransaction', [tx, 1]);
 
             // Transaction will be returned with block height appended
             return {
                 ...rawTransaction,
-                height
+                block
             }
         });
 

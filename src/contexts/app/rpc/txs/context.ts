@@ -12,11 +12,11 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
     }
 
     // Request latest tx details
-    const { tx, height } = state.txsQueue.shift();
+    const { tx, block } = state.txsQueue.shift();
 
     return withState(state)
         .set({ isBusyFetchingTxs: true })
-        .request(commonLanguage.queries.GetRawTransaction, { tx, height })
+        .request(commonLanguage.queries.GetRawTransaction, { tx, block })
 }
 
 /**
@@ -37,7 +37,8 @@ const withHandleRequestGetTx: Reducer = ({ state, event }) => {
  * Add new txs to fetch
  */
 const withRpcNewBlock: Reducer = ({ state, event }) => {
-    const { tx: txs, height } = event.payload;
+    const block = event.payload;
+    const { tx: txs, height } = block;
 
     if (height <= state.height) {
         return state;
@@ -47,7 +48,7 @@ const withRpcNewBlock: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.heightMustBeSequential;
     }
 
-    const txsWithHeight = txs.map((tx: any) => ({ tx, height }));
+    const txsWithBlock = txs.map((tx: any) => ({ tx, block }));
 
 
     return withState(state)
@@ -55,7 +56,7 @@ const withRpcNewBlock: Reducer = ({ state, event }) => {
             height,
             txsQueue: [
                 ...state.txsQueue,
-                ...txsWithHeight] // The tx queue array will contain a tx and it's associated block
+                ...txsWithBlock] // The tx queue array will contain a tx and it's associated block
         })
         .reduce({ event, callback: withFetchNextTx })
 }
