@@ -52,7 +52,11 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
     });
 
     return withState(state)
-        .emit(commonLanguage.events.TxParsed, utxos);
+        .emit(commonLanguage.events.TxParsed, {
+            tx,
+            block,
+            utxos
+        });
 
 }
 const reducer: Reducer = ({ state, event }) => {
