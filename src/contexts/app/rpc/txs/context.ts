@@ -48,7 +48,7 @@ const withRpcNewBlock: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.heightMustBeSequential;
     }
 
-    const txsWithBlock = txs.map((tx: any) => ({ tx, block }));
+    const txsWithBlock = txs.map((tx: any) => ({ tx, block })); //@todo find way to remove block (make it parent context of some sort?)
 
 
     return withState(state)

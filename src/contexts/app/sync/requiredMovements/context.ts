@@ -203,7 +203,6 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
             addToAddress(CarverAddressType.ProofOfStake, `${posAddressLabel}:POS`, -posAddressAmount.amount);
             break;
         case CarverTxType.ProofOfWork:
-            console.log(powAddressLabel);
             const powRewardAmount = consolidatedAddressAmounts.get(powAddressLabel);
             if (!powRewardAmount) {
                 throw 'POW reward not found?';
@@ -253,10 +252,9 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
     const { tx, block, utxos } = event.payload;
 
     const requiredMovements = getRequiredMovements(block, tx, utxos);
-    console.log('required:', requiredMovements);
 
     return withState(state)
-    //@todo emit required movements out (next step is to fill address cache)
+        .emit(commonLanguage.events.TxParsed, requiredMovements);
 
 }
 

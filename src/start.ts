@@ -27,6 +27,9 @@ import utxosBindings from './contexts/app/sync/utxos/bindings'
 import requiredMovementsContext from './contexts/app/sync/requiredMovements/context'
 import requiredMovementsBindings from './contexts/app/sync/requiredMovements/bindings'
 
+import addressesContext from './contexts/app/sync/addresses/context'
+import addressesBindings from './contexts/app/sync/addresses/bindings'
+
 import apiSessionContext from './contexts/app/api/session/context'
 
 import { withContext } from './classes/logic/withContext'
@@ -82,6 +85,11 @@ const start = async () => {
     id: 'REQUIRED_MOVEMENTS'
   });
 
+  await contextStore.register({
+    context: addressesContext,
+    id: 'ADDRESSES'
+  });
+
   // Bind all contexts 
   const contextBindings = [
     rpcGetInfoBindings,
@@ -91,7 +99,9 @@ const start = async () => {
     apiSessionBindings,
     apiSocketBindings,
     utxosBindings,
-    requiredMovementsBindings];
+    requiredMovementsBindings,
+    addressesBindings
+  ];
   for await (const contextBinding of contextBindings) {
     await contextBinding.bindContexts(contextStore as any);
   }

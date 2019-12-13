@@ -16,7 +16,6 @@ const bindContexts = async (contextStore: ContextStore) => {
                 await withContext(utxos).emit(utxosContext.commonLanguage.commands.ParseTx, event.payload);
             }
         });
-    //.streamEventsFromContext({ type: rpcTxsContext.commonLanguage.events.NewTxFound, context: rpcTxs })
 }
 
 export default {

@@ -14,11 +14,11 @@ interface Utxo {
 const withCommandParseTx: Reducer = ({ state, event }) => {
     const tx = event.payload;
 
-    const { block, vout: vouts } = tx;
+    const { txid, block, vout: vouts } = tx;
     if (!vouts) {
         throw commonLanguage.errors.noTxVout;
     }
-    const { txid, height } = block;
+    const { height } = block;
 
     const utxos: Utxo[] = [];
     vouts.forEach((vout: any) => {
