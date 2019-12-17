@@ -15,7 +15,8 @@ const bindContexts = async (contextStore: ContextStore) => {
     withContext(utxos)
         .streamEvents({
             type: utxosContext.commonLanguage.events.TxParsed, callback: async (event) => {
-                await withContext(requiredMovements).emit(requiredMovementsContext.commonLanguage.commands.ParseTx, event.payload);
+                //console.log('here');
+                await withContext(requiredMovements).dispatch({ type: requiredMovementsContext.commonLanguage.commands.ParseTx, payload: event.payload });
             }
         });
 }

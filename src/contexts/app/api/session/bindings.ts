@@ -50,7 +50,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                         await forwardEventToSocket(event);
                     }
                 })
-                .emit('INITIALIZE', { id });
+                .dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id } });
 
             return {
                 id
@@ -66,7 +66,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             try {
                 // Request new session connection. If this succeeds then connection was established successfuly.
                 const id = getSocketSessionId(socket);
-                await withContext(apiSession).emit(apiSessionContext.commonLanguage.commands.Connect, { id });
+                await withContext(apiSession).dispatch({ type: apiSessionContext.commonLanguage.commands.Connect, payload: { id } });
             } catch (error) {
                 return next(error);
             }
@@ -85,10 +85,9 @@ const bindContexts = async (contextStore: ContextStore) => {
             console.log(`Websocket User Connected: ${id}`, carverUser);
 
             socket.on('emit', async ({ type, payload }) => {
-                //console.log('emit to carverUser:', type, id, payload)
                 // Pass down this event to the context (with the socket identifier so we know which context triggered this event). 
                 // The single socket context management is done internally by "apiSession" context
-                withContext(carverUser).emit(type, payload);
+                withContext(carverUser).dispatch({ type, payload });
             })
 
             // @todo we can issue a new socket connection event here

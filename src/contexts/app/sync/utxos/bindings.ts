@@ -10,10 +10,17 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcTxs = await contextStore.get(rpcTxsContext);
     const utxos = await contextStore.get(utxosContext);
 
+    /*withContext(utxos)
+        .streamEvents({
+            type: utxosContext.commonLanguage.events.TxParsed, callback: async (event) => {
+                console.log('new tx found');
+            }
+        });*/
+
     withContext(rpcTxs)
         .streamEvents({
             type: rpcTxsContext.commonLanguage.events.NewTxFound, callback: async (event) => {
-                await withContext(utxos).emit(utxosContext.commonLanguage.commands.ParseTx, event.payload);
+                await withContext(utxos).dispatch({ type: utxosContext.commonLanguage.commands.ParseTx, payload: event.payload });
             }
         });
 }

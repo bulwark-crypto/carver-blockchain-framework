@@ -136,25 +136,9 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
      * Command state
      */
     const emit = async (event: Event): Promise<void> => {
-        try {
-            const reducerResults = withState(stateStore.state).reduce({ event, callback: context.reducer });
-            stateStore.state = reducerResults.state;
-        } catch (err) {
-            if (context.commonLanguage) {
-                // We'll get a description of the error, find the matching key and re-throw an object exception
-                const matchingErrors = Object.entries(context.commonLanguage).find(errorEntry => {
-                    const [type, description] = errorEntry;
-                    return err === description;
-                })
-
-                if (matchingErrors) {
-                    const [type, description] = matchingErrors;
-                    throw { type, description };
-                }
-
-                throw err; // re-throw
-            }
-        }
+        // Note that his can throw (Notice that state chain is built into expected emit state return)
+        const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
+        stateStore.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
         await emitCurrentStateEvents();
         await emitCurrentStateRequests();

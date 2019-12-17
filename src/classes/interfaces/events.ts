@@ -1,7 +1,7 @@
 export interface Event {
     id?: number;
     type: string;
-    payload: any;
+    payload?: any;
 }
 export interface Command {
     id?: number;

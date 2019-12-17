@@ -20,14 +20,14 @@ const bindContexts = async (contextStore: ContextStore) => {
         const getNewSession = async ({ sourceIdentifier }: GetNewSessionParams) => {
             const id = uniqid();
 
-            const reservePayload = {
+            const payload = {
                 id,
                 sourceIdentifier // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
             }
 
             // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
-            console.log('request new session!');
-            await withContext(apiSession).emit(apiSessionContext.commonLanguage.commands.ReserveNewSocket, reservePayload)
+            console.log(`Request new session: ${id}!`);
+            await withContext(apiSession).dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSocket, payload })
 
             const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id);
             return newSession;

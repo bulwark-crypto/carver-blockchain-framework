@@ -25,10 +25,10 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
                 .streamEvents({
                     type: '*', callback: async (event) => {
                         console.log('This will catch all widget events', event);
-                        withContext(carverUser).emit(carverUserContext.commonLanguage.commands.Widgets.Emit, { id, ...event }); // event will be emitted to frontend with id (id, type, payload)
+                        withContext(carverUser).dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Emit, payload: { id, ...event } }); // event will be emitted to frontend with id (id, type, payload)
                     }
                 })
-                .emit(carverUserContext.commonLanguage.commands.Initialize, { id, variant })
+                .dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id, variant } })
 
             return {
                 id

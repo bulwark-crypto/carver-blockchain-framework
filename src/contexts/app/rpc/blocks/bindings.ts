@@ -43,7 +43,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         // Proxy event RPCGETINFO:UPDATED->RPCBLOCKS:INITIALIZE (no payload)
         .streamEvents({
             type: rpcGetInfoContext.commonLanguage.events.Updated, callback: async (event) => {
-                await withContext(rpcBlocks).emit(rpcBlocksContext.commonLanguage.commands.Initialize, event.payload);
+                await withContext(rpcBlocks).dispatch({ type: rpcBlocksContext.commonLanguage.commands.Initialize, payload: event.payload });
             }
         });
 

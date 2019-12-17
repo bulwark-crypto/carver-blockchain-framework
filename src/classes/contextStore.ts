@@ -75,16 +75,18 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
     };
 
     const getParent = (id: string) => {
+        let context = parent;
+
         while (true) {
-            if (!parent) {
+            if (!context) {
                 return null;
             }
 
-            if (parent.id === id) {
-                return parent;
+            if (context.id === id) {
+                return context;
             }
 
-            parent = parent.parent;
+            context = context.parent;
         }
     }
 

@@ -11,7 +11,11 @@ interface StreamEventsParams {
 }
 
 interface WithContextChain {
-    emit: (type: string, payload?: any) => Promise<WithContextChain>;
+    /**
+     * Dispatch a command, store any new events
+     * @todo the id of event should be mandatory here (the devents that are emitted are based on this event id)
+     */
+    dispatch: (event: Event) => Promise<WithContextChain>;
     /**
      * Stream events in automatically from the last sequence @todo redo to streamEventsToContext?
      */
@@ -24,8 +28,8 @@ interface WithContextChain {
 const withContext = (context: RegisteredContext) => {
     const contextChain = {} as WithContextChain
 
-    contextChain.emit = async (type: string, payload: any = null) => {
-        context.eventStore.emit(createEvent({ type, payload }));
+    contextChain.dispatch = async (event: Event) => {
+        await context.eventStore.emit(event);
 
         return contextChain;
     }

@@ -10,6 +10,10 @@ interface ReduceParams {
 interface WithStateChain {
     state: any;
     isStateChain: boolean;
+    /**
+     * Basic reducer for the state chain
+     * Optionally reduce by type (only call the callback if the event type matches.)
+     */
     reduce: ({ type, event, callback }: ReduceParams) => WithStateChain;
     emit: (type: string, payload?: any) => WithStateChain;
     set: (params: any) => WithStateChain;
@@ -29,6 +33,7 @@ const withState = (state: any) => {
                 return stateChain;
             }
         }
+
         const reducerResults = callback({ state: stateChain.state, event });
         stateChain.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
         return stateChain;
