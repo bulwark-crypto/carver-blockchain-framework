@@ -12,11 +12,11 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
     }
 
     // Request latest tx details
-    const { tx, block } = state.txsQueue.shift();
+    const { tx, height } = state.txsQueue.shift();
 
     return withState(state)
         .set({ isBusyFetchingTxs: true })
-        .request(commonLanguage.queries.GetRawTransaction, { tx, block })
+        .request(commonLanguage.queries.GetRawTransaction, { tx, height })
 }
 
 /**
@@ -48,15 +48,15 @@ const withRpcNewBlock: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.heightMustBeSequential;
     }
 
-    const txsWithBlock = txs.map((tx: any) => ({ tx, block })); //@todo find way to remove block (make it parent context of some sort?)
 
+    const txsWithHeight = txs.map((tx: any) => ({ tx, height }));
 
     return withState(state)
         .set({
             height,
             txsQueue: [
                 ...state.txsQueue,
-                ...txsWithBlock] // The tx queue array will contain a tx and it's associated block
+                ...txsWithHeight] // The tx queue array will contain a tx and it's associated block
         })
         .reduce({ event, callback: withFetchNextTx })
 }

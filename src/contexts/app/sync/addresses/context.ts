@@ -8,7 +8,7 @@ const withCommandParseRequiredMovements: Reducer = ({ state, event }) => {
     const requiredMovements = event.payload;
 
     requiredMovements.consolidatedAddressAmounts.forEach((address: any) => {
-        console.log('address:', address);
+        //console.log('address:', address);
     })
 
     return withState(state)

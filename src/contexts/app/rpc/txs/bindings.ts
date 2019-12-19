@@ -10,15 +10,25 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcTxs = await contextStore.get(rpcTxsContext);
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
 
+    /*
+    
+    */
+
     // Queries to handle
     withContext(rpcTxs)
-        .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, block }) => {
+        .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, height }) => {
+            console.log(height);
+
+
+            //await withPermanentStore(rpcBlocks.permanentStore).query(rpcBlocksContext.commonLanguage.permanentStore.GetBlockByHeight, height);
+
+
             const rawTransaction = await rpc.call('getrawtransaction', [tx, 1]);
 
             // Transaction will be returned with block height appended
             return {
                 ...rawTransaction,
-                block
+                height
             }
         });
 

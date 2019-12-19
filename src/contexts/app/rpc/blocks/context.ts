@@ -18,12 +18,14 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
     return withState(state)
         .set({ height: response.height })
         .emit(commonLanguage.events.NewBlockReached, response)
-        .reduce({ event, callback: withCheckLatestBlock });
+        .reduce({ event, callback: withCommandParseGetInfo });
 }
-const withCheckLatestBlock: Reducer = ({ state, event }) => {
+const withCommandParseGetInfo: Reducer = ({ state, event }) => {
 
     // Take the height from rpc getblock response
     const { blocks } = event.payload;
+
+    // Limit the blocks to sync to first 1000 (expand when event store is completed)
     if (state.height > 1000 || state.height >= blocks) {
         return state;
     }
@@ -34,13 +36,16 @@ const withCheckLatestBlock: Reducer = ({ state, event }) => {
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCheckLatestBlock })
+        .reduce({ type: commonLanguage.commands.ParseGetInfo, event, callback: withCommandParseGetInfo })
         .reduce({ type: commonLanguage.queries.GetBlockAtHeight, event, callback: withQueryGetBlock });
 }
 
 const commonLanguage = {
     commands: {
-        Initialize: 'Initialize'
+        /**
+         * Parse RPC getinfo results to fetch the block height from
+         */
+        ParseGetInfo: 'PARSE_GET_INFO'
     },
     events: {
         NewBlockReached: 'NEW_BLOCK_REACHED'

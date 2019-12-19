@@ -26,13 +26,13 @@ const bindContexts = async (contextStore: ContextStore) => {
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
 
+
+
     // Queries to handle
     withContext(rpcBlocks)
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetBlockAtHeight, async (height) => {
-            //benchmark('getblock:', height)
-
-
             //@todo we can split this up into two differnet contexts (RPC:BLOCKHASH, RPC:BLOCK)
+            //The current way might throw an exception on either call
             const hash = await rpc.call('getblockhash', [height]);
             const block = await rpc.call('getblock', [hash]);
 
@@ -43,7 +43,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         // Proxy event RPCGETINFO:UPDATED->RPCBLOCKS:INITIALIZE (no payload)
         .streamEvents({
             type: rpcGetInfoContext.commonLanguage.events.Updated, callback: async (event) => {
-                await withContext(rpcBlocks).dispatch({ type: rpcBlocksContext.commonLanguage.commands.Initialize, payload: event.payload });
+                await withContext(rpcBlocks).dispatch({ type: rpcBlocksContext.commonLanguage.commands.ParseGetInfo, payload: event.payload });
             }
         });
 
