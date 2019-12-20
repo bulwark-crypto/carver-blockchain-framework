@@ -2,7 +2,7 @@ import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withQueryGetBlock: Reducer = ({ state, event }) => {
-    const { response, error } = event.payload;
+    const { response: block, error } = event.payload;
 
     //@todo also  checkRpcErrors
     if (error) {
@@ -11,13 +11,17 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
         return state;
     }
 
-    if (response.height !== state.height + 1) {
+    const { height } = block;
+
+    if (height !== state.height + 1) {
         throw commonLanguage.errors.heightMustBeSequential;
     }
 
+    console.log(height);
     return withState(state)
-        .set({ height: response.height })
-        .emit(commonLanguage.events.NewBlockReached, response)
+        .set({ height })
+        .emit(commonLanguage.events.NewBlockReached, height)
+        .store(commonLanguage.storage.Add, block)
         .reduce({ event, callback: withCommandParseGetInfo });
 }
 const withCommandParseGetInfo: Reducer = ({ state, event }) => {
@@ -31,13 +35,13 @@ const withCommandParseGetInfo: Reducer = ({ state, event }) => {
     }
 
     return withState(state)
-        .query(commonLanguage.queries.GetBlockAtHeight, state.height + 1); // Request 
+        .query(commonLanguage.queries.GetByHeight, state.height + 1); // Request 
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.ParseGetInfo, event, callback: withCommandParseGetInfo })
-        .reduce({ type: commonLanguage.queries.GetBlockAtHeight, event, callback: withQueryGetBlock });
+        .reduce({ type: commonLanguage.queries.GetByHeight, event, callback: withQueryGetBlock });
 }
 
 const commonLanguage = {
@@ -51,7 +55,10 @@ const commonLanguage = {
         NewBlockReached: 'NEW_BLOCK_REACHED'
     },
     queries: {
-        GetBlockAtHeight: 'GET_BLOCK_AT_HEIGHT'
+        GetByHeight: 'GET_BY_HEIGHT',
+    },
+    storage: {
+        Add: 'ADD'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'

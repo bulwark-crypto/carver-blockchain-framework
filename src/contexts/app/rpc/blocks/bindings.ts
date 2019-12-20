@@ -30,7 +30,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     // Queries to handle
     withContext(rpcBlocks)
-        .handleQuery(rpcBlocksContext.commonLanguage.queries.GetBlockAtHeight, async (height) => {
+        .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {
             //@todo we can split this up into two differnet contexts (RPC:BLOCKHASH, RPC:BLOCK)
             //The current way might throw an exception on either call
             const hash = await rpc.call('getblockhash', [height]);

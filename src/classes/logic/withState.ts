@@ -16,6 +16,7 @@ interface WithStateChain {
      */
     reduce: ({ type, event, callback }: ReduceParams) => WithStateChain;
     emit: (type: string, payload?: any) => WithStateChain;
+    store: (query: string, payload?: any) => WithStateChain;
     set: (params: any) => WithStateChain;
     request: (type: string, payload?: any) => WithStateChain;
     query: (type: string, payload?: any) => WithStateChain;
@@ -39,12 +40,21 @@ const withState = (state: any) => {
         return stateChain;
     }
     stateChain.emit = (type: string, payload: any = null) => {
-
         stateChain.state = {
             ...stateChain.state,
             emit: [
                 ...(stateChain.state.emit ? stateChain.state.emit : []),
                 createEvent({ type, payload })
+            ]
+        };
+        return stateChain;
+    }
+    stateChain.store = (query: string, payload: any = null) => {
+        stateChain.state = {
+            ...stateChain.state,
+            store: [
+                ...(stateChain.state.store ? stateChain.state.store : []),
+                { query, payload }
             ]
         };
         return stateChain;

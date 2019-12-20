@@ -87,9 +87,11 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
      * Emits any outstanding events in state
      */
     const emitCurrentStateEvents = async () => {
-        const { emit } = stateStore.state;
+        const { emit, ...stateWithoutEvents } = stateStore.state;
 
-        // There are new events to emit to subscribers
+        // Store state without emit
+        stateStore.state = stateWithoutEvents
+
         if (emit) {
             // Store any new events to emit
             const storedEventsToEmit: StoredEvent[] = []
@@ -112,23 +114,31 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
                 emitter.emit('*', { type: storedEvent.type, event: storedEvent });
             });
 
-            // reset emit state as we've emitted all events
-            stateStore.state = {
-                ...stateStore.state,
-                emit: []
-            }
         }
+
     }
 
     const emitCurrentStateRequests = async () => {
-        const { request, ...stateWithoutRequest } = stateStore.state;
-        stateStore.state = stateWithoutRequest;
+        const { request, ...stateWithoutRequests } = stateStore.state;
+
+        // Store state without request
+        stateStore.state = stateWithoutRequests;
 
         if (request) {
             request.forEach((event: Event) => {
                 //console.log('emit:', event);
                 emitter.emit(event.type, event);
             });
+        }
+    }
+    const emitCurrentStateStore = async () => {
+        const { store, ...stateWithoutStorage } = stateStore.state;
+
+        // Store state without storage
+        stateStore.state = stateWithoutStorage;
+
+        if (store) {
+            console.log('store:', store);
         }
     }
 
@@ -140,7 +150,11 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
         const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
         stateStore.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
+        //@todo One thing that is possible to do here is to not emit the store / events right away and add some batching. That way multiple events can be emitted in a batch
+
+        await emitCurrentStateStore();
         await emitCurrentStateEvents();
+
         await emitCurrentStateRequests();
     }
 
