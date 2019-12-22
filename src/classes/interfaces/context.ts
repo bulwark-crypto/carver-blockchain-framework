@@ -1,6 +1,5 @@
 import { Event } from './events'
 import { EventEmitter } from 'events';
-import { createEventStore } from '../contextDispatcher'
 
 export interface ReducerParams {
     state: any;

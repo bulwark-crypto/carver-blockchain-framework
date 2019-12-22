@@ -29,7 +29,7 @@ const withContext = (context: RegisteredContext) => {
     const contextChain = {} as WithContextChain
 
     contextChain.dispatch = async (event: Event) => {
-        await context.eventStore.dispatch(event);
+        await context.dispatch(event);
 
         return contextChain;
     }
@@ -47,7 +47,7 @@ const withContext = (context: RegisteredContext) => {
     }*/
 
     contextChain.streamEvents = ({ type, callback }: StreamEventsParams) => {
-        context.eventStore.replayEventsToCallback({ type, callback });
+        context.eventStore.streamEvents({ type, callback });
 
         return contextChain;
     }

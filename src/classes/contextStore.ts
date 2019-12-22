@@ -3,6 +3,7 @@ const EventEmitter = require('events');
 import { Context, State } from './interfaces/context'
 import { RegisteredContext } from './contextDispatcher'
 import { Event } from './interfaces/events'
+import { createEventStore } from './eventStore'
 import { bindContextDispatcher } from './contextDispatcher'
 
 //@todo this should be a global permanent store (so store can be non-mongodb)
@@ -39,20 +40,23 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
         // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
         const emitter = new EventEmitter();
-        const eventStore = bindContextDispatcher({ emitter, context, stateStore, permanentStore });
 
+        const eventStore = createEventStore({ emitter, id });
 
+        //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
+
+        const contextDispatcher = bindContextDispatcher({ emitter, context, stateStore, permanentStore, eventStore });
         // Forward requests from emitted state to async request handler
         const subscribeToRequest = (type: string, callback: (event: Event) => Promise<any>): void => {
             emitter.on(type, async (event: Event) => {
                 try {
                     const response = await callback(event.payload);
-                    eventStore.dispatch({
+                    contextDispatcher.dispatch({
                         type: event.type,
                         payload: { response }
                     })
                 } catch (error) {
-                    eventStore.dispatch({
+                    contextDispatcher.dispatch({
                         type: event.type,
                         payload: { error }
                     })
@@ -63,13 +67,18 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         }
         //@todo it would be great to ensure that the passed-in context .errors are all unique to avoid unexpected errors
 
+        const dispatch = async (event: Event) => {
+            await contextDispatcher.dispatch(event);
+        }
+
         const registeredContext = {
             id,
             context,
-            eventStore,
             subscribeToRequest,
             stateStore,
-            permanentStore
+            permanentStore,
+            dispatch,
+            eventStore
         } as RegisteredContext
         registeredContexts.push(registeredContext);
 
