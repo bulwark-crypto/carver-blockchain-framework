@@ -1,4 +1,4 @@
-import { RegisteredContext } from "../../classes/eventStore";
+import { RegisteredContext } from "../contextDispatcher";
 import { Event, createEvent } from "../interfaces/events";
 
 interface StreamEventsFromContextParams {
@@ -29,7 +29,7 @@ const withContext = (context: RegisteredContext) => {
     const contextChain = {} as WithContextChain
 
     contextChain.dispatch = async (event: Event) => {
-        await context.eventStore.emit(event);
+        await context.eventStore.dispatch(event);
 
         return contextChain;
     }

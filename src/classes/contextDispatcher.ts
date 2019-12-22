@@ -2,21 +2,24 @@ import { EventEmitter } from "events"
 import { Context, State } from "./interfaces/context";
 import { Event } from './interfaces/events'
 import { withState } from "./logic/withState";
+import { PermanentStore } from "./interfaces/permanentStore";
 
 interface StateStore {
     state: any;
 }
 export interface RegisteredContext {
     context: Context;
-    eventStore: ReturnType<typeof createEventStore>;
+    eventStore: ReturnType<typeof bindContextDispatcher>;
     id: string;
     stateStore: StateStore;
+    //permanentStore: 
     subscribeToRequest: (type: string, callback: (event: Event) => Promise<any>) => void;
 }
 interface EventStoreParams {
     emitter: EventEmitter;
     context: Context;
     stateStore: StateStore;
+    permanentStore: PermanentStore;
 }
 interface QueryParams {
     context: RegisteredContext;
@@ -33,7 +36,7 @@ interface ReplayEventsParams {
     callback: (event: Event) => Promise<void>;
     //@todo add lastPlayedId
 }
-const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) => {
+const bindContextDispatcher = ({ emitter, context, stateStore, permanentStore }: EventStoreParams) => {
     const storedEvents: StoredEvent[] = []
     const selfSubscriptions: SelfEventSubscription[] = [];
 
@@ -138,6 +141,7 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
         stateStore.state = stateWithoutStorage;
 
         if (store) {
+            permanentStore.store(store);
             console.log('store:', store);
         }
     }
@@ -145,12 +149,13 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
     /**
      * Command state
      */
-    const emit = async (event: Event): Promise<void> => {
+    const dispatch = async (event: Event): Promise<void> => {
         // Note that his can throw (Notice that state chain is built into expected emit state return)
         const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
         stateStore.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
         //@todo One thing that is possible to do here is to not emit the store / events right away and add some batching. That way multiple events can be emitted in a batch
+
 
         await emitCurrentStateStore();
         await emitCurrentStateEvents();
@@ -161,10 +166,10 @@ const createEventStore = ({ emitter, context, stateStore }: EventStoreParams) =>
 
     return {
         replayEventsToCallback,
-        emit
+        dispatch
     }
 }
 
 export {
-    createEventStore
+    bindContextDispatcher
 }

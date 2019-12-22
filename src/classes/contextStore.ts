@@ -1,9 +1,12 @@
 const EventEmitter = require('events');
 
 import { Context, State } from './interfaces/context'
-import { RegisteredContext } from './eventStore'
+import { RegisteredContext } from './contextDispatcher'
 import { Event } from './interfaces/events'
-import { createEventStore } from '../classes/eventStore'
+import { bindContextDispatcher } from './contextDispatcher'
+
+//@todo this should be a global permanent store (so store can be non-mongodb)
+import { createPermanentStore } from '../classes/adapters/mongodb/permanentStore'
 
 interface RegisterContextParams {
     context: any;
@@ -32,22 +35,24 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         const stateStore = {
             state: initialState.isStateChain ? initialState.state : initialState
         }
+        const permanentStore = createPermanentStore({ id });
 
         // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
         const emitter = new EventEmitter();
-        const eventStore = createEventStore({ emitter, context, stateStore });
+        const eventStore = bindContextDispatcher({ emitter, context, stateStore, permanentStore });
+
 
         // Forward requests from emitted state to async request handler
         const subscribeToRequest = (type: string, callback: (event: Event) => Promise<any>): void => {
             emitter.on(type, async (event: Event) => {
                 try {
                     const response = await callback(event.payload);
-                    eventStore.emit({
+                    eventStore.dispatch({
                         type: event.type,
                         payload: { response }
                     })
                 } catch (error) {
-                    eventStore.emit({
+                    eventStore.dispatch({
                         type: event.type,
                         payload: { error }
                     })
@@ -63,7 +68,8 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             context,
             eventStore,
             subscribeToRequest,
-            stateStore
+            stateStore,
+            permanentStore
         } as RegisteredContext
         registeredContexts.push(registeredContext);
 

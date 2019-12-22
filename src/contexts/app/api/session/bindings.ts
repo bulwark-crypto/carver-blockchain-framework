@@ -1,5 +1,5 @@
 import { Event } from '../../../../classes/interfaces/events'
-import { RegisteredContext } from '../../../../classes/eventStore';
+import { RegisteredContext } from '../../../../classes/contextDispatcher';
 import { withContext } from '../../../../classes/logic/withContext';
 import { config } from '../../../../../config';
 import * as socketio from "socket.io";
