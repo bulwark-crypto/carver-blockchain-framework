@@ -1,4 +1,4 @@
-import { RegisteredContext } from '../../../../classes/contextDispatcher';
+import { RegisteredContext } from '../../../../classes/contextStore';
 import { rpc } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contextStore';
@@ -23,12 +23,7 @@ const benchmark = (...log: any) => {
 }*/
 
 const bindContexts = async (contextStore: ContextStore) => {
-    const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
-
-
-
-    // Queries to handle
     withContext(rpcBlocks)
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {
             //@todo we can split this up into two differnet contexts (RPC:BLOCKHASH, RPC:BLOCK)
@@ -37,8 +32,12 @@ const bindContexts = async (contextStore: ContextStore) => {
             const block = await rpc.call('getblock', [hash]);
 
             return block;
+        })
+        .handleStore(rpcBlocksContext.commonLanguage.storage.AddOne, async (rpcBlock) => {
+            console.log('@todo store this in mongodb', rpcBlock)
         });
 
+    const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
     withContext(rpcGetInfo)
         // Proxy event RPCGETINFO:UPDATED->RPCBLOCKS:INITIALIZE (no payload)
         .streamEvents({

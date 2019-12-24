@@ -21,7 +21,7 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
     return withState(state)
         .set({ height })
         .emit(commonLanguage.events.NewBlockReached, height)
-        .store(commonLanguage.storage.Add, block)
+        .store(commonLanguage.storage.AddOne, block)
         .reduce({ event, callback: withCommandParseGetInfo });
 }
 const withCommandParseGetInfo: Reducer = ({ state, event }) => {
@@ -30,7 +30,7 @@ const withCommandParseGetInfo: Reducer = ({ state, event }) => {
     const { blocks } = event.payload;
 
     // Limit the blocks to sync to first 1000 (expand when event store is completed)
-    if (state.height > 1000 || state.height >= blocks) {
+    if (state.height > 20 || state.height >= blocks) {
         return state;
     }
 
@@ -58,7 +58,7 @@ const commonLanguage = {
         GetByHeight: 'GET_BY_HEIGHT',
     },
     storage: {
-        Add: 'ADD'
+        AddOne: 'ADD_ONE'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'

@@ -2,33 +2,18 @@ import { EventEmitter } from "events"
 import { Context, State } from "./interfaces/context";
 import { Event } from './interfaces/events'
 import { EventStore } from './interfaces/eventStore'
+import { StateStore } from './interfaces/stateStore'
 import { withState } from "./logic/withState";
 import { PermanentStore } from "./interfaces/permanentStore";
 
-interface StateStore {
-    state: any;
-}
-export interface RegisteredContext {
-    context: Context;
-    id: string;
-    dispatch: (event: Event) => Promise<void>;
-    subscribeToRequest: (type: string, callback: (event: Event) => Promise<any>) => void;
-
-    stateStore: StateStore;
-    eventStore: EventStore;
-    permanentStore: PermanentStore;
-}
 interface EventStoreParams {
     emitter: EventEmitter;
     context: Context;
     stateStore: StateStore;
-    permanentStore: PermanentStore;
+    storeSubscriptions: Map<string, ((payload: any) => Promise<any>)[]>;
     eventStore: EventStore;
 }
-interface QueryParams {
-    context: RegisteredContext;
-}
-const bindContextDispatcher = ({ emitter, context, stateStore, permanentStore, eventStore }: EventStoreParams) => {
+const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscriptions, eventStore }: EventStoreParams) => {
 
     /**
      * Emits any outstanding events in state
@@ -63,8 +48,7 @@ const bindContextDispatcher = ({ emitter, context, stateStore, permanentStore, e
 
         if (request) {
             request.forEach((event: Event) => {
-                //console.log('emit:', event);
-                emitter.emit(event.type, event);
+                emitter.emit(event.type, event); // Notice that we pass the entire event as the payload. This is done to be able to access the type of event in the callback.
             });
         }
     }
@@ -75,8 +59,21 @@ const bindContextDispatcher = ({ emitter, context, stateStore, permanentStore, e
         stateStore.state = stateWithoutStorage;
 
         if (store) {
-            await permanentStore.store(store);
-            console.log('store:', store);
+            //@todo we can do all of this storing in parallel
+
+            // For each .store object find the appropritate handler and forward the payload there.
+            for await (const { query, payload } of store) {
+
+                if (!storeSubscriptions.has(query)) {
+                    console.log(`Unhandled store query: ${query}`)
+                    return;
+                }
+
+                const subscriptions = storeSubscriptions.get(query);
+                for await (const subscription of subscriptions) {
+                    await subscription(payload);
+                }
+            }
         }
     }
 

@@ -1,13 +1,15 @@
 const EventEmitter = require('events');
 
 import { Context, State } from './interfaces/context'
-import { RegisteredContext } from './contextDispatcher'
 import { Event } from './interfaces/events'
+import { PermanentStore } from './interfaces/permanentStore';
 import { createEventStore } from './eventStore'
 import { bindContextDispatcher } from './contextDispatcher'
 
 //@todo this should be a global permanent store (so store can be non-mongodb)
 import { createPermanentStore } from '../classes/adapters/mongodb/permanentStore'
+import { StateStore } from './interfaces/stateStore';
+import { EventStore } from './interfaces/eventStore';
 
 interface RegisterContextParams {
     context: any;
@@ -24,6 +26,17 @@ interface ContextStore {
     get: (context: any, id?: string) => Promise<RegisteredContext>;
     getParent: (id: string) => ContextStore;
 }
+export interface RegisteredContext {
+    context: Context;
+    id: string;
+    dispatch: (event: Event) => Promise<void>;
+    subscribeToRequest: (type: string, callback: (event: Event) => Promise<any>) => void;
+    subscribeToStore: (type: string, callback: (payload: any) => Promise<any>) => void;
+
+    stateStore: StateStore;
+    eventStore: EventStore;
+    permanentStore: PermanentStore;
+}
 
 const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
     const registeredContexts: RegisteredContext[] = [];
@@ -36,7 +49,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         const stateStore = {
             state: initialState.isStateChain ? initialState.state : initialState
         }
-        const permanentStore = createPermanentStore({ id });
+        const permanentStore = null as PermanentStore;//createPermanentStore({ id });
 
         // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
         const emitter = new EventEmitter();
@@ -45,7 +58,11 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
         //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
-        const contextDispatcher = bindContextDispatcher({ emitter, context, stateStore, permanentStore, eventStore });
+
+        const storeSubscriptions = new Map<string, ((payload: any) => Promise<any>)[]>();
+
+        const contextDispatcher = bindContextDispatcher({ emitter, context, stateStore, storeSubscriptions, eventStore });
+
         // Forward requests from emitted state to async request handler
         const subscribeToRequest = (type: string, callback: (event: Event) => Promise<any>): void => {
             emitter.on(type, async (event: Event) => {
@@ -65,7 +82,16 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
             });
         }
-        //@todo it would be great to ensure that the passed-in context .errors are all unique to avoid unexpected errors
+
+
+        const subscribeToStore = (type: string, callback: (payload: any) => Promise<any>): void => {
+            if (!storeSubscriptions.has(type)) {
+                storeSubscriptions.set(type, []);
+            }
+
+            storeSubscriptions.get(type).push(callback)
+        }
+
 
         const dispatch = async (event: Event) => {
             await contextDispatcher.dispatch(event);
@@ -73,12 +99,16 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
         const registeredContext = {
             id,
+
             context,
-            subscribeToRequest,
+            dispatch,
+
             stateStore,
             permanentStore,
-            dispatch,
-            eventStore
+            eventStore,
+
+            subscribeToRequest,
+            subscribeToStore,
         } as RegisteredContext
         registeredContexts.push(registeredContext);
 

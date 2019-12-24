@@ -11,12 +11,25 @@ export interface Context {
     reducer: <T>(params: ReducerParams) => T;
 }
 export interface State {
+
     /**
-     * Every state can emit it's own events
-     */
-    emit?: Event[];
-    /**
-     * Every state can request outside context to handle it
+     * - Can not be queried
+     * - Not stored
      */
     request?: Event[];
+
+    /**
+     * - Can be queried
+     * - Handled out of order
+     * - Storage external to binding (ex: store in db)
+     */
+    store?: Event[];
+
+    /**
+     * - Can not be queried
+     * - Stored in order
+     * - Can be streamed in batches
+     * - Id of event is always the index where it was inserted. This allows multiple events to occur in the same Date/Time in order.
+     */
+    emit?: Event[];
 }

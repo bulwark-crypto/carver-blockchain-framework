@@ -1,4 +1,4 @@
-import { RegisteredContext } from "../contextDispatcher";
+import { RegisteredContext } from "../../classes/contextStore";
 import { Event, createEvent } from "../interfaces/events";
 
 interface StreamEventsFromContextParams {
@@ -23,6 +23,7 @@ interface WithContextChain {
     streamEvents: (params: StreamEventsParams) => WithContextChain;
     handleRequest: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
     handleQuery: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
+    handleStore: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
 
 }
 const withContext = (context: RegisteredContext) => {
@@ -47,15 +48,23 @@ const withContext = (context: RegisteredContext) => {
     }*/
 
     contextChain.streamEvents = ({ type, callback }: StreamEventsParams) => {
-        context.eventStore.streamEvents({ type, callback });
+        context.eventStore.streamEvents({ type, callback }); //@todo withEventStore(eventStore).streamEvents? Move this out?
 
         return contextChain;
     }
 
     contextChain.handleRequest = (type: string, callback: (event: Event) => Promise<any>) => {
         context.subscribeToRequest(type, callback);
+
         return contextChain;
     }
+    contextChain.handleStore = (type: string, callback: (event: Event) => Promise<any>) => {
+        context.subscribeToStore(type, callback);
+
+        return contextChain;
+    }
+
+
     contextChain.handleQuery = contextChain.handleRequest;
 
     return contextChain;
