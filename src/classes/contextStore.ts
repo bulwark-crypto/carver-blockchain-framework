@@ -7,7 +7,6 @@ import { createEventStore } from './eventStore'
 import { bindContextDispatcher } from './contextDispatcher'
 
 //@todo this should be a global permanent store (so store can be non-mongodb)
-import { createPermanentStore } from '../classes/adapters/mongodb/permanentStore'
 import { StateStore } from './interfaces/stateStore';
 import { EventStore } from './interfaces/eventStore';
 
@@ -35,7 +34,6 @@ export interface RegisteredContext {
 
     stateStore: StateStore;
     eventStore: EventStore;
-    permanentStore: PermanentStore;
 }
 
 const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
@@ -49,8 +47,6 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         const stateStore = {
             state: initialState.isStateChain ? initialState.state : initialState
         }
-        const permanentStore = null as PermanentStore;//createPermanentStore({ id });
-
         // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
         const emitter = new EventEmitter();
 
@@ -104,7 +100,6 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             dispatch,
 
             stateStore,
-            permanentStore,
             eventStore,
 
             subscribeToRequest,

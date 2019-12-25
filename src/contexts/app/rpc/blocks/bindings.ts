@@ -1,4 +1,7 @@
 import { RegisteredContext } from '../../../../classes/contextStore';
+
+import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
+
 import { rpc } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contextStore';
@@ -23,6 +26,8 @@ const benchmark = (...log: any) => {
 }*/
 
 const bindContexts = async (contextStore: ContextStore) => {
+    const db = await dbStore.get();
+
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
     withContext(rpcBlocks)
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {
@@ -34,7 +39,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             return block;
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.AddOne, async (rpcBlock) => {
-            console.log('@todo store this in mongodb', rpcBlock)
+            await db.collection('blocks').insertOne(rpcBlock)
         });
 
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);

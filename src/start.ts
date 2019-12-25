@@ -1,6 +1,7 @@
 import { createContextStore } from './classes/contextStore'
-import { createEvent, CreateEventParams } from './classes/interfaces/events'
-import { Context } from './classes/interfaces/context'
+
+import { dbStore } from './classes/adapters/mongodb/mongoDbInstance'
+import { config } from '../config'
 
 import appContext from './contexts/app/context'
 
@@ -37,6 +38,9 @@ import { withContext } from './classes/logic/withContext'
 const start = async () => {
 
   console.log('Starting Carver Blockchain Framework')
+
+  await dbStore.initialize(config.db.url, config.db.dbName);
+  console.log('Connected to database!');
 
   const contextStore = createContextStore({ id: 'CORE' });
 

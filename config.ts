@@ -7,11 +7,12 @@ export const config = {
         timeoutMs: 8 * 1000, // 8 seconds
     },
     db: {
-        host: '127.0.0.1',
-        port: '27017',
-        name: 'blockex',
-        username: 'blockexuser',
-        password: 'Explorer!1'
+        url: 'mongodb://127.0.0.1:27017',
+
+        username: 'dbuser',
+        password: 'dbpassword123!',
+
+        dbName: 'carverFramework',
     },
     api: {
         socket: {
