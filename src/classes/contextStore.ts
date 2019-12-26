@@ -31,6 +31,7 @@ export interface RegisteredContext {
     dispatch: (event: Event) => Promise<void>;
     subscribeToRequest: (type: string, callback: (event: Event) => Promise<any>) => void;
     subscribeToStore: (type: string, callback: (payload: any) => Promise<any>) => void;
+    query: (query: string, payload: any) => Promise<any>;
 
     stateStore: StateStore;
     eventStore: EventStore;
@@ -55,7 +56,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
 
-        const storeSubscriptions = new Map<string, ((payload: any) => Promise<any>)[]>();
+        const storeSubscriptions = new Map<string, ((payload: any) => Promise<any>)[]>(); // @todo should this be an array or a query can only be handled by a single callback?
 
         const contextDispatcher = bindContextDispatcher({ emitter, context, stateStore, storeSubscriptions, eventStore });
 
@@ -93,6 +94,19 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             await contextDispatcher.dispatch(event);
         }
 
+        const query = async (query: string, payload: any) => {
+
+            if (!storeSubscriptions.has(query)) {
+                console.log(`Unhandled store query: ${query} (context id: ${id})`)
+                return;
+            }
+
+            const subscriptions = storeSubscriptions.get(query);
+            for await (const subscription of subscriptions) {
+                return await subscription(payload);
+            }
+        }
+
         const registeredContext = {
             id,
 
@@ -104,6 +118,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
             subscribeToRequest,
             subscribeToStore,
+            query
         } as RegisteredContext
         registeredContexts.push(registeredContext);
 

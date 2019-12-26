@@ -58,7 +58,8 @@ const commonLanguage = {
         GetByHeight: 'GET_BY_HEIGHT',
     },
     storage: {
-        AddOne: 'ADD_ONE'
+        AddOne: 'ADD_ONE',
+        GetBlockByHeight: 'GET_BLOCK_BY_HEIGHT',
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'

@@ -36,7 +36,7 @@ const withHandleRequestGetTx: Reducer = ({ state, event }) => {
 /**
  * Add new txs to fetch
  */
-const withRpcNewBlock: Reducer = ({ state, event }) => {
+const withParseBlock: Reducer = ({ state, event }) => {
     const block = event.payload;
     const { tx: txs, height } = block;
 
@@ -62,13 +62,13 @@ const withRpcNewBlock: Reducer = ({ state, event }) => {
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.commands.NewBlock, event, callback: withRpcNewBlock })
+        .reduce({ type: commonLanguage.commands.ParseBlock, event, callback: withParseBlock })
         .reduce({ type: commonLanguage.queries.GetRawTransaction, event, callback: withHandleRequestGetTx });
 }
 
 const commonLanguage = {
     commands: {
-        NewBlock: 'NEW_BLOCK'
+        ParseBlock: 'PARSE_BLOCK'
     },
     events: {
         NewTxFound: 'NEW_TX_FOUND'

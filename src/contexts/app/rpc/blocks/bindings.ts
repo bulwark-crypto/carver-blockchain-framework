@@ -40,6 +40,9 @@ const bindContexts = async (contextStore: ContextStore) => {
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.AddOne, async (rpcBlock) => {
             await db.collection('blocks').insertOne(rpcBlock)
+        })
+        .handleStore(rpcBlocksContext.commonLanguage.storage.GetBlockByHeight, async (height) => {
+            return await db.collection('blocks').findOne({ height })
         });
 
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);

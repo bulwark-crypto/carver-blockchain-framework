@@ -8,14 +8,13 @@ import rpcBlocksContext from '../blocks/context'
 
 const bindContexts = async (contextStore: ContextStore) => {
     const rpcTxs = await contextStore.get(rpcTxsContext);
-    const rpcBlocks = await contextStore.get(rpcBlocksContext);
+    const withRpcTxs = withContext(rpcTxs);
 
-    /*
-    
-    */
+    const rpcBlocks = await contextStore.get(rpcBlocksContext);
+    const withRpcBlocks = withContext(rpcBlocks);
 
     // Queries to handle
-    withContext(rpcTxs)
+    withRpcTxs
         .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, height }) => {
             console.log(height);
 
@@ -32,11 +31,17 @@ const bindContexts = async (contextStore: ContextStore) => {
             }
         });
 
-    withContext(rpcBlocks)
-        // Proxy event RPC:NEW_BLOCK_REACHED->RPC_TXS:NEW_BLOCK
+
+    // Proxy event RPC:NEW_BLOCK_REACHED->RPC_TXS:NEW_BLOCK
+    withRpcBlocks
         .streamEvents({
             type: rpcBlocksContext.commonLanguage.events.NewBlockReached, callback: async (event) => {
-                await withContext(rpcTxs).dispatch({ type: rpcTxsContext.commonLanguage.commands.NewBlock, payload: event.payload });
+                const height = event.payload;
+
+                // Get rpc block from permanent store by height
+                const block = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.GetBlockByHeight, height);
+
+                await rpcTxs.dispatch({ type: rpcTxsContext.commonLanguage.commands.ParseBlock, payload: block });
             }
         });
 
