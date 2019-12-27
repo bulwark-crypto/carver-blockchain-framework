@@ -26,9 +26,51 @@ const benchmark = (...log: any) => {
 }*/
 
 const bindContexts = async (contextStore: ContextStore) => {
+    const rpcBlocks = await contextStore.get(rpcBlocksContext);
+
     const db = await dbStore.get();
 
-    const rpcBlocks = await contextStore.get(rpcBlocksContext);
+    /**
+     * Create unique index on blocks collection
+     */
+    const initCollections = async () => {
+        const contextVersion = await db.collection('contextVersions').findOne({ id: rpcBlocks.id });
+        if (!contextVersion) {
+            await db.collection('blocks').createIndex({ height: 1 }, { unique: true });
+            await db.collection('contextVersions').insertOne({ id: rpcBlocks.id });
+        }
+
+    }
+
+    /**
+     * Resume sate based on last inserted block
+     */
+    const resumeState = async () => {
+        const getLastHeight = async () => {
+            const blocks = await db.collection('blocks').find({}).sort({ height: -1 }).limit(1);
+            if (blocks) {
+                for await (const block of blocks) {
+                    return block.height;
+                }
+            }
+            return 0;
+        }
+        const height = await getLastHeight();
+
+        // Initialize context with the most recent height (So we can resume at next height)
+        await rpcBlocks.dispatch({
+            type: rpcBlocksContext.commonLanguage.commands.Initialize, payload: {
+                height
+            }
+        });
+    }
+
+
+    await initCollections();
+    await resumeState();
+
+    //@todo get blast block (initialize with height)
+
     withContext(rpcBlocks)
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {
             //@todo we can split this up into two differnet contexts (RPC:BLOCKHASH, RPC:BLOCK)
@@ -41,7 +83,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleStore(rpcBlocksContext.commonLanguage.storage.AddOne, async (rpcBlock) => {
             await db.collection('blocks').insertOne(rpcBlock)
         })
-        .handleStore(rpcBlocksContext.commonLanguage.storage.GetBlockByHeight, async (height) => {
+        .handleStore(rpcBlocksContext.commonLanguage.storage.GetByHeight, async (height) => {
             return await db.collection('blocks').findOne({ height })
         });
 
@@ -50,7 +92,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         // Proxy event RPCGETINFO:UPDATED->RPCBLOCKS:INITIALIZE (no payload)
         .streamEvents({
             type: rpcGetInfoContext.commonLanguage.events.Updated, callback: async (event) => {
-                await withContext(rpcBlocks).dispatch({ type: rpcBlocksContext.commonLanguage.commands.ParseGetInfo, payload: event.payload });
+                await rpcBlocks.dispatch({ type: rpcBlocksContext.commonLanguage.commands.ParseGetInfo, payload: event.payload });
             }
         });
 

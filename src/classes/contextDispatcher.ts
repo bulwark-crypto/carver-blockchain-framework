@@ -78,15 +78,11 @@ const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscription
     }
 
     /**
-     * Command state
+     * Emit current state effects (store/events/requests)
      */
-    const dispatch = async (event: Event): Promise<void> => {
-        // Note that his can throw (Notice that state chain is built into expected emit state return)
-        const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
-        stateStore.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
+    const emitSideffects = async (): Promise<void> => {
 
         //@todo One thing that is possible to do here is to not emit the store / events right away and add some batching. That way multiple events can be emitted in a batch
-
 
         await emitCurrentStateStore();
         await emitCurrentStateEvents();
@@ -96,7 +92,7 @@ const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscription
 
 
     return {
-        dispatch
+        emitSideffects
     }
 }
 

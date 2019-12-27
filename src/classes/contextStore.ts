@@ -28,6 +28,12 @@ interface ContextStore {
 export interface RegisteredContext {
     context: Context;
     id: string;
+    reduce: (event: Event) => void;
+    /**
+     * - Reduce an event
+     * - Store objects in permanent store
+     * - Store new events in event store
+     */
     dispatch: (event: Event) => Promise<void>;
     subscribeToRequest: (type: string, callback: (event: Event) => Promise<any>) => void;
     subscribeToStore: (type: string, callback: (payload: any) => Promise<any>) => void;
@@ -65,12 +71,12 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             emitter.on(type, async (event: Event) => {
                 try {
                     const response = await callback(event.payload);
-                    contextDispatcher.dispatch({
+                    dispatch({
                         type: event.type,
                         payload: { response }
                     })
                 } catch (error) {
-                    contextDispatcher.dispatch({
+                    dispatch({
                         type: event.type,
                         payload: { error }
                     })
@@ -91,7 +97,12 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
 
         const dispatch = async (event: Event) => {
-            await contextDispatcher.dispatch(event);
+            // Note that his can throw (Notice that state chain is built into expected emit state return)
+            const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
+            stateStore.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
+
+            // Emits any side effects after executing the command (requests,events,store)
+            await contextDispatcher.emitSideffects();
         }
 
         const query = async (query: string, payload: any) => {

@@ -4,6 +4,7 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 const withQueryGetBlock: Reducer = ({ state, event }) => {
     const { response: block, error } = event.payload;
 
+
     //@todo also  checkRpcErrors
     if (error) {
         //@todo This function should only accept respones (no error). 
@@ -35,17 +36,29 @@ const withCommandParseGetInfo: Reducer = ({ state, event }) => {
     }
 
     return withState(state)
-        .query(commonLanguage.queries.GetByHeight, state.height + 1); // Request 
+        .query(commonLanguage.queries.GetByHeight, state.height + 1); // Request next block (if available)
+}
+const withCommandInitialize: Reducer = ({ state, event }) => {
+    const { height } = event.payload;
+
+    return withState(state)
+        .set({ height })
+        .query(commonLanguage.queries.GetByHeight, height + 1); // Request next block (if available)
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.ParseGetInfo, event, callback: withCommandParseGetInfo })
         .reduce({ type: commonLanguage.queries.GetByHeight, event, callback: withQueryGetBlock });
 }
 
 const commonLanguage = {
     commands: {
+        /**
+         * Resume context with latest height
+         */
+        Initialize: 'INITIALIZE',
         /**
          * Parse RPC getinfo results to fetch the block height from
          */
@@ -59,7 +72,7 @@ const commonLanguage = {
     },
     storage: {
         AddOne: 'ADD_ONE',
-        GetBlockByHeight: 'GET_BLOCK_BY_HEIGHT',
+        GetByHeight: 'GET_BY_HEIGHT',
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'
