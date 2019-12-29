@@ -30,14 +30,17 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     const db = await dbStore.get();
 
+
+
     /**
      * Create unique index on blocks collection
      */
     const initCollections = async () => {
-        const contextVersion = await db.collection('contextVersions').findOne({ id: rpcBlocks.id });
+        const contextVersion = await db.collection('versions').findOne({ id: rpcBlocks.id });
         if (!contextVersion) {
             await db.collection('blocks').createIndex({ height: 1 }, { unique: true });
-            await db.collection('contextVersions').insertOne({ id: rpcBlocks.id });
+
+            await db.collection('versions').insertOne({ id: rpcBlocks.id, version: 1 }); // with version we can do easy update migrations
         }
 
     }
@@ -68,8 +71,6 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     await initCollections();
     await resumeState();
-
-    //@todo get blast block (initialize with height)
 
     withContext(rpcBlocks)
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {

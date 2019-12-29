@@ -25,10 +25,11 @@ const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscription
         stateStore.state = stateWithoutEvents
 
         if (emit) {
-            // Store newly emitted events
+            // Store newly emitted events (this will add them to db)
             await eventStore.store(emit);
 
-            // notify all subscribers that there is a new event of the types in permanent store
+            // Notify all subscribers that there is a new event of the types in permanent store
+            // This will also notify eventStore streamEvents() listeners if they are already not replaying
             (emit as Event[]).forEach((event) => {
                 emitter.emit(event.type, event);
 

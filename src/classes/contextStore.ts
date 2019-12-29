@@ -16,6 +16,7 @@ interface RegisterContextParams {
 }
 interface CreateContextStoreOptions {
     id: string;
+    version?: number;
     parent?: any;
 }
 interface ContextStore {
@@ -28,6 +29,7 @@ interface ContextStore {
 export interface RegisteredContext {
     context: Context;
     id: string;
+    version: number;
     reduce: (event: Event) => void;
     /**
      * - Reduce an event
@@ -57,7 +59,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
         const emitter = new EventEmitter();
 
-        const eventStore = createEventStore({ emitter, id });
+        const eventStore = await createEventStore({ emitter, id });
 
         //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 

@@ -1,5 +1,5 @@
 import { RegisteredContext } from "../../classes/contextStore";
-import { Event, createEvent } from "../interfaces/events";
+import { Event } from "../interfaces/events";
 
 interface StreamEventsFromContextParams {
     type: string;

@@ -1,5 +1,5 @@
 import { RegisteredContext } from '../../../../classes/contextStore';
-import { Event, createEvent } from '../../../../classes/interfaces/events'
+import { Event } from '../../../../classes/interfaces/events'
 import { ContextStore } from '../../../../classes/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { rpc } from '../../../../classes/libs/rpcInstance';
@@ -25,7 +25,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         // Proxy event APP:INITIALIZED->RPCGETINFO:INITIALIZE
         .streamEvents({
             type: appContext.commonLanguage.events.Initialized, callback: async (event) => {
-                await withContext(rpcGetInfo).dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize }); // event will be emitted to frontend with id (id, type, payload)
+                await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize }); // event will be emitted to frontend with id (id, type, payload)
             }
         })
 

@@ -7,6 +7,8 @@ const createDbInstance = () => {
     const initialize = async (url: string, dbName: string) => {
         const client = await MongoClient.connect(config.db.url, { useNewUrlParser: true });
         db = client.db(dbName);
+
+        return db;
     }
 
     /**

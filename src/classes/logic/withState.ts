@@ -1,4 +1,4 @@
-import { Event, createEvent } from '../interfaces/events'
+import { Event } from '../interfaces/events'
 import { ReducerParams } from '../interfaces/context'
 
 type Reducer = (params: ReducerParams) => WithStateChain;
@@ -44,7 +44,7 @@ const withState = (state: any) => {
             ...stateChain.state,
             emit: [
                 ...(stateChain.state.emit ? stateChain.state.emit : []),
-                createEvent({ type, payload })
+                { type, payload }
             ]
         };
         return stateChain;
@@ -73,7 +73,7 @@ const withState = (state: any) => {
             ...stateChain.state,
             request: [
                 ...(stateChain.state.request ? stateChain.state.request : []),
-                createEvent({ type, payload })
+                { type, payload }
             ]
         };
 

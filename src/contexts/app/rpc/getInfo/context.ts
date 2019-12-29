@@ -1,4 +1,4 @@
-import { Event, createEvent } from '../../../../classes/interfaces/events'
+import { Event } from '../../../../classes/interfaces/events'
 import { Context, State } from '../../../../classes/interfaces/context'
 //import { withInit } from '../logic/withInit'
 //import { withRpc } from '../logic/withRpc'

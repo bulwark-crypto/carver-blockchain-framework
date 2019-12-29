@@ -4,6 +4,7 @@ import { dbStore } from './classes/adapters/mongodb/mongoDbInstance'
 import { config } from '../config'
 
 import appContext from './contexts/app/context'
+import appBindings from './contexts/app/bindings'
 
 import apiRestContext from './contexts/app/api/rest/context'
 import apiRestBindings from './contexts/app/api/rest/bindings'
@@ -44,6 +45,7 @@ const start = async () => {
 
   const contextStore = createContextStore({ id: 'CORE' });
 
+  // APP will initialize db structure
   const app = await contextStore.register({
     context: appContext,
     id: 'APP'
@@ -96,6 +98,7 @@ const start = async () => {
 
   // Bind all contexts 
   const contextBindings = [
+    appBindings,
     rpcGetInfoBindings,
     rpcBlocksBindings,
     rpcTxsBindings,
@@ -110,7 +113,7 @@ const start = async () => {
     await contextBinding.bindContexts(contextStore as any);
   }
 
-  await withContext(app).dispatch({ type: appContext.commonLanguage.commands.Initialize })
+  await app.dispatch({ type: appContext.commonLanguage.commands.Initialize })
 }
 
 start();
