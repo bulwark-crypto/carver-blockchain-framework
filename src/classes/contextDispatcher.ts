@@ -8,29 +8,23 @@ import { PermanentStore } from "./interfaces/permanentStore";
 
 interface EventStoreParams {
     emitter: EventEmitter;
-    context: Context;
-    stateStore: StateStore;
     storeSubscriptions: Map<string, ((payload: any) => Promise<any>)[]>;
     eventStore: EventStore;
 }
-const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscriptions, eventStore }: EventStoreParams) => {
+const bindContextDispatcher = ({ emitter, storeSubscriptions, eventStore }: EventStoreParams) => {
 
     /**
      * Emits any outstanding events in state
      */
-    const emitCurrentStateEvents = async () => {
-        const { emit, ...stateWithoutEvents } = stateStore.state;
-
-        // Store state without emit
-        stateStore.state = stateWithoutEvents
-
+    const emitCurrentStateEvents = async (emit: Event[]) => {
         if (emit) {
+
             // Store newly emitted events (this will add them to db)
             await eventStore.store(emit);
 
             // Notify all subscribers that there is a new event of the types in permanent store
             // This will also notify eventStore streamEvents() listeners if they are already not replaying
-            (emit as Event[]).forEach((event) => {
+            emit.forEach((event) => {
                 emitter.emit(event.type, event);
 
                 // The event is emitted second time to any wildcard listeners (ex: any widget events)
@@ -38,27 +32,16 @@ const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscription
             });
 
         }
-
     }
 
-    const emitCurrentStateRequests = async () => {
-        const { request, ...stateWithoutRequests } = stateStore.state;
-
-        // Store state without request
-        stateStore.state = stateWithoutRequests;
-
-        if (request) {
-            request.forEach((event: Event) => {
+    const emitCurrentStateQueries = async (queries: Event[]) => {
+        if (queries) {
+            queries.forEach((event: Event) => {
                 emitter.emit(event.type, event); // Notice that we pass the entire event as the payload. This is done to be able to access the type of event in the callback.
             });
         }
     }
-    const emitCurrentStateStore = async () => {
-        const { store, ...stateWithoutStorage } = stateStore.state;
-
-        // Store state without storage
-        stateStore.state = stateWithoutStorage;
-
+    const emitCurrentStateStore = async (store: any[]) => {
         if (store) {
             //@todo we can do all of this storing in parallel
 
@@ -78,22 +61,24 @@ const bindContextDispatcher = ({ emitter, context, stateStore, storeSubscription
         }
     }
 
-    /**
-     * Emit current state effects (store/events/requests)
-     */
-    const emitSideffects = async (): Promise<void> => {
+    const emitState = async (state: any) => {
 
-        //@todo One thing that is possible to do here is to not emit the store / events right away and add some batching. That way multiple events can be emitted in a batch
+        const { store, emit, request, ...stateWithoutSideEffects } = state;
 
-        await emitCurrentStateStore();
-        await emitCurrentStateEvents();
+        // First we ensure that we succeed on .store()
+        await emitCurrentStateStore(store);
 
-        await emitCurrentStateRequests();
+        // Then we ensure all events are properly stored in event store
+        await emitCurrentStateEvents(emit);
+
+        // Lastly emit the queries
+        await emitCurrentStateQueries(request);
+
+        return stateWithoutSideEffects;
     }
 
-
     return {
-        emitSideffects
+        emitState
     }
 }
 

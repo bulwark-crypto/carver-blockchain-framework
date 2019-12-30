@@ -64,9 +64,9 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
 
-        const storeSubscriptions = new Map<string, ((payload: any) => Promise<any>)[]>(); // @todo should this be an array or a query can only be handled by a single callback?
+        const storeSubscriptions = new Map<string, ((payload: any) => Promise<any>)[]>(); // @todo should NOT be an array or a query can only be handled by a single callback?
 
-        const contextDispatcher = bindContextDispatcher({ emitter, context, stateStore, storeSubscriptions, eventStore });
+        const contextDispatcher = bindContextDispatcher({ emitter, storeSubscriptions, eventStore });
 
         // Forward requests from emitted state to async request handler
         const subscribeToRequest = (type: string, callback: (event: Event) => Promise<any>): void => {
@@ -101,10 +101,12 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         const dispatch = async (event: Event) => {
             // Note that his can throw (Notice that state chain is built into expected emit state return)
             const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
-            stateStore.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
-            // Emits any side effects after executing the command (requests,events,store)
-            await contextDispatcher.emitSideffects();
+            // Notice that we store the new reducer after emitting the side effects
+            const state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
+
+            // Replace state with reducer results if there are no exceptions in storing events
+            stateStore.state = await contextDispatcher.emitState(state);
         }
 
         const query = async (query: string, payload: any) => {

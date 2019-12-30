@@ -17,10 +17,8 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
     const db = await dbStore.get();
 
-    console.log(`Initializing Event Store: ${id}`)
 
     const eventsCollectionName = `eventStore_${id}`;
-
 
     const initializeEventStore = async () => {
 
@@ -34,22 +32,48 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
     }
     await initializeEventStore();
 
+    const getLastSequence = async () => {
+        const lastEvents = await db.collection(eventsCollectionName).find({}).sort({ sequence: -1 }).limit(1);
+        if (lastEvents) {
+
+            for await (const event of lastEvents) {
+                console.log(event);
+                return event.sequence;
+            }
+        }
+        return 0;
+    }
+
+    let sequence = await getLastSequence();
+
+    console.log(`Event Store: ${id} (sequence: ${sequence})`)
 
     const store = async (events: Event[]) => {
+
+        let newSequence = sequence;
+
         // Store any new events to emit
-        const storedEventsToEmit: StoredEvent[] = []
+        const storedEvents: StoredEvent[] = []
         events.forEach((event: Event) => {
+            newSequence++
+
             const storedEvent = {
                 ...event,
-                sequence: storedEvents.length
+                sequence: newSequence
             } as StoredEvent
-            storedEventsToEmit.push(storedEvent)
 
             // This can be async and take a while. The goal is that store is guaranteed before notify
             storedEvents.push(storedEvent);
         });
 
-        //@todo
+
+        await db.collection(eventsCollectionName).insertMany(storedEvents);
+
+        // context sequence is now updated after successful inserts
+        sequence = newSequence;
+
+        console.log(id, storedEvents);
+
 
     }
     const streamEvents = ({ type, callback }: ReplayEventsParams): void => {
