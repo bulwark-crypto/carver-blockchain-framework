@@ -5,6 +5,7 @@ import { dbStore } from './adapters/mongodb/mongoDbInstance'
 
 interface StoredEvent extends Event {
     sequence: number;
+    date: Date;
 }
 interface CreateEventStoreParams {
     emitter: EventEmitter;
@@ -13,7 +14,7 @@ interface CreateEventStoreParams {
 
 //@todo remove emitter from here
 const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promise<EventStore> => {
-    const storedEvents: StoredEvent[] = [];
+    //const storedEvents: StoredEvent[] = [];
 
     const db = await dbStore.get();
 
@@ -24,7 +25,8 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
         const version = await db.collection('versions').findOne({ id: eventsCollectionName });
         if (!version) {
-            await db.collection(eventsCollectionName).createIndex({ sequence: 1 }, { unique: true });
+            await db.collection(eventsCollectionName).createIndex({ type: 1, sequence: 1 }, { unique: true }); // for ability to queue by type+sequence
+            await db.collection(eventsCollectionName).createIndex({ sequence: 1 }, { unique: true }); // for ability to queue all events
 
             await db.collection('versions').insertOne({ id: eventsCollectionName, version: 1 });
         }
@@ -37,7 +39,7 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
         if (lastEvents) {
 
             for await (const event of lastEvents) {
-                console.log(event);
+                //console.log(event);
                 return event.sequence;
             }
         }
@@ -50,6 +52,8 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
     const store = async (events: Event[]) => {
 
+        const date = new Date();
+
         let newSequence = sequence;
 
         // Store any new events to emit
@@ -59,7 +63,8 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
             const storedEvent = {
                 ...event,
-                sequence: newSequence
+                sequence: newSequence,
+                date
             } as StoredEvent
 
             // This can be async and take a while. The goal is that store is guaranteed before notify
@@ -76,10 +81,21 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
 
     }
-    const streamEvents = ({ type, callback }: ReplayEventsParams): void => {
+    const streamEvents = ({ type, sequence, callback }: ReplayEventsParams): void => {
         const subscriber = {
             isReplaying: false,
-            lastPlayedId: undefined as number
+            sequence: sequence ? sequence : 0
+        }
+
+        const getQuery = () => {
+            let query = { sequence: { $gt: subscriber.sequence } }
+            if (type) {
+                return {
+                    type,
+                    ...query,
+                }
+            }
+            return
         }
 
         const replayEvents = async () => {
@@ -91,8 +107,11 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
             // Fetch new events to replay            
             while (true) {
-                const permanentEventsByType = type === '*' ? storedEvents : storedEvents.filter(event => event.type === type);
-                const eventsToReplay = subscriber.lastPlayedId !== undefined ? permanentEventsByType.filter(event => event.sequence > subscriber.lastPlayedId) : permanentEventsByType;
+                const query = getQuery();
+                const eventsToReplay = await db.collection(eventsCollectionName).find(query).limit(100).toArray(); // batch size of 100
+
+                //const permanentEventsByType = type === '*' ? storedEvents : storedEvents.filter(event => event.type === type);
+                //const eventsToReplay = subscriber.lastPlayedId !== undefined ? permanentEventsByType.filter(event => event.sequence > subscriber.lastPlayedId) : permanentEventsByType;
 
                 if (eventsToReplay.length === 0) {
                     break;
@@ -100,13 +119,18 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
                 // Replay new events
                 for await (const eventToReplay of eventsToReplay) {
-                    const { sequence, ...event } = eventToReplay;
+                    if (!eventToReplay.sequence) {
+                        throw `Invalid event replay sequence: ${type} ${id}`
+                    }
+                    console.log(`replay: ${type} ${id} ${eventToReplay.sequence}`)
+                    //console.log('replay:', eventToReplay)
+                    //const { sequence, ...event } = eventToReplay;
 
-                    await callback(event);
+                    await callback(eventToReplay);
 
                     //await context.eventStore.emit(event);
 
-                    subscriber.lastPlayedId = sequence;
+                    subscriber.sequence = eventToReplay.sequence;
                 }
             }
 

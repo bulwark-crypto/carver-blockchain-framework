@@ -68,7 +68,7 @@ const commonLanguage = {
         NewBlockReached: 'NEW_BLOCK_REACHED'
     },
     queries: {
-        GetByHeight: 'GET_BY_HEIGHT',
+        GetByHeight: 'GET_BY_HEIGHT', //@todo notice that these are named the same.
     },
     storage: {
         AddOne: 'ADD_ONE',

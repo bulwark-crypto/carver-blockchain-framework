@@ -89,13 +89,14 @@ const bindContexts = async (contextStore: ContextStore) => {
         });
 
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
-    withContext(rpcGetInfo)
+
+    /*withContext(rpcGetInfo)
         // Proxy event RPCGETINFO:UPDATED->RPCBLOCKS:INITIALIZE (no payload)
         .streamEvents({
             type: rpcGetInfoContext.commonLanguage.events.Updated, callback: async (event) => {
                 await rpcBlocks.dispatch({ type: rpcBlocksContext.commonLanguage.commands.ParseGetInfo, payload: event.payload });
             }
-        });
+        });*/
 
 }
 
