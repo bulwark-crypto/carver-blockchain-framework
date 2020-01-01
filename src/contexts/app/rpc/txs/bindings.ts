@@ -41,7 +41,8 @@ const bindContexts = async (contextStore: ContextStore) => {
                 // Get rpc block from permanent store by height
                 const block = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.GetByHeight, height);
 
-                await rpcTxs.dispatch({ type: rpcTxsContext.commonLanguage.commands.ParseBlock, payload: block });
+                console.log('*** get');
+                //await rpcTxs.dispatch({ type: rpcTxsContext.commonLanguage.commands.ParseBlock, payload: block });
             }
         });
 

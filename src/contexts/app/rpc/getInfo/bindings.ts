@@ -23,10 +23,8 @@ const bindContexts = async (contextStore: ContextStore) => {
 
 
     withContext(app)
-        // Proxy event APP:INITIALIZED->RPCGETINFO:INITIALIZE
         .streamEvents({
-            type: appContext.commonLanguage.events.Initialized, callback: async (event) => {
-                //console.log(event);
+            type: appContext.commonLanguage.events.Initialized, sessionOnly: true, callback: async (event) => {
                 await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize }); // event will be emitted to frontend with id (id, type, payload)
             }
         })

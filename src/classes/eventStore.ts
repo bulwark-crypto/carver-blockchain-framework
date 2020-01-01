@@ -47,6 +47,7 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
     }
 
     let sequence = await getLastSequence();
+    const initialSequence = !!sequence ? sequence : 0;
 
     console.log(`Event Store: ${id} (sequence: ${sequence})`)
 
@@ -81,10 +82,10 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
 
     }
-    const streamEvents = ({ type, sequence, callback }: ReplayEventsParams): void => {
+    const streamEvents = ({ type, sequence, callback, sessionOnly }: ReplayEventsParams): void => {
         const subscriber = {
             isReplaying: false,
-            sequence: sequence ? sequence : 0
+            sequence: !!sequence ? sequence : (sessionOnly ? initialSequence : 0)
         }
 
         const getQuery = () => {

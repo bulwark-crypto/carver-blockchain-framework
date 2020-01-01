@@ -54,32 +54,32 @@ const start = async () => {
   //@todo we can nest these inside the app context
   await contextStore.register({
     context: rpcGetInfoContext,
-    id: 'RPC:GETINFO'
+    id: 'RPC_GETINFO'
   });
 
   await contextStore.register({
     context: rpcBlocksContext,
-    id: 'RPC:GETINFO'
+    id: 'RPC_BLOCKS'
   });
 
   await contextStore.register({
     context: rpcTxsContext,
-    id: 'RPC:TXS'
+    id: 'RPC_TXS'
   });
 
   await contextStore.register({
     context: apiRestContext,
-    id: 'API:REST'
+    id: 'API_REST'
   });
 
   await contextStore.register({
     context: apiSocketContext,
-    id: 'API:SOCKET'
+    id: 'API_SOCKET'
   });
 
   await contextStore.register({
     context: apiSessionContext,
-    id: 'API:SESSION'
+    id: 'API_SESSION'
   });
 
   await contextStore.register({

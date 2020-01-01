@@ -1,13 +1,10 @@
 import { RegisteredContext } from "../../classes/contextStore";
 import { Event } from "../interfaces/events";
+import { ReplayEventsParams } from "../interfaces/eventStore";
 
 interface StreamEventsFromContextParams {
     type: string;
     context: RegisteredContext;
-}
-interface StreamEventsParams {
-    type: string;
-    callback: (payload: any) => Promise<any>;
 }
 
 interface WithContextChain {
@@ -20,7 +17,7 @@ interface WithContextChain {
      * Stream events in automatically from the last sequence @todo redo to streamEventsToContext?
      */
     streamEventsFromContext: (params: StreamEventsFromContextParams) => WithContextChain;
-    streamEvents: (params: StreamEventsParams) => WithContextChain;
+    streamEvents: (params: ReplayEventsParams) => WithContextChain;
     handleRequest: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
     handleQuery: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
     handleStore: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
@@ -47,8 +44,8 @@ const withContext = (context: RegisteredContext) => {
         return contextChain;
     }*/
 
-    contextChain.streamEvents = ({ type, callback }: StreamEventsParams) => {
-        context.eventStore.streamEvents({ type, callback }); //@todo withEventStore(eventStore).streamEvents? Move this out?
+    contextChain.streamEvents = (params: ReplayEventsParams) => {
+        context.eventStore.streamEvents(params); //@todo withEventStore(eventStore).streamEvents? Move this out?
 
         return contextChain;
     }
