@@ -16,7 +16,7 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
 
     return withState(state)
         .set({ isBusyFetchingTxs: true })
-        .request(commonLanguage.queries.GetRawTransaction, { tx, height })
+        .query(commonLanguage.queries.GetRawTransaction, { tx, height })
 }
 
 /**
@@ -24,13 +24,21 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
  */
 const withHandleRequestGetTx: Reducer = ({ state, event }) => {
     const { response, error } = event.payload;
+
     if (error) {
         throw commonLanguage.errors.unableToFetchTx;
     }
 
+    // The response contains raw tx from rpc
+    const { rpcTx, height } = response;
+
     return withState(state)
         .set({ isBusyFetchingTxs: false })
-        .emit(commonLanguage.events.NewTxFound, response) // New tx added
+        .store(commonLanguage.storage.AddOne, {
+            ...rpcTx,
+            height
+        })
+        .emit(commonLanguage.events.NewTxFound, { height, id: rpcTx.txid })
         .reduce({ event, callback: withFetchNextTx })
 }
 /**
@@ -60,14 +68,23 @@ const withParseBlock: Reducer = ({ state, event }) => {
         })
         .reduce({ event, callback: withFetchNextTx })
 }
+const withCommandInitialize: Reducer = ({ state, event }) => {
+    const { height } = event.payload;
+
+    return withState(state)
+        .set({ height })
+}
+
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.ParseBlock, event, callback: withParseBlock })
         .reduce({ type: commonLanguage.queries.GetRawTransaction, event, callback: withHandleRequestGetTx });
 }
 
 const commonLanguage = {
     commands: {
+        Initialize: 'INITIALIZE',
         ParseBlock: 'PARSE_BLOCK'
     },
     events: {
@@ -75,6 +92,10 @@ const commonLanguage = {
     },
     queries: {
         GetRawTransaction: 'GET_RAW_TRANSACTION'
+    },
+    storage: {
+        AddOne: 'ADD_ONE',
+        GetByHeight: 'GET_BY_HEIGHT',
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',

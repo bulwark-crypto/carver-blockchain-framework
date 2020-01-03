@@ -14,6 +14,7 @@ interface Utxo {
 const withCommandParseTx: Reducer = ({ state, event }) => {
     const tx = event.payload;
 
+    //@todo these are not in payload
     const { txid, block, vout: vouts } = tx;
     if (!vouts) {
         throw commonLanguage.errors.noTxVout;

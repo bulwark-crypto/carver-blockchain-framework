@@ -27,14 +27,10 @@ const benchmark = (...log: any) => {
 
 const bindContexts = async (contextStore: ContextStore) => {
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
+    const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
 
     const db = await dbStore.get();
 
-
-
-    /**
-     * Create unique index on blocks collection
-     */
     const initCollections = async () => {
         const contextVersion = await db.collection('versions').findOne({ id: rpcBlocks.id });
         if (!contextVersion) {
@@ -44,10 +40,8 @@ const bindContexts = async (contextStore: ContextStore) => {
         }
 
     }
+    await initCollections();
 
-    /**
-     * Resume sate based on last inserted block
-     */
     const resumeState = async () => {
         const getLastHeight = async () => {
             const blocks = await db.collection('blocks').find({}).sort({ height: -1 }).limit(1);
@@ -67,9 +61,6 @@ const bindContexts = async (contextStore: ContextStore) => {
             }
         });
     }
-
-
-    await initCollections();
     await resumeState();
 
     withContext(rpcBlocks)
@@ -88,7 +79,6 @@ const bindContexts = async (contextStore: ContextStore) => {
             return await db.collection('blocks').findOne({ height })
         });
 
-    const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
 
     withContext(rpcGetInfo)
         .streamEvents({

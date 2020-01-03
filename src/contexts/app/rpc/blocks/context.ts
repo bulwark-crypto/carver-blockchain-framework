@@ -42,8 +42,8 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
     const { height } = event.payload;
 
     return withState(state)
-        .set({ height })
-        .query(commonLanguage.queries.GetByHeight, height + 1); // Request next block (if available)
+        .set({ height });
+    //.query(commonLanguage.queries.GetByHeight, height + 1); // Request next block (if available) // this is commented out because this would be called on getinfo, no ned to guess if the other block exists
 }
 
 const reducer: Reducer = ({ state, event }) => {
