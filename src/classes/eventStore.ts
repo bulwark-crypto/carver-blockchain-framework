@@ -77,10 +77,6 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
 
         // context sequence is now updated after successful inserts
         sequence = newSequence;
-
-        console.log(id, storedEvents);
-
-
     }
     const streamEvents = ({ type, sequence, callback, sessionOnly }: ReplayEventsParams): void => {
         const subscriber = {
@@ -123,13 +119,8 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
                     if (!eventToReplay.sequence) {
                         throw `Invalid event replay sequence: ${type} ${id}`
                     }
-                    console.log(`replay: ${type} ${id} ${eventToReplay.sequence}`)
-                    //console.log('replay:', eventToReplay)
-                    //const { sequence, ...event } = eventToReplay;
 
                     await callback(eventToReplay);
-
-                    //await context.eventStore.emit(event);
 
                     subscriber.sequence = eventToReplay.sequence;
                 }

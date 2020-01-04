@@ -38,7 +38,7 @@ const withHandleRequestGetTx: Reducer = ({ state, event }) => {
             ...rpcTx,
             height
         })
-        .emit(commonLanguage.events.NewTxFound, { height, id: rpcTx.txid })
+        .emit(commonLanguage.events.NewTxFound, { height, id: rpcTx.txid }) // this could emit txid only for even lighter weight
         .reduce({ event, callback: withFetchNextTx })
 }
 /**
@@ -96,6 +96,7 @@ const commonLanguage = {
     storage: {
         AddOne: 'ADD_ONE',
         GetByHeight: 'GET_BY_HEIGHT',
+        GetOneByTxId: 'GET_ONE_BY_TX_ID'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',

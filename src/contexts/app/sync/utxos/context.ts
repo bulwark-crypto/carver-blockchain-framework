@@ -12,14 +12,14 @@ interface Utxo {
  * Extract utxos from a tx
  */
 const withCommandParseTx: Reducer = ({ state, event }) => {
-    const tx = event.payload;
+    const rpcTx = event.payload;
 
     //@todo these are not in payload
-    const { txid, block, vout: vouts } = tx;
+    const { txid, height, vout: vouts } = rpcTx;
+
     if (!vouts) {
         throw commonLanguage.errors.noTxVout;
     }
-    const { height } = block;
 
     const utxos: Utxo[] = [];
     vouts.forEach((vout: any) => {
@@ -52,13 +52,15 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
         }
     });
 
+    console.log('*** utxos', utxos);
+
     return withState(state)
-        .emit(commonLanguage.events.TxParsed,
-            {
-                tx,
-                block,
-                utxos
-            });
+    /*.emit(commonLanguage.events.TxParsed,
+        {
+            tx,
+            block,
+            utxos
+        });*/
 
 }
 const reducer: Reducer = ({ state, event }) => {
