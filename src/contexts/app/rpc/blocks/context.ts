@@ -22,7 +22,7 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
     return withState(state)
         .set({ height })
         .emit(commonLanguage.events.NewBlockReached, height)
-        .store(commonLanguage.storage.AddOne, block)
+        .store(commonLanguage.storage.InsertOne, block)
         .reduce({ event, callback: withCommandParseGetInfo });
 }
 const withCommandParseGetInfo: Reducer = ({ state, event }) => {
@@ -71,7 +71,7 @@ const commonLanguage = {
         GetByHeight: 'GET_BY_HEIGHT', //@todo notice that these are named the same.
     },
     storage: {
-        AddOne: 'ADD_ONE',
+        InsertOne: 'INSERT_ONE',
         GetByHeight: 'GET_BY_HEIGHT',
     },
     errors: {

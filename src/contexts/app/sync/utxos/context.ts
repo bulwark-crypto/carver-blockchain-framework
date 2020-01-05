@@ -31,12 +31,12 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
 
                     const addresses = vout.scriptPubKey.addresses;
                     if (addresses.length !== 1) {
-                        throw 'ONLY PUBKEYS WITH 1 ADDRESS ARE SUPPORTED FOR NOW';
+                        throw 'ONLY PUBKEYS WITH 1 ADDRESS ARE SUPPORTED FOR NOW'; //@todo convert to commonLanguage error
                     }
                     if (vout.value === undefined) {
                         console.log(vout);
-                        console.log(tx);
-                        throw 'VOUT WITHOUT VALUE?';
+                        console.log(rpcTx);
+                        throw 'VOUT WITHOUT VALUE?'; //@todo convert to commonLanguage error
                     }
 
                     const address = addresses[0];
@@ -52,16 +52,10 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
         }
     });
 
-    console.log('*** utxos', utxos);
 
     return withState(state)
-    /*.emit(commonLanguage.events.TxParsed,
-        {
-            tx,
-            block,
-            utxos
-        });*/
-
+        .store(commonLanguage.storage.InsertMany, utxos)
+        .emit(commonLanguage.events.TxParsed, txid)
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
@@ -79,7 +73,12 @@ const commonLanguage = {
         heightMustBeSequential: 'Blocks must be sent in sequential order',
         unableToFetchTx: 'Unable to fetch TX',
         noTxVout: 'Unsupported transaction. (No vout[]).'
-    }
+    },
+    storage: {
+        InsertMany: 'INSERT_MANY',
+        GetByHeight: 'GET_BY_HEIGHT',
+        GetOneByTxId: 'GET_ONE_BY_TX_ID'
+    },
 }
 
 const initialState = {

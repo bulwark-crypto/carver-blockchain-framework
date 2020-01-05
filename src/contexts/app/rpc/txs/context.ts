@@ -34,11 +34,11 @@ const withHandleRequestGetTx: Reducer = ({ state, event }) => {
 
     return withState(state)
         .set({ isBusyFetchingTxs: false })
-        .store(commonLanguage.storage.AddOne, {
+        .store(commonLanguage.storage.InsertOne, {
             ...rpcTx,
             height
         })
-        .emit(commonLanguage.events.NewTxFound, { height, id: rpcTx.txid }) // this could emit txid only for even lighter weight
+        .emit(commonLanguage.events.NewTxFound, rpcTx.txid)
         .reduce({ event, callback: withFetchNextTx })
 }
 /**
@@ -94,7 +94,7 @@ const commonLanguage = {
         GetRawTransaction: 'GET_RAW_TRANSACTION'
     },
     storage: {
-        AddOne: 'ADD_ONE',
+        InsertOne: 'INSERT_ONE',
         GetByHeight: 'GET_BY_HEIGHT',
         GetOneByTxId: 'GET_ONE_BY_TX_ID'
     },

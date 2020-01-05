@@ -19,7 +19,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             await db.collection('txs').createIndex({ height: 1 }, { unique: true });
             await db.collection('txs').createIndex({ txid: 1 }, { unique: true });
 
-            await db.collection('versions').insertOne({ id: rpcTxs.id, version: 1 }); // with version we can do easy update migrations
+            await db.collection('versions').insertOne({ id: rpcTxs.id, version: 1 });
         }
     }
     await initCollections();
@@ -59,7 +59,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                 height
             }
         })
-        .handleStore(rpcTxsContext.commonLanguage.storage.AddOne, async (tx) => {
+        .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (tx) => {
             await db.collection('txs').insertOne(tx);
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.GetByHeight, async (height) => {
