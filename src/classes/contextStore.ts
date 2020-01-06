@@ -98,7 +98,13 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         }
 
 
+        let startedDispatching = false;
         const dispatch = async (event: Event) => {
+            if (startedDispatching) {
+                throw `You can only dispatch ${id} one at a time`;
+            }
+            startedDispatching = true;
+            console.log('[START]', id, event.type, stateStore.state.height);
             try {
                 // Note that his can throw (Notice that state chain is built into expected emit state return)
                 const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
@@ -106,12 +112,21 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 // Notice that we store the new reducer after emitting the side effects
                 const state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
+                //console.log('storing...', id);
+
+                // Store the new state before emitting events/queries (as those might alter state further)
+                stateStore.state = await contextDispatcher.storeState(state);
+                console.log('[STORED] ', id, state.height, stateStore.state.height);
+
                 // Replace state with reducer results if there are no exceptions in storing events
-                stateStore.state = await contextDispatcher.emitState(state);
+                await contextDispatcher.emitEventsAndQueries(state);
             } catch (err) {
                 console.log(`${id} exception:`);
                 throw err
             }
+            console.log('[END]', id, event.type, stateStore.state.height);
+
+            startedDispatching = false;
         }
 
         const query = async (query: string, payload: any) => {

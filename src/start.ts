@@ -81,20 +81,20 @@ const start = async () => {
     context: apiSessionContext,
     id: 'API_SESSION'
   });
-
-  await contextStore.register({
-    context: utxosContext,
-    id: 'UTXOS'
-  });
-  await contextStore.register({
-    context: requiredMovementsContext,
-    id: 'REQUIRED_MOVEMENTS'
-  });
-
-  await contextStore.register({
-    context: addressesContext,
-    id: 'ADDRESSES'
-  });
+  /*
+    await contextStore.register({
+      context: utxosContext,
+      id: 'UTXOS'
+    });
+    await contextStore.register({
+      context: requiredMovementsContext,
+      id: 'REQUIRED_MOVEMENTS'
+    });
+  
+    await contextStore.register({
+      context: addressesContext,
+      id: 'ADDRESSES'
+    });*/
 
   // Bind all contexts 
   const contextBindings = [
@@ -105,9 +105,9 @@ const start = async () => {
     apiRestBindings,
     apiSessionBindings,
     apiSocketBindings,
-    utxosBindings,
-    requiredMovementsBindings,
-    addressesBindings
+    //utxosBindings,
+    //requiredMovementsBindings,
+    //addressesBindings
   ];
   for await (const contextBinding of contextBindings) {
     await contextBinding.bindContexts(contextStore as any);

@@ -5,6 +5,8 @@ import { EventStore } from './interfaces/eventStore'
 import { StateStore } from './interfaces/stateStore'
 import { withState } from "./logic/withState";
 import { PermanentStore } from "./interfaces/permanentStore";
+const sleep = require('util').promisify(setTimeout)
+
 
 interface EventStoreParams {
     emitter: EventEmitter;
@@ -18,9 +20,6 @@ const bindContextDispatcher = ({ emitter, storeSubscriptions, eventStore }: Even
      */
     const emitCurrentStateEvents = async (emit: Event[]) => {
         if (emit) {
-
-            // Store newly emitted events (this will add them to db)
-            await eventStore.store(emit);
 
             // Notify all subscribers that there is a new event of the types in permanent store
             // This will also notify eventStore streamEvents() listeners if they are already not replaying
@@ -61,24 +60,39 @@ const bindContextDispatcher = ({ emitter, storeSubscriptions, eventStore }: Even
         }
     }
 
-    const emitState = async (state: any) => {
+    const storeState = async (state: any) => {
 
         const { store, emit, request, ...stateWithoutSideEffects } = state;
 
-        // First we ensure that we succeed on .store()
-        await emitCurrentStateStore(store);
+        if (store) {
+            // First we ensure that we succeed on .store()
+            await emitCurrentStateStore(store);
+        }
+        //await sleep(1000);
 
-        // Then we ensure all events are properly stored in event store
+        if (emit) {
+            // Store newly emitted events (this will add them to db)
+            await eventStore.store(emit);
+        }
+
+        //await sleep(1000);
+
+        return stateWithoutSideEffects;
+    }
+    const emitEventsAndQueries = async (state: any) => {
+        const { emit, request } = state;
+
+        // Emit any new events
         await emitCurrentStateEvents(emit);
 
         // Lastly emit the queries
         await emitCurrentStateQueries(request);
-
-        return stateWithoutSideEffects;
+        //await sleep(1000);
     }
 
     return {
-        emitState
+        storeState,
+        emitEventsAndQueries
     }
 }
 
