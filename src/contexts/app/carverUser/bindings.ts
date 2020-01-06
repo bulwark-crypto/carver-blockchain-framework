@@ -13,7 +13,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     const carverUser = await contextStore.get(carverUserContext, id)
 
     withContext(carverUser)
-        .handleRequest(carverUserContext.commonLanguage.queries.GetNewWidgetContext, async ({ id, variant }) => {
+        .handleQuery(carverUserContext.commonLanguage.queries.GetNewWidgetContext, async ({ id, variant }) => {
 
             //@todo create widgets based on variant
             const blocksWidget = await userWidgetsContextStore.register({ id, context: blocksWidgetContext })

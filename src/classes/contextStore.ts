@@ -37,7 +37,7 @@ export interface RegisteredContext {
      * - Store new events in event store
      */
     dispatch: (event: Event) => Promise<void>;
-    subscribeToRequest: (type: string, callback: (event: Event) => Promise<any>) => void;
+    subscribeToQuery: (type: string, callback: (event: Event) => Promise<any>) => void;
     subscribeToStore: (type: string, callback: (payload: any) => Promise<any>) => void;
     query: (query: string, payload: any) => Promise<any>;
 
@@ -69,7 +69,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         const contextDispatcher = bindContextDispatcher({ emitter, storeSubscriptions, eventStore });
 
         // Forward requests from emitted state to async request handler
-        const subscribeToRequest = (type: string, callback: (event: Event) => Promise<any>): void => {
+        const subscribeToQuery = (type: string, callback: (event: Event) => Promise<any>): void => {
             emitter.on(type, async (event: Event) => {
                 try {
                     const response = await callback(event.payload);
@@ -151,7 +151,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             stateStore,
             eventStore,
 
-            subscribeToRequest,
+            subscribeToQuery,
             subscribeToStore,
             query
         } as RegisteredContext

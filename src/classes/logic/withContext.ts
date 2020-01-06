@@ -18,7 +18,6 @@ interface WithContextChain {
      */
     streamEventsFromContext: (params: StreamEventsFromContextParams) => WithContextChain;
     streamEvents: (params: ReplayEventsParams) => WithContextChain;
-    handleRequest: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
     handleQuery: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
     handleStore: (type: string, callback: (payload: any) => Promise<any>) => WithContextChain;
 
@@ -50,8 +49,8 @@ const withContext = (context: RegisteredContext) => {
         return contextChain;
     }
 
-    contextChain.handleRequest = (type: string, callback: (event: Event) => Promise<any>) => {
-        context.subscribeToRequest(type, callback);
+    contextChain.handleQuery = (type: string, callback: (event: Event) => Promise<any>) => {
+        context.subscribeToQuery(type, callback);
 
         return contextChain;
     }
@@ -61,8 +60,6 @@ const withContext = (context: RegisteredContext) => {
         return contextChain;
     }
 
-
-    contextChain.handleQuery = contextChain.handleRequest;
 
     return contextChain;
 }

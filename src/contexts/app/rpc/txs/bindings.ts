@@ -47,7 +47,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
 
     withContext(rpcTxs)
-        .handleRequest(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, height }) => {
+        .handleQuery(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, height }) => {
             //await withPermanentStore(rpcBlocks.permanentStore).query(rpcBlocksContext.commonLanguage.permanentStore.GetBlockByHeight, height);
 
 

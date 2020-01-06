@@ -19,7 +19,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     const usersContextStore = createContextStore({ id: 'SESSION', parent: contextStore });
 
     withContext(apiSession)
-        .handleRequest(apiSessionContext.commonLanguage.queries.GetNewUserContext, async ({ id }) => {
+        .handleQuery(apiSessionContext.commonLanguage.queries.GetNewUserContext, async ({ id }) => {
 
             const carverUser = await usersContextStore.register({ id, context: carverUserContext })
             await carverUserBindings.bindContexts(usersContextStore, id);
@@ -36,7 +36,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             console.log(`Initializing New Carver User ${id}`);
 
             await withContext(carverUser)
-                .handleRequest(carverUserContext.commonLanguage.queries.GetNetworkStatus, async () => {
+                .handleQuery(carverUserContext.commonLanguage.queries.GetNetworkStatus, async () => {
                     return {
                         usersOnline: apiSession.stateStore.state.activeSessions.length,
                     }
