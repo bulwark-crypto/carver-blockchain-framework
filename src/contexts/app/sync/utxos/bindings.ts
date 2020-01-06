@@ -27,18 +27,32 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleStore(utxosContext.commonLanguage.storage.InsertMany, async (utxos) => {
             await db.collection('utxos').insertMany(utxos);
         })
+        .handleStore(utxosContext.commonLanguage.storage.UpdateLastTxSequence, async (sequence) => {
+            await db.collection('eventSequences').updateOne(
+                { id: utxos.id },
+                { $set: { id: utxos.id, sequence } },
+                { upsert: true }
+            );
+        })
 
+
+    const rpcTxSequence = await db.collection('eventSequences').findOne({ id: utxos.id });
     withContext(rpcTxs)
         .streamEvents({
-            type: rpcTxsContext.commonLanguage.events.NewTxFound, callback: async (event) => {
+            type: rpcTxsContext.commonLanguage.events.NewTxFound,
+            sequence: !!rpcTxSequence ? rpcTxSequence.sequence : 0,
+            callback: async (event) => {
                 const id = event.payload;
-
 
                 // Get rpc block from permanent store by height
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.GetOneByTxId, id);
 
-                //console.log('new tx found:', event, rpcTx);
-                await utxos.dispatch({ type: utxosContext.commonLanguage.commands.ParseTx, payload: rpcTx });
+                await utxos.dispatch({
+                    type: utxosContext.commonLanguage.commands.ParseTx, payload: {
+                        rpcTx,
+                        sequence: event.sequence
+                    }
+                });
             }
         });
 }

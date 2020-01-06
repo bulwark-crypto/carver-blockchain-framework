@@ -13,7 +13,9 @@ const bindContexts = async (contextStore: ContextStore) => {
     withContext(requiredMovements)
         .streamEvents({
             type: requiredMovementsContext.commonLanguage.events.TxParsed, callback: async (event) => {
-                await withContext(addresses).dispatch({ type: addressesContext.commonLanguage.commands.ParseRequiredMovements, payload: event.payload });
+                //@todo
+
+                //await withContext(addresses).dispatch({ type: addressesContext.commonLanguage.commands.ParseRequiredMovements, payload: event.payload });
             }
         });
 }

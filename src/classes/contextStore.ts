@@ -99,14 +99,19 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
 
         const dispatch = async (event: Event) => {
-            // Note that his can throw (Notice that state chain is built into expected emit state return)
-            const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
+            try {
+                // Note that his can throw (Notice that state chain is built into expected emit state return)
+                const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
 
-            // Notice that we store the new reducer after emitting the side effects
-            const state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
+                // Notice that we store the new reducer after emitting the side effects
+                const state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
-            // Replace state with reducer results if there are no exceptions in storing events
-            stateStore.state = await contextDispatcher.emitState(state);
+                // Replace state with reducer results if there are no exceptions in storing events
+                stateStore.state = await contextDispatcher.emitState(state);
+            } catch (err) {
+                console.log(`${id} exception:`);
+                throw err
+            }
         }
 
         const query = async (query: string, payload: any) => {
