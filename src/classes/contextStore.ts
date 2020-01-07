@@ -109,15 +109,14 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
                 // After successful save of both permanent/event store update the state
                 stateStore.state = stateWithoutSideEffects;
+                startedDispatching = false;
 
                 // After saving / changing state emit events & queries
                 await contextDispatcher.emitEvents(emit);
-
                 const response = await contextDispatcher.emitQueries(request);
 
-                startedDispatching = false;
                 if (response) {
-                    dispatch(response);
+                    await dispatch(response); // The await on dispatch is important as we can chain response->handler->response allowing the context to chain events
                 }
             } catch (err) {
                 console.log(`${id} exception:`);
