@@ -2,16 +2,10 @@ import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 
 const withQueryGetNewWidgetContext: Reducer = ({ state, event }) => {
-    const { response, error } = event.payload;
-
-    //@todo also  checkRpcErrors
-    if (error) {
-        console.log('REQUEST:GET_BLOCK error:', error);
-        return state;
-    }
+    const widgetContext = event.payload;
 
     return withState(state)
-        .set({ widgetContexts: [...state.widgetContexts, response] })
+        .set({ widgetContexts: [...state.widgetContexts, widgetContext] })
 
 }
 const withCommandWidgetsEmit: Reducer = ({ state, event }) => {

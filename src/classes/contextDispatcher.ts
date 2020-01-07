@@ -5,94 +5,85 @@ import { EventStore } from './interfaces/eventStore'
 import { StateStore } from './interfaces/stateStore'
 import { withState } from "./logic/withState";
 import { PermanentStore } from "./interfaces/permanentStore";
-const sleep = require('util').promisify(setTimeout)
-
 
 interface EventStoreParams {
     emitter: EventEmitter;
-    storeSubscriptions: Map<string, ((payload: any) => Promise<any>)[]>;
+    storeHandlers: Map<string, ((payload: any) => Promise<any>)>;
+    queryHandlers: Map<string, ((payload: any) => Promise<any>)>;
     eventStore: EventStore;
 }
-const bindContextDispatcher = ({ emitter, storeSubscriptions, eventStore }: EventStoreParams) => {
-
-    /**
-     * Emits any outstanding events in state
-     */
-    const emitCurrentStateEvents = async (emit: Event[]) => {
-        if (emit) {
-
-            // Notify all subscribers that there is a new event of the types in permanent store
-            // This will also notify eventStore streamEvents() listeners if they are already not replaying
-            emit.forEach((event) => {
-                emitter.emit(event.type, event);
-
-                // The event is emitted second time to any wildcard listeners (ex: any widget events)
-                emitter.emit('*', { type: event.type, event });
-            });
-
+const bindContextDispatcher = ({ emitter, storeHandlers, queryHandlers, eventStore }: EventStoreParams) => {
+    const saveToPermanentStore = async (store: any[]) => {
+        if (!store) {
+            return;
         }
-    }
 
-    const emitCurrentStateQueries = async (queries: Event[]) => {
-        if (queries) {
-            queries.forEach((event: Event) => {
-                emitter.emit(event.type, event); // Notice that we pass the entire event as the payload. This is done to be able to access the type of event in the callback.
-            });
-        }
-    }
-    const emitCurrentStateStore = async (store: any[]) => {
-        if (store) {
-            //@todo we can do all of this storing in parallel
-
-            // For each .store object find the appropritate handler and forward the payload there.
-            for await (const { query, payload } of store) {
-
-                if (!storeSubscriptions.has(query)) {
-                    console.log(`Unhandled store query: ${query}`)
-                    return;
-                }
-
-                const subscriptions = storeSubscriptions.get(query);
-                for await (const subscription of subscriptions) {
-                    await subscription(payload);
-                }
+        // First we ensure that we succeed on .store()
+        // For each .store object find the appropritate handler and forward the payload there.
+        for await (const { query, payload } of store) {
+            if (!storeHandlers.has(query)) {
+                throw commonLanguage.errors.UnhandledStore
             }
+
+            const storeHandler = storeHandlers.get(query);
+            await storeHandler(payload);
         }
     }
 
-    const storeState = async (state: any) => {
-
-        const { store, emit, request, ...stateWithoutSideEffects } = state;
-
-        if (store) {
-            // First we ensure that we succeed on .store()
-            await emitCurrentStateStore(store);
-        }
-        //await sleep(1000);
-
-        if (emit) {
-            // Store newly emitted events (this will add them to db)
-            await eventStore.store(emit);
+    const saveToEventStore = async (emit: Event[]) => {
+        if (!emit) {
+            return;
         }
 
-        //await sleep(1000);
-
-        return stateWithoutSideEffects;
+        // Store newly emitted events (this will add them to db)
+        await eventStore.store(emit);
     }
-    const emitEventsAndQueries = async (state: any) => {
-        const { emit, request } = state;
+    const emitEvents = async (emit: Event[]) => {
+        if (!emit) {
+            return;
+        }
 
-        // Emit any new events
-        await emitCurrentStateEvents(emit);
+        // Notify all subscribers that there is a new event of the types in permanent store
+        // This will also notify eventStore streamEvents() listeners if they are already not replaying
+        emit.forEach((event) => {
 
-        // Lastly emit the queries
-        await emitCurrentStateQueries(request);
-        //await sleep(1000);
+            emitter.emit(event.type, event);
+
+            // The event is emitted second time to any wildcard listeners (ex: any widget events)
+            emitter.emit('*', { type: event.type, event });
+        });
+    }
+    const emitQueries = async (queries: any) => {
+        if (!queries) {
+            return;
+        }
+
+        // For each .query object find the appropritate handler and forward the payload there.
+        for await (const { type, payload } of queries) {
+            if (!queryHandlers.has(type)) {
+                throw commonLanguage.errors.UnhandledQuery
+            }
+
+            const queryHandler = queryHandlers.get(type);
+            const queryResponse = await queryHandler(payload);
+
+            return { type, payload: queryResponse }
+        }
     }
 
     return {
-        storeState,
-        emitEventsAndQueries
+        saveToPermanentStore,
+        saveToEventStore,
+        emitEvents,
+        emitQueries,
+
+    }
+}
+
+const commonLanguage = {
+    errors: {
+        UnhandledQuery: 'UNHANDLED_QUERY',
+        UnhandledStore: 'UNHANDLED_STORE',
     }
 }
 

@@ -23,14 +23,10 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
  * Event payload will contain requested tx (in event.payload.response)
  */
 const withHandleRequestGetTx: Reducer = ({ state, event }) => {
-    const { response, error } = event.payload;
-
-    if (error) {
-        throw commonLanguage.errors.unableToFetchTx;
-    }
+    const rpcTxWithHeight = event.payload;
 
     // The response contains raw tx from rpc
-    const { rpcTx, height } = response;
+    const { rpcTx, height } = rpcTxWithHeight;
 
     return withState(state)
         .set({ isBusyFetchingTxs: false })

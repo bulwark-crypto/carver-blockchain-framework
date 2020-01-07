@@ -17,15 +17,8 @@ const withInitialize: Reducer = ({ state, event }) => {
         .query('LATEST_BLOCK_DETAILS');
 }
 const withQueryLatestBlockDetails: Reducer = ({ state, event }) => {
-    const { response, error } = event.payload
-    if (error) {
-        console.log('REQUEST:GET_BLOCK error:', error);
-        return state;
-    }
-
-    console.log('blockDetails', response);
-
-    const { id, variant } = state;
+    const response = event.payload
+    const { variant } = state;
 
     return withState(state)
         .emit('INITIALIZED', {

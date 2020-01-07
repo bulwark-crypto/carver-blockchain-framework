@@ -31,18 +31,6 @@ const withContext = (context: RegisteredContext) => {
         return contextChain;
     }
 
-    // The old way of streaming events to context
-    /*
-    contextChain.streamEventsFromContext = ({ type, context: streamFromContext }: StreamEventsFromContextParams) => {
-        // Events will be streamed from the source into our context
-        const callback = async (event: Event) => {
-            await context.eventStore.emit(event);
-        };
-
-        streamFromContext.eventStore.replayEventsToCallback({ type, callback });
-        return contextChain;
-    }*/
-
     contextChain.streamEvents = (params: ReplayEventsParams) => {
         context.eventStore.streamEvents(params); //@todo withEventStore(eventStore).streamEvents? Move this out?
 
@@ -50,12 +38,12 @@ const withContext = (context: RegisteredContext) => {
     }
 
     contextChain.handleQuery = (type: string, callback: (event: Event) => Promise<any>) => {
-        context.subscribeToQuery(type, callback);
+        context.handleQuery(type, callback);
 
         return contextChain;
     }
     contextChain.handleStore = (type: string, callback: (event: Event) => Promise<any>) => {
-        context.subscribeToStore(type, callback);
+        context.handleStore(type, callback);
 
         return contextChain;
     }

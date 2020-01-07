@@ -2,17 +2,9 @@ import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withQueryGetBlock: Reducer = ({ state, event }) => {
-    const { response: block, error } = event.payload;
+    const rpcBlock = event.payload;
 
-
-    //@todo also  checkRpcErrors
-    if (error) {
-        //@todo This function should only accept respones (no error). 
-        console.log('REQUEST:GET_BLOCK error:', error);
-        return state;
-    }
-
-    const { height } = block;
+    const { height } = rpcBlock;
 
     if (height !== state.height + 1) {
         throw commonLanguage.errors.heightMustBeSequential;
@@ -22,13 +14,15 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
     return withState(state)
         .set({ height })
         .emit(commonLanguage.events.NewBlockReached, height)
-        .store(commonLanguage.storage.InsertOne, block)
+        .store(commonLanguage.storage.InsertOne, rpcBlock)
         .reduce({ event, callback: withCommandParseGetInfo });
 }
 const withCommandParseGetInfo: Reducer = ({ state, event }) => {
 
     // Take the height from rpc getblock response
     const { blocks } = event.payload;
+
+
 
     // Limit the blocks to sync to first 1000 (expand when event store is completed)
     if (state.height > 20 || state.height >= blocks) {

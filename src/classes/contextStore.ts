@@ -37,8 +37,8 @@ export interface RegisteredContext {
      * - Store new events in event store
      */
     dispatch: (event: Event) => Promise<void>;
-    subscribeToQuery: (type: string, callback: (event: Event) => Promise<any>) => void;
-    subscribeToStore: (type: string, callback: (payload: any) => Promise<any>) => void;
+    handleQuery: (type: string, callback: (event: Event) => Promise<any>) => void;
+    handleStore: (type: string, callback: (payload: any) => Promise<any>) => void;
     query: (query: string, payload: any) => Promise<any>;
 
     stateStore: StateStore;
@@ -64,47 +64,36 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
 
-        const storeSubscriptions = new Map<string, ((payload: any) => Promise<any>)[]>(); // @todo should NOT be an array or a query can only be handled by a single callback?
+        const storeHandlers = new Map<string, ((payload: any) => Promise<any>)>();
+        const queryHandlers = new Map<string, ((payload: any) => Promise<any>)>();
 
-        const contextDispatcher = bindContextDispatcher({ emitter, storeSubscriptions, eventStore });
+        const contextDispatcher = bindContextDispatcher({ emitter, storeHandlers, queryHandlers, eventStore });
 
         // Forward requests from emitted state to async request handler
-        const subscribeToQuery = (type: string, callback: (event: Event) => Promise<any>): void => {
-            emitter.on(type, async (event: Event) => {
-                try {
-                    const response = await callback(event.payload);
-                    dispatch({
-                        type: event.type,
-                        payload: { response }
-                    })
-                } catch (error) {
-                    dispatch({
-                        type: event.type,
-                        payload: { error }
-                    })
-                    console.log('error', error);
-                }
-
-            });
-        }
-
-
-        const subscribeToStore = (type: string, callback: (payload: any) => Promise<any>): void => {
-            if (!storeSubscriptions.has(type)) {
-                storeSubscriptions.set(type, []);
+        const handleQuery = (type: string, callback: (event: Event) => Promise<any>): void => {
+            if (queryHandlers.has(type)) {
+                throw commonLanguage.errors.QueryAlreadyRegistered
             }
 
-            storeSubscriptions.get(type).push(callback)
+            queryHandlers.set(type, callback)
+        }
+
+        const handleStore = (type: string, callback: (payload: any) => Promise<any>): void => {
+            if (storeHandlers.has(type)) {
+                throw commonLanguage.errors.StoreAlreadyRegistered
+            }
+
+            storeHandlers.set(type, callback)
         }
 
 
         let startedDispatching = false;
         const dispatch = async (event: Event) => {
             if (startedDispatching) {
+                console.log(event);
                 throw `You can only dispatch ${id} one at a time`;
             }
             startedDispatching = true;
-            console.log('[START]', id, event.type, stateStore.state.height);
             try {
                 // Note that his can throw (Notice that state chain is built into expected emit state return)
                 const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
@@ -112,34 +101,38 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 // Notice that we store the new reducer after emitting the side effects
                 const state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
-                //console.log('storing...', id);
+                const { store, emit, request, ...stateWithoutSideEffects } = state;
 
-                // Store the new state before emitting events/queries (as those might alter state further)
-                stateStore.state = await contextDispatcher.storeState(state);
-                console.log('[STORED] ', id, state.height, stateStore.state.height);
+                // Save to permanent store / event store
+                await contextDispatcher.saveToPermanentStore(store);
+                await contextDispatcher.saveToEventStore(emit);
 
-                // Replace state with reducer results if there are no exceptions in storing events
-                await contextDispatcher.emitEventsAndQueries(state);
+                // After successful save of both permanent/event store update the state
+                stateStore.state = stateWithoutSideEffects;
+
+                // After saving / changing state emit events & queries
+                await contextDispatcher.emitEvents(emit);
+
+                const response = await contextDispatcher.emitQueries(request);
+
+                startedDispatching = false;
+                if (response) {
+                    dispatch(response);
+                }
             } catch (err) {
                 console.log(`${id} exception:`);
                 throw err
             }
-            console.log('[END]', id, event.type, stateStore.state.height);
 
-            startedDispatching = false;
         }
 
         const query = async (query: string, payload: any) => {
-
-            if (!storeSubscriptions.has(query)) {
-                console.log(`Unhandled store query: ${query} (context id: ${id})`)
-                return;
+            if (!storeHandlers.has(query)) {
+                throw commonLanguage.errors.UnhandledQuery;
             }
 
-            const subscriptions = storeSubscriptions.get(query);
-            for await (const subscription of subscriptions) {
-                return await subscription(payload);
-            }
+            const subscription = storeHandlers.get(query);
+            return await subscription(payload);
         }
 
         const registeredContext = {
@@ -151,8 +144,8 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             stateStore,
             eventStore,
 
-            subscribeToQuery,
-            subscribeToStore,
+            handleQuery,
+            handleStore,
             query
         } as RegisteredContext
         registeredContexts.push(registeredContext);
@@ -188,6 +181,14 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         get,
         getParent
     };
+}
+
+const commonLanguage = {
+    errors: {
+        UnhandledQuery: 'UNHANDLED_QUERY',
+        QueryAlreadyRegistered: 'QUERY_ALREADY_REGISTERED',
+        StoreAlreadyRegistered: 'STORE_ALREADY_REGISTERED'
+    }
 }
 
 export {

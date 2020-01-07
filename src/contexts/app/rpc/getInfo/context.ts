@@ -39,20 +39,14 @@ const checkRpcErrors = (err: string) => {
 }
 
 const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
-    const { response, error } = event.payload;
-
-    if (error) {
-        console.log('REQUEST:GETINFO error:', error);
-        return state;
-    }
-
-    //@todo also  checkRpcErrors
+    const rpcGetInfo = event.payload;
 
     return withState(state)
         .set({
-            getInfo: response
+            rpcGetInfo
         })
-        .emit(commonLanguage.events.Updated, response);
+        .emit(commonLanguage.events.Updated, rpcGetInfo) // @todo store the info in permanent store and emit a lightweight event?
+
 }
 
 const withInitialize: Reducer = ({ state, event }) => {
