@@ -2,39 +2,34 @@ import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withFetchNextTx: Reducer = ({ state, event }) => {
-    if (state.isBusyFetchingTxs) {
-        return state;
-    }
-
     // Nothing else to fetch
     if (state.txsQueue.length === 0) {
         return state;
     }
 
     // Request latest tx details
-    const { tx, height } = state.txsQueue.shift();
+    const payload = state.txsQueue.shift();
 
     return withState(state)
-        .set({ isBusyFetchingTxs: true })
-        .query(commonLanguage.queries.GetRawTransaction, { tx, height })
+        .query(commonLanguage.queries.GetRawTransaction, payload)
 }
 
 /**
  * Event payload will contain requested tx (in event.payload.response)
  */
 const withHandleRequestGetTx: Reducer = ({ state, event }) => {
-    const rpcTxWithHeight = event.payload;
-
-    // The response contains raw tx from rpc
-    const { rpcTx, height } = rpcTxWithHeight;
+    const { rpcTx, height, sequence } = event.payload;
 
     return withState(state)
-        .set({ isBusyFetchingTxs: false })
         .store(commonLanguage.storage.InsertOne, {
             ...rpcTx,
-            height
+            height,
+            sequence
         })
-        .emit(commonLanguage.events.NewTxFound, rpcTx.txid)
+        .emit({
+            type: commonLanguage.events.NewTxFound,
+            payload: rpcTx.txid
+        })
         .reduce({ event, callback: withFetchNextTx })
 }
 /**
@@ -53,14 +48,14 @@ const withParseBlock: Reducer = ({ state, event }) => {
     }
 
 
-    const txsWithHeight = txs.map((tx: any) => ({ tx, height }));
+    const newTxsQueue = txs.map((txid: string) => ({ txid, height, sequence: event.sequence }));
 
     return withState(state)
         .set({
             height,
             txsQueue: [
                 ...state.txsQueue,
-                ...txsWithHeight] // The tx queue array will contain a tx and it's associated block
+                ...newTxsQueue] // The tx queue array will contain a tx and it's associated height. It will also contain the block sequence (for resuming purposes)
         })
         .reduce({ event, callback: withFetchNextTx })
 }

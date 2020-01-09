@@ -21,9 +21,12 @@ const withQueryLatestBlockDetails: Reducer = ({ state, event }) => {
     const { variant } = state;
 
     return withState(state)
-        .emit('INITIALIZED', {
-            variant,
-            ...response,
+        .emit({
+            type: 'INITIALIZED',
+            payload: {
+                variant,
+                ...response,
+            }
         });
 }
 

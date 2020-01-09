@@ -12,7 +12,9 @@ const withCommandParseRequiredMovements: Reducer = ({ state, event }) => {
     })
 
     return withState(state)
-        .emit(commonLanguage.events.AddressCreated, {
+        .emit({
+            type: commonLanguage.events.AddressCreated,
+            payload: {}
         });
 
 }

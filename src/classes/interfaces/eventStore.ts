@@ -2,7 +2,7 @@ import { Event } from '../interfaces/events'
 
 export interface EventStore {
     store: (events: Event[]) => Promise<void>;
-    streamEvents: ({ type, callback }: ReplayEventsParams) => void;
+    streamEvents: (params: ReplayEventsParams) => void;
 }
 
 export interface ReplayEventsParams {

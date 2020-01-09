@@ -45,7 +45,10 @@ const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
         .set({
             rpcGetInfo
         })
-        .emit(commonLanguage.events.Updated, rpcGetInfo) // @todo store the info in permanent store and emit a lightweight event?
+        .emit({
+            type: commonLanguage.events.Updated,
+            payload: rpcGetInfo,// @todo store the info in permanent store and emit a lightweight event?
+        })
 
 }
 

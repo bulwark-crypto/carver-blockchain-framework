@@ -34,19 +34,21 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
     }
     await initializeEventStore();
 
-    const getLastSequence = async () => {
+    const getLastEvent = async () => {
         const lastEvents = await db.collection(eventsCollectionName).find({}).sort({ sequence: -1 }).limit(1);
         if (lastEvents) {
-
             for await (const event of lastEvents) {
-                //console.log(event);
-                return event.sequence;
+                return event;
             }
         }
-        return 0;
+
+        return null;
     }
 
-    let sequence = await getLastSequence();
+    const lastEvent = await getLastEvent();
+
+    let sequence = !!lastEvent ? lastEvent.sequence : 0
+
     const initialSequence = !!sequence ? sequence : 0;
 
     console.log(`Event Store: ${id} (sequence: ${sequence})`)
@@ -61,6 +63,7 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
         const storedEvents: StoredEvent[] = []
         events.forEach((event: Event) => {
             newSequence++
+
 
             const storedEvent = {
                 ...event,

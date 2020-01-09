@@ -27,20 +27,21 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleStore(utxosContext.commonLanguage.storage.InsertMany, async (utxos) => {
             await db.collection('utxos').insertMany(utxos);
         })
-        .handleStore(utxosContext.commonLanguage.storage.UpdateLastTxSequence, async (sequence) => {
-            await db.collection('eventSequences').updateOne(
-                { id: utxos.id },
-                { $set: { id: utxos.id, sequence } },
-                { upsert: true }
-            );
-        })
+    /*.handleStore(utxosContext.commonLanguage.storage.UpdateLastTxSequence, async (sequence) => {
+        await db.collection('eventSequences').updateOne(
+            { id: utxos.id },
+            { $set: { id: utxos.id, sequence } },
+            { upsert: true }
+        );
+    })*/
 
 
-    const rpcTxSequence = await db.collection('eventSequences').findOne({ id: utxos.id });
+    //const rpcTxSequence = await db.collection('eventSequences').findOne({ id: utxos.id });
     withContext(rpcTxs)
         .streamEvents({
             type: rpcTxsContext.commonLanguage.events.NewTxFound,
-            sequence: !!rpcTxSequence ? rpcTxSequence.sequence : 0,
+            toId: utxos.id, // Store "rpcTxs -> utxos" sequence after each callback
+            //sequence: !!rpcTxSequence ? rpcTxSequence.sequence : 0,
             callback: async (event) => {
                 const id = event.payload;
 
@@ -48,10 +49,9 @@ const bindContexts = async (contextStore: ContextStore) => {
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.GetOneByTxId, id);
 
                 await utxos.dispatch({
-                    type: utxosContext.commonLanguage.commands.ParseTx, payload: {
-                        rpcTx,
-                        sequence: event.sequence
-                    }
+                    type: utxosContext.commonLanguage.commands.ParseTx,
+                    payload: rpcTx,
+                    sequence: event.sequence
                 });
             }
         });

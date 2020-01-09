@@ -12,7 +12,7 @@ interface Utxo {
  * Extract utxos from a tx
  */
 const withCommandParseTx: Reducer = ({ state, event }) => {
-    const { rpcTx, sequence } = event.payload;
+    const { rpcTx } = event.payload;
 
     //@todo these are not in payload
     const { txid, height, vout: vouts } = rpcTx;
@@ -55,8 +55,11 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
 
     return withState(state)
         .store(commonLanguage.storage.InsertMany, utxos)
-        .store(commonLanguage.storage.UpdateLastTxSequence, sequence)
-        .emit(commonLanguage.events.TxParsed, txid)
+        //.store(commonLanguage.storage.UpdateLastTxSequence, sequence)
+        .emit({
+            type: commonLanguage.events.TxParsed,
+            payload: txid
+        })
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)

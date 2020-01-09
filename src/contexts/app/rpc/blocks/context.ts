@@ -13,7 +13,10 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
     console.log(height);
     return withState(state)
         .set({ height })
-        .emit(commonLanguage.events.NewBlockReached, height)
+        .emit({
+            type: commonLanguage.events.NewBlockReached,
+            payload: height
+        })
         .store(commonLanguage.storage.InsertOne, rpcBlock)
         .reduce({ event, callback: withCommandParseGetInfo });
 }

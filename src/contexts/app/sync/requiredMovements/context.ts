@@ -254,7 +254,10 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
     const requiredMovements = getRequiredMovements(block, tx, utxos);
 
     return withState(state)
-        .emit(commonLanguage.events.TxParsed, requiredMovements);
+        .emit({
+            type: commonLanguage.events.TxParsed,
+            payload: requiredMovements
+        });
 
 }
 

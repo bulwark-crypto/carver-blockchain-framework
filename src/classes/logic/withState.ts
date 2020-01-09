@@ -15,7 +15,7 @@ interface WithStateChain {
      * Optionally reduce by type (only call the callback if the event type matches.)
      */
     reduce: ({ type, event, callback }: ReduceParams) => WithStateChain;
-    emit: (type: string, payload?: any) => WithStateChain;
+    emit: (event: Event) => WithStateChain;
     store: (query: string, payload?: any) => WithStateChain;
     set: (params: any) => WithStateChain;
     request: (type: string, payload?: any) => WithStateChain;
@@ -39,12 +39,12 @@ const withState = (state: any) => {
         stateChain.state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
         return stateChain;
     }
-    stateChain.emit = (type: string, payload: any = null) => {
+    stateChain.emit = (event: Event) => {
         stateChain.state = {
             ...stateChain.state,
             emit: [
                 ...(stateChain.state.emit ? stateChain.state.emit : []),
-                { type, payload }
+                event
             ]
         };
         return stateChain;

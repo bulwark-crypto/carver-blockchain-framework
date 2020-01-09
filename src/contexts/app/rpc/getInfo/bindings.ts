@@ -24,8 +24,10 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(app)
         .streamEvents({
-            type: appContext.commonLanguage.events.Initialized, sessionOnly: true, callback: async (event) => {
-                await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize }); // event will be emitted to frontend with id (id, type, payload)
+            type: appContext.commonLanguage.events.Initialized,
+            sessionOnly: true,
+            callback: async (event) => {
+                await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize, sequence: event.sequence }); // event will be emitted to frontend with id (id, type, payload)
             }
         })
 

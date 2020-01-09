@@ -1,11 +1,15 @@
 import { Context } from '../../classes/interfaces/context'
 import { withState, Reducer } from '../../classes/logic/withState'
 
-const withCommandInitialize: Reducer = ({ state }) => {
+const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.IsAlreadyInitialized;
     }
-    return withState(state).set({ isInitialized: true }).emit(commonLanguage.events.Initialized);
+    return withState(state)
+        .set({ isInitialized: true })
+        .emit({
+            type: commonLanguage.events.Initialized
+        });
 }
 
 const reducer: Reducer = ({ state, event }) => {

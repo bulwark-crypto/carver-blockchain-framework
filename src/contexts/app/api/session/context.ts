@@ -24,7 +24,10 @@ const withRequestApiSessionReserveSocket: Reducer = ({ state, event }) => {
         .set({
             activeSessions
         })
-        .emit('API:SESSION:NEW', newSession);
+        .emit({
+            type: 'API:SESSION:NEW',
+            payload: newSession
+        });
 }
 
 const withRequestApiSessionConnect: Reducer = ({ state, event }) => {

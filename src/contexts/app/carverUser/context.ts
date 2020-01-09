@@ -12,13 +12,19 @@ const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
     //@todo add rate limit
 
     return withState(state)
-        .emit(commonLanguage.events.Widgets.Emitted, event.payload);
+        .emit({
+            type: commonLanguage.events.Widgets.Emitted,
+            payload: event.payload
+        });
 }
 const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
     const { id } = event.payload;
 
     return withState(state)
-        .emit(commonLanguage.events.Widgets.Removed, { id });
+        .emit({
+            type: commonLanguage.events.Widgets.Removed,
+            payload: { id }
+        });
 }
 
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {

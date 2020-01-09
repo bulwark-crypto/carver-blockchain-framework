@@ -24,17 +24,18 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
     await initCollections();
 
-    const resumeState = async () => {
-        const getLastHeight = async () => {
-            const txs = await db.collection('txs').find({}).sort({ height: -1 }).limit(1);
-            if (txs) {
-                for await (const tx of txs) {
-                    return tx.height;
-                }
-            }
-            return 0;
+    const getLastTx = async () => {
+        const txs = await db.collection('txs').find({}).sort({ height: -1 }).limit(1);
+        for await (const tx of txs) {
+            return tx;
         }
-        const height = await getLastHeight();
+
+        return null;
+    }
+    const lastTx = await getLastTx();
+
+    const resumeState = async () => {
+        const height = !!lastTx ? lastTx.height : 0;
 
         // Initialize context with the most recent height (So we can resume at next height)
         await rpcTxs.dispatch({
@@ -45,18 +46,17 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
     await resumeState();
 
-
     withContext(rpcTxs)
-        .handleQuery(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ tx, height }) => {
+        .handleQuery(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ txid, height, sequence }) => {
             //await withPermanentStore(rpcBlocks.permanentStore).query(rpcBlocksContext.commonLanguage.permanentStore.GetBlockByHeight, height);
 
+            const rpcTx = await rpc.call('getrawtransaction', [txid, 1]);
 
-            const rpcTx = await rpc.call('getrawtransaction', [tx, 1]);
-
-            // Transaction will be returned with block height appended
+            // Transaction will be returned with block height and NewBlockReached sequence
             return {
                 rpcTx,
-                height
+                height,
+                sequence
             }
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (tx) => {
@@ -72,18 +72,25 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(rpcBlocks)
         .streamEvents({
-            type: rpcBlocksContext.commonLanguage.events.NewBlockReached, callback: async (event) => {
+            type: rpcBlocksContext.commonLanguage.events.NewBlockReached,
+            sequence: !!lastTx ? lastTx.sequence : 0, // Resume from last sequence
+            callback: async (event) => {
                 const height = event.payload;
 
                 // Get rpc block from permanent store by height
                 const block = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.GetByHeight, height);
 
-                await rpcTxs.dispatch({ type: rpcTxsContext.commonLanguage.commands.ParseBlock, payload: block });
+                await rpcTxs.dispatch({
+                    type: rpcTxsContext.commonLanguage.commands.ParseBlock,
+                    payload: block,
+                    sequence: event.sequence // We'll store block sequence with the tx so we can resume from this state later on
+                });
             }
         });
 
 }
 
 export default {
+    //@todo add onRegistration that would 
     bindContexts
 }
