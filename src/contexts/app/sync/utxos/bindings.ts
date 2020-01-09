@@ -23,25 +23,26 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
     await initCollections();
 
+    const getLastUtxo = async () => {
+        const utxos = await db.collection('utxos').find({}).sort({ _id: -1 }).limit(1);
+        for await (const utxo of utxos) {
+            return utxo;
+        }
+
+        return null;
+    }
+    const lastUtxo = await getLastUtxo();
+
     withContext(utxos)
         .handleStore(utxosContext.commonLanguage.storage.InsertMany, async (utxos) => {
             await db.collection('utxos').insertMany(utxos);
         })
-    /*.handleStore(utxosContext.commonLanguage.storage.UpdateLastTxSequence, async (sequence) => {
-        await db.collection('eventSequences').updateOne(
-            { id: utxos.id },
-            { $set: { id: utxos.id, sequence } },
-            { upsert: true }
-        );
-    })*/
 
 
-    //const rpcTxSequence = await db.collection('eventSequences').findOne({ id: utxos.id });
     withContext(rpcTxs)
         .streamEvents({
             type: rpcTxsContext.commonLanguage.events.NewTxFound,
-            toId: utxos.id, // Store "rpcTxs -> utxos" sequence after each callback
-            //sequence: !!rpcTxSequence ? rpcTxSequence.sequence : 0,
+            sequence: !!lastUtxo ? lastUtxo.sequence : 0, // Resume from last sequence
             callback: async (event) => {
                 const id = event.payload;
 

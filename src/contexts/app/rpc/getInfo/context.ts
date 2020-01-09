@@ -1,10 +1,9 @@
 import { Event } from '../../../../classes/interfaces/events'
 import { Context, State } from '../../../../classes/interfaces/context'
-//import { withInit } from '../logic/withInit'
-//import { withRpc } from '../logic/withRpc'
 import { withUnhandledCommand, withUnhandledCommandPayload } from '../../../../classes/logic/knownErrors'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
+/*
 interface RpcPayload {
     res: any;
     err: any;
@@ -36,7 +35,7 @@ const checkRpcErrors = (err: string) => {
             }
     }
 
-}
+}*/
 
 const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
     const rpcGetInfo = event.payload;

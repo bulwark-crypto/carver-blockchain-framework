@@ -6,13 +6,14 @@ interface Utxo {
     height: number;
     amount: number;
     address: string;
+    sequence: number;
 }
 
 /**
  * Extract utxos from a tx
  */
 const withCommandParseTx: Reducer = ({ state, event }) => {
-    const { rpcTx } = event.payload;
+    const rpcTx = event.payload;
 
     //@todo these are not in payload
     const { txid, height, vout: vouts } = rpcTx;
@@ -46,7 +47,8 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
                         label,
                         height,
                         amount: vout.value,
-                        address
+                        address,
+                        sequence: event.sequence
                     })
             }
         }

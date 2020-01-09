@@ -25,7 +25,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     await initCollections();
 
     const getLastTx = async () => {
-        const txs = await db.collection('txs').find({}).sort({ height: -1 }).limit(1);
+        const txs = await db.collection('txs').find({}).sort({ _id: -1 }).limit(1);
         for await (const tx of txs) {
             return tx;
         }
