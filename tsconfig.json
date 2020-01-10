@@ -4,7 +4,8 @@
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "downlevelIteration": true // For [...Array(n)] syntax
   },
   "files": [
     "src/start.ts",
