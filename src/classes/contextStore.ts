@@ -50,6 +50,8 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
     const register = async <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options: any = { /*This could contain event storing options*/ }) => {
 
+        //@todo during registration process ensure the commonLanguage of context does not contain any duplicate strings
+
         const initialState = {
             ...context.initialState
         }
@@ -95,6 +97,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             }
             startedDispatching = true;
             try {
+
                 // Note that his can throw (Notice that state chain is built into expected emit state return)
                 const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
 

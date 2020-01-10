@@ -69,7 +69,7 @@ const commonLanguage = {
     },
     storage: {
         InsertOne: 'INSERT_ONE',
-        GetByHeight: 'GET_BY_HEIGHT',
+        FindOneByHeight: 'FIND_ONE_BY_HEIGHT',
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'

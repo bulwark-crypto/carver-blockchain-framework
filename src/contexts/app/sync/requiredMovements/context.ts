@@ -249,15 +249,17 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
  * Add new txs to fetch
  */
 const withCommandParseTx: Reducer = ({ state, event }) => {
-    const { tx, block, utxos } = event.payload;
+    const { rpcTx, rpcBlock, utxos } = event.payload;
 
-    const requiredMovements = getRequiredMovements(block, tx, utxos);
+    const requiredMovements = getRequiredMovements(rpcBlock, rpcTx, utxos);
+
+    console.log('parse tx!', requiredMovements);
 
     return withState(state)
-        .emit({
-            type: commonLanguage.events.TxParsed,
-            payload: requiredMovements
-        });
+    /*.emit({
+        type: commonLanguage.events.TxParsed,
+        payload: requiredMovements
+    });*/
 
 }
 

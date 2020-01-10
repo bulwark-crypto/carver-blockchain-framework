@@ -85,13 +85,13 @@ const start = async () => {
     context: utxosContext,
     id: 'UTXOS'
   });
-  /*
+
   await contextStore.register({
     context: requiredMovementsContext,
     id: 'REQUIRED_MOVEMENTS'
   });
- 
-  await contextStore.register({
+
+  /*await contextStore.register({
     context: addressesContext,
     id: 'ADDRESSES'
   });*/
@@ -106,7 +106,7 @@ const start = async () => {
     apiSessionBindings,
     apiSocketBindings,
     utxosBindings,
-    //requiredMovementsBindings,
+    requiredMovementsBindings,
     //addressesBindings
   ];
   for await (const contextBinding of contextBindings) {

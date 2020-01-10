@@ -63,9 +63,9 @@ const bindContexts = async (contextStore: ContextStore) => {
             await db.collection('txs').insertOne(tx);
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.GetByHeight, async (height) => {
-            return await db.collection('txs').find({ height });
+            return await db.collection('txs').find({ height }).toArray();
         })
-        .handleStore(rpcTxsContext.commonLanguage.storage.GetOneByTxId, async (txid) => {
+        .handleStore(rpcTxsContext.commonLanguage.storage.FindOneByTxId, async (txid) => {
             return await db.collection('txs').findOne({ txid });
         });
 
@@ -78,7 +78,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                 const height = event.payload;
 
                 // Get rpc block from permanent store by height
-                const block = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.GetByHeight, height);
+                const block = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
 
                 await rpcTxs.dispatch({
                     type: rpcTxsContext.commonLanguage.commands.ParseBlock,

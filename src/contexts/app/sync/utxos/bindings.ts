@@ -37,6 +37,12 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleStore(utxosContext.commonLanguage.storage.InsertMany, async (utxos) => {
             await db.collection('utxos').insertMany(utxos);
         })
+        .handleStore(utxosContext.commonLanguage.storage.GetByTxId, async ({ txid, vouts }) => {
+            // Create list of txid+n for number of vouts. vouts here is the count of number of vouts in the tx
+            const labels = [...(Array(vouts).keys() as any)].map((value: any, index: number) => `${txid}:${index}`)
+
+            return await db.collection('utxos').find({ label: { $in: labels } }).toArray();
+        });
 
 
     withContext(rpcTxs)
@@ -44,10 +50,10 @@ const bindContexts = async (contextStore: ContextStore) => {
             type: rpcTxsContext.commonLanguage.events.NewTxFound,
             sequence: !!lastUtxo ? lastUtxo.sequence : 0, // Resume from last sequence
             callback: async (event) => {
-                const id = event.payload;
+                const txid = event.payload;
 
                 // Get rpc block from permanent store by height
-                const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.GetOneByTxId, id);
+                const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
 
                 await utxos.dispatch({
                     type: utxosContext.commonLanguage.commands.ParseTx,

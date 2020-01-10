@@ -60,7 +60,10 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
         //.store(commonLanguage.storage.UpdateLastTxSequence, sequence)
         .emit({
             type: commonLanguage.events.TxParsed,
-            payload: txid
+            payload: {
+                txid,
+                vouts: vouts.length
+            }
         })
 }
 const reducer: Reducer = ({ state, event }) => {
@@ -83,7 +86,7 @@ const commonLanguage = {
     storage: {
         InsertMany: 'INSERT_MANY',
         GetByHeight: 'GET_BY_HEIGHT',
-        GetOneByTxId: 'GET_ONE_BY_TX_ID',
+        GetByTxId: 'GET_BY_TX_ID',
 
         UpdateLastTxSequence: 'UPDATE_LAST_TX_SEQUENCE',
         GetLastTxSequence: 'GET_LAST_TX_SEQUENCE',
