@@ -261,10 +261,11 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
     const totalAmountIn = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountIn, 0);
     const totalAmountOut = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountOut, 0);
     return {
+        txid: tx.txid,
         txType,
         totalAmountIn,
         totalAmountOut,
-        consolidatedAddressAmounts
+        consolidatedAddressAmounts: Array.from(consolidatedAddressAmounts.values())
     }
 }
 
@@ -280,20 +281,33 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
     const utxoLabels = getVinUtxoLabels(rpcTx);
 
     return withState(state)
-        .query(commonLanguage.queries.GetUtxosAndBlockForTx, { txid, rpcTx, utxoLabels })
+        .query(commonLanguage.queries.GetUtxosForTx, {
+            txid,
+            rpcTx,
+            utxoLabels,
+            sequence: event.sequence
+        })
 }
 
-const withQueryGetUtxosAndBlockForTx: Reducer = ({ state, event }) => {
-    const { rpcTx, utxos } = event.payload;
+const withQueryGetUtxosForTx: Reducer = ({ state, event }) => {
+    const { rpcTx, utxos, sequence } = event.payload;
 
     const requiredMovements = getRequiredMovements(rpcTx, utxos);
 
-    return state;
+    return withState(state)
+        .store(commonLanguage.storage.InsertOne, {
+            ...requiredMovements,
+            sequence
+        })
+        .emit({
+            type: commonLanguage.events.TxParsed,
+            payload: rpcTx.txid
+        });
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.queries.GetUtxosAndBlockForTx, event, callback: withQueryGetUtxosAndBlockForTx })
+        .reduce({ type: commonLanguage.queries.GetUtxosForTx, event, callback: withQueryGetUtxosForTx })
         .reduce({ type: commonLanguage.commands.ParseTx, event, callback: withCommandParseTx });
 }
 
@@ -305,7 +319,10 @@ const commonLanguage = {
         TxParsed: 'TX_PARSED'
     },
     queries: {
-        GetUtxosAndBlockForTx: 'GET_UTXOS_AND_BLOCK_FOR_TX'
+        GetUtxosForTx: 'GET_UTXOS_FOR_TX'
+    },
+    storage: {
+        InsertOne: 'INSERT_ONE'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',

@@ -5,21 +5,27 @@ import { ContextStore } from '../../../../classes/contextStore';
 import requiredMovementsContext from './context'
 import utxosContext from '../utxos/context'
 import rpcTxsContext from '../../rpc/txs/context'
-import rpcBlocksContext from '../../rpc/blocks/context'
+
+import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 const bindContexts = async (contextStore: ContextStore) => {
     const requiredMovements = await contextStore.get(requiredMovementsContext);
     const rpcTxs = await contextStore.get(rpcTxsContext);
     const utxos = await contextStore.get(utxosContext);
-    const blocks = await contextStore.get(rpcBlocksContext);
+
+    const db = await dbStore.get();
 
     withContext(requiredMovements)
-        .handleQuery(requiredMovementsContext.commonLanguage.queries.GetUtxosAndBlockForTx, async ({ rpcTx, utxoLabels }) => {
+        .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (requiredMovements) => {
+            await db.collection('requiredMovements').insertOne(requiredMovements);
+        })
+        .handleQuery(requiredMovementsContext.commonLanguage.queries.GetUtxosForTx, async ({ rpcTx, utxoLabels, sequence }) => {
             const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByLabels, utxoLabels);
 
             return {
                 rpcTx,
-                utxos: txUtxos
+                utxos: txUtxos,
+                sequence
             }
         });
 
