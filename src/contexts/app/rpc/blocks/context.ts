@@ -28,7 +28,7 @@ const withCommandParseGetInfo: Reducer = ({ state, event }) => {
 
 
     // Limit the blocks to sync to first 1000 (expand when event store is completed)
-    if (state.height > 20 || state.height >= blocks) {
+    if (/*state.height > 20 ||*/ state.height >= blocks) {
         return state;
     }
 

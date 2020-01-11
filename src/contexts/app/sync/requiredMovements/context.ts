@@ -51,13 +51,13 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
 
     for (const vin of tx.vin) {
         if (vin.value) {
-            throw 'VIN WITH VALUE?';
+            throw 'VIN WITH VALUE?'; //@todo convert to commonLanguage error
         }
 
         if (vin.coinbase) {
             if (tx.vin.length != 1) {
                 console.log(tx);
-                throw "COINBASE WITH >1 VIN?";
+                throw "COINBASE WITH >1 VIN?"; //@todo convert to commonLanguage error
             }
 
             // Identify that this is a POW or POW/MN tx
@@ -67,13 +67,14 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
         } else if (vin.txid) {
             if (vin.vout === undefined) {
                 console.log(vin);
-                throw 'VIN TXID WITHOUT VOUT?';
+                throw 'VIN TXID WITHOUT VOUT?'; //@todo convert to commonLanguage error
             }
 
             const utxoLabel = `${vin.txid}:${vin.vout}`;
             const vinUtxo = utxos.find((utxo: any) => utxo.label === utxoLabel);
             if (!vinUtxo) {
-                throw `UTXO not found: ${utxoLabel}`;
+                console.log(utxos);
+                throw `UTXO not found: ${utxoLabel}`; //@todo convert to commonLanguage error
             }
             addToAddress(CarverAddressType.Address, vinUtxo.addressLabel, -vinUtxo.amount);
 
@@ -83,7 +84,7 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
             }
         } else {
             console.log(vin);
-            throw 'UNSUPPORTED VIN (NOT COINBASE OR TX)';
+            throw 'UNSUPPORTED VIN (NOT COINBASE OR TX)'; //@todo convert to commonLanguage error
         }
     }
 
@@ -99,12 +100,12 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
 
                     const addresses = vout.scriptPubKey.addresses;
                     if (addresses.length !== 1) {
-                        throw 'ONLY PUBKEYS WITH 1 ADDRESS ARE SUPPORTED FOR NOW';
+                        throw 'ONLY PUBKEYS WITH 1 ADDRESS ARE SUPPORTED FOR NOW'; //@todo convert to commonLanguage error
                     }
                     if (vout.value === undefined) {
                         console.log(vout);
                         console.log(tx);
-                        throw 'VOUT WITHOUT VALUE?';
+                        throw 'VOUT WITHOUT VALUE?'; //@todo convert to commonLanguage error
                     }
 
                     const addressLabel = addresses[0];
@@ -140,7 +141,7 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
                                 break;
                             default:
                                 console.log(txType);
-                                throw 'Unhandled carverTxType!';
+                                throw 'Unhandled carverTxType!'; //@todo convert to commonLanguage error
                         }
                     }
                     if (vout.value > 0) {
@@ -160,7 +161,7 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
                         if (vout.value === undefined) {
                             console.log(vout);
                             console.log(tx);
-                            throw 'ZEROCOIN WITHOUT VALUE?';
+                            throw 'ZEROCOIN WITHOUT VALUE?'; //@todo convert to commonLanguage error
                         }
                         addToAddress(CarverAddressType.Zerocoin, 'ZEROCOIN', vout.value);
                     }
@@ -170,7 +171,7 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
                         if (vout.value === undefined) {
                             console.log(vout);
                             console.log(tx);
-                            throw 'BURN WITHOUT VALUE?';
+                            throw 'BURN WITHOUT VALUE?'; //@todo convert to commonLanguage error
                         }
                         addToAddress(CarverAddressType.Burn, 'BURN', vout.value);
                     }
@@ -178,11 +179,11 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
                 default:
                     console.log(vout);
                     console.log(tx);
-                    throw `UNSUPPORTED VOUT SCRIPTPUBKEY TYPE: ${vout.scriptPubKey.type}`;
+                    throw `UNSUPPORTED VOUT SCRIPTPUBKEY TYPE: ${vout.scriptPubKey.type}`; //@todo convert to commonLanguage error
             }
         } else {
             console.log(vout);
-            throw `UNSUPPORTED VOUT!`;
+            throw `UNSUPPORTED VOUT!`; //@todo convert to commonLanguage error
         }
     }
 
@@ -239,8 +240,6 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
         txType,
         totalAmountIn,
         totalAmountOut,
-        carverAddressMovements: [] as any[],
-
         consolidatedAddressAmounts
     }
 }
@@ -253,7 +252,7 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
 
     const requiredMovements = getRequiredMovements(rpcBlock, rpcTx, utxos);
 
-    console.log('parse tx!', requiredMovements);
+    //console.log('parse tx!', requiredMovements);
 
     return withState(state)
     /*.emit({

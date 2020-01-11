@@ -17,12 +17,13 @@ const bindContexts = async (contextStore: ContextStore) => {
     withContext(utxos)
         .streamEvents({
             type: utxosContext.commonLanguage.events.TxParsed, callback: async (event) => {
-                const { txid, vouts } = event.payload;
+                const txid = event.payload;
 
                 // Get rpc tx,block and utxos required to parse tx movements
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
                 const rpcBlock = await blocks.query(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, rpcTx.height);
-                const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByTxId, { txid, vouts });
+                const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByTxId, txid);
+                //console.log(txid, txUtxos);
 
                 await requiredMovements.dispatch({
                     type: requiredMovementsContext.commonLanguage.commands.ParseTx,
