@@ -1,5 +1,4 @@
 import { RegisteredContext } from '../../../../classes/contextStore';
-import { rpc } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { createContextStore, ContextStore } from '../../../../classes/contextStore'
 

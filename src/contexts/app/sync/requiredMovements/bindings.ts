@@ -1,5 +1,4 @@
 import { RegisteredContext } from '../../../../classes/contextStore';
-import { rpc } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contextStore';
 
@@ -14,6 +13,16 @@ const bindContexts = async (contextStore: ContextStore) => {
     const utxos = await contextStore.get(utxosContext);
     const blocks = await contextStore.get(rpcBlocksContext);
 
+    withContext(requiredMovements)
+        .handleQuery(requiredMovementsContext.commonLanguage.queries.GetUtxosAndBlockForTx, async ({ rpcTx, utxoLabels }) => {
+            const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByLabels, utxoLabels);
+
+            return {
+                rpcTx,
+                utxos: txUtxos
+            }
+        });
+
     withContext(utxos)
         .streamEvents({
             type: utxosContext.commonLanguage.events.TxParsed, callback: async (event) => {
@@ -21,16 +30,14 @@ const bindContexts = async (contextStore: ContextStore) => {
 
                 // Get rpc tx,block and utxos required to parse tx movements
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
-                const rpcBlock = await blocks.query(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, rpcTx.height);
-                const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByTxId, txid);
                 //console.log(txid, txUtxos);
 
                 await requiredMovements.dispatch({
                     type: requiredMovementsContext.commonLanguage.commands.ParseTx,
                     payload: {
                         rpcTx,
-                        rpcBlock,
-                        utxos: txUtxos
+                        //height: rpcBlock.height,
+                        //utxos: txUtxos
                     },
                     sequence: event.sequence // We'll store block sequence with the tx so we can resume from this state later on
                 })

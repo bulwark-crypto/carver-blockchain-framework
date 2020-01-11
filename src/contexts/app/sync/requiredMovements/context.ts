@@ -17,11 +17,35 @@ const isPosTx = (tx: any) => {
         tx.vout[0].scriptPubKey &&
         tx.vout[0].scriptPubKey.type === 'nonstandard';
 }
+const getVinUtxoLabels = (rpcTx: any) => {
+    const utxoLabels = [];
+
+    for (let vinIndex = 0; vinIndex < rpcTx.vin.length; vinIndex++) {
+        const vin = rpcTx.vin[vinIndex];
+
+        // Zerocoin doesn't need any vins
+        if (vin.scriptSig && vin.scriptSig.asm == 'OP_ZEROCOINSPEND') {
+            return utxoLabels;
+        }
+
+        if (vin.txid) {
+            if (vin.vout === undefined) {
+                console.log(vin);
+                throw 'VIN TXID WITHOUT VOUT?';
+            }
+
+            const label = `${vin.txid}:${vin.vout}`;
+            utxoLabels.push(label);
+        }
+    }
+
+    return utxoLabels;
+}
 
 /**
  * Analyze a tx and return raw CarverMovement object data (to be finalized after)
  */
-const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
+const getRequiredMovements = (tx: any, utxos: any[]) => {
     let txType = null; // By default we don't know the tx type
 
     // We'll keep a tally of all inputs/outputs summed by address
@@ -147,7 +171,7 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
                     if (vout.value > 0) {
                         utxos.push({
                             label: `${tx.txid}:${vout.n}`,
-                            blockHeight: block.height,
+                            height: tx.height,
                             amount: vout.value,
                             addressLabel
                         });
@@ -248,22 +272,28 @@ const getRequiredMovements = (block: any, tx: any, utxos: any[]) => {
  * Add new txs to fetch
  */
 const withCommandParseTx: Reducer = ({ state, event }) => {
-    const { rpcTx, rpcBlock, utxos } = event.payload;
+    const { rpcTx, utxos } = event.payload;
 
-    const requiredMovements = getRequiredMovements(rpcBlock, rpcTx, utxos);
 
-    //console.log('parse tx!', requiredMovements);
+    const txid = rpcTx.txid;
+
+    const utxoLabels = getVinUtxoLabels(rpcTx);
 
     return withState(state)
-    /*.emit({
-        type: commonLanguage.events.TxParsed,
-        payload: requiredMovements
-    });*/
+        .query(commonLanguage.queries.GetUtxosAndBlockForTx, { txid, rpcTx, utxoLabels })
+}
 
+const withQueryGetUtxosAndBlockForTx: Reducer = ({ state, event }) => {
+    const { rpcTx, utxos } = event.payload;
+
+    const requiredMovements = getRequiredMovements(rpcTx, utxos);
+
+    return state;
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
+        .reduce({ type: commonLanguage.queries.GetUtxosAndBlockForTx, event, callback: withQueryGetUtxosAndBlockForTx })
         .reduce({ type: commonLanguage.commands.ParseTx, event, callback: withCommandParseTx });
 }
 
@@ -273,6 +303,9 @@ const commonLanguage = {
     },
     events: {
         TxParsed: 'TX_PARSED'
+    },
+    queries: {
+        GetUtxosAndBlockForTx: 'GET_UTXOS_AND_BLOCK_FOR_TX'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',

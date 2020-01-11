@@ -1,11 +1,13 @@
 import { RegisteredContext } from '../../../../classes/contextStore';
-import { rpc } from '../../../../classes/libs/rpcInstance'
+import { createRpcInstance } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contextStore';
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import rpcTxsContext from './context'
 import rpcBlocksContext from '../blocks/context'
+
+const rpc = createRpcInstance();
 
 const bindContexts = async (contextStore: ContextStore) => {
     const rpcTxs = await contextStore.get(rpcTxsContext);

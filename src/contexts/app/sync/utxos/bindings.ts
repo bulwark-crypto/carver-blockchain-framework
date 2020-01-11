@@ -1,5 +1,4 @@
 import { RegisteredContext } from '../../../../classes/contextStore';
-import { rpc } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contextStore';
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
@@ -17,7 +16,6 @@ const bindContexts = async (contextStore: ContextStore) => {
         const contextVersion = await db.collection('versions').findOne({ id: utxos.id });
         if (!contextVersion) {
             await db.collection('utxos').createIndex({ label: 1 }, { unique: true });
-            await db.collection('utxos').createIndex({ tx: 1 }, { unique: true });
 
             await db.collection('versions').insertOne({ id: utxos.id, version: 1 });
         }
@@ -38,12 +36,15 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleStore(utxosContext.commonLanguage.storage.InsertMany, async (utxos) => {
             await db.collection('utxos').insertMany(utxos);
         })
-        .handleStore(utxosContext.commonLanguage.storage.GetByTxId, async (txid) => {
+        .handleStore(utxosContext.commonLanguage.storage.GetByLabels, async (labels) => {
             // Create list of txid+n for number of vouts. vouts here is the count of number of vouts in the tx
             //const labels = [...(Array(vouts).keys() as any)].map((value: any, index: number) => `${txid}:${index}`)
 
-            //return await db.collection('utxos').find({ label: { $in: labels } }).toArray();
-            return await db.collection('utxos').find({ txid }).toArray();
+            if (!labels) {
+                return [];
+            }
+
+            return await db.collection('utxos').find({ label: { $in: labels } }).toArray();
         });
 
 

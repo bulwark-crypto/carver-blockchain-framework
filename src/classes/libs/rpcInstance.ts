@@ -33,8 +33,8 @@ const createRpcInstance = () => {
         }
     }
 }
-const rpc = createRpcInstance()
+//const rpc = createRpcInstance()
 
 export {
-    rpc
+    createRpcInstance
 }

@@ -2,12 +2,14 @@ import { RegisteredContext } from '../../../../classes/contextStore';
 import { Event } from '../../../../classes/interfaces/events'
 import { ContextStore } from '../../../../classes/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
-import { rpc } from '../../../../classes/libs/rpcInstance';
+import { createRpcInstance } from '../../../../classes/libs/rpcInstance';
 
 import { config } from '../../../../../config'
 
 import appContext from '../../context'
 import rpcGetInfoContext from './context'
+
+const rpc = createRpcInstance();
 
 const bindContexts = async (contextStore: ContextStore) => {
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);

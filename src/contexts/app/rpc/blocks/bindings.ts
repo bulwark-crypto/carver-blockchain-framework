@@ -2,12 +2,14 @@ import { RegisteredContext } from '../../../../classes/contextStore';
 
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
-import { rpc } from '../../../../classes/libs/rpcInstance'
+import { createRpcInstance } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contextStore';
 
 import rpcGetInfoContext from '../getInfo/context'
 import rpcBlocksContext from './context'
+
+const rpc = createRpcInstance();
 
 let timer = new Date().getTime();
 let elapsed = 0

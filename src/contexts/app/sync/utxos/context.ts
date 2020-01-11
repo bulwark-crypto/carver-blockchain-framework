@@ -2,7 +2,6 @@ import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
 interface Utxo {
-    txid: string;
     label: string;
     height: number;
     amount: number;
@@ -46,7 +45,6 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
 
                     utxos.push({
                         label,
-                        txid,
                         height,
                         amount: vout.value,
                         address,
@@ -85,7 +83,7 @@ const commonLanguage = {
     storage: {
         InsertMany: 'INSERT_MANY',
         GetByHeight: 'GET_BY_HEIGHT',
-        GetByTxId: 'GET_BY_TX_ID',
+        GetByLabels: 'GET_BY_LABELS',
 
         UpdateLastTxSequence: 'UPDATE_LAST_TX_SEQUENCE',
         GetLastTxSequence: 'GET_LAST_TX_SEQUENCE',
