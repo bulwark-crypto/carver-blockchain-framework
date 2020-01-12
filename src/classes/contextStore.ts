@@ -88,9 +88,8 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             storeHandlers.set(type, callback)
         }
 
-
         let startedDispatching = false;
-        const dispatch = async (event: Event) => {
+        const dispatchNext = async (event: Event) => {
             if (startedDispatching) {
                 console.log(event);
                 throw `You can only dispatch ${id} one at a time`;
@@ -115,15 +114,24 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 startedDispatching = false;
 
                 // After saving / changing state emit events & queries
-                await contextDispatcher.emitEvents(emit);
                 const response = await contextDispatcher.emitQueries(request);
+                await contextDispatcher.emitEvents(emit);
 
-                if (response) {
-                    await dispatch(response); // The await on dispatch is important as we can chain response->handler->response allowing the context to chain events
-                }
+                // If response is returned that means there are is a pending query. It'll be dispatch()'ed again to the context
+                return response
             } catch (err) {
-                console.log(`${id} exception:`);
+                console.log(`${id} exception:`, err);
                 throw err
+            }
+
+        }
+        const dispatch = async (event: Event) => {
+            // Keep dispatching until there is no futher response from the context
+            while (true) {
+                event = await dispatchNext(event)
+                if (!event) {
+                    break;
+                }
             }
 
         }

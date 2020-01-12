@@ -1,12 +1,41 @@
 
 import { config } from '../../../config'
 
-const createRpcInstance = () => {
+const createGlobalRpcInstance = () => {
     const rpcLib = require('node-bitcoin-rpc')
     rpcLib.init(config.rpc.host, config.rpc.port, config.rpc.username, config.rpc.password);
 
     let callsQueue: any[] = []
     let processing = false;
+
+
+    const callNext = () => {
+        if (callsQueue.length === 0) {
+            return;
+        }
+
+        const { fn, params, resolve, reject } = callsQueue.shift();
+
+        processing = true;
+
+        rpcLib.call(fn, params, (err: any, data: any) => {
+            processing = false;
+
+            if (err || !!data.error) {
+                console.log('Call failed', fn, err || data.error);
+
+                const errorResult = err || data.error;
+                const errorResponse = typeof errorResult === 'object' ? JSON.stringify(errorResult) : errorResult;
+
+                reject(new Error(errorResponse));
+            } else {
+                resolve(data.result);
+            }
+
+            callNext();
+        });
+    }
+
 
     return {
         call: (fn: string, params: any[] = []) => {
@@ -18,36 +47,11 @@ const createRpcInstance = () => {
                 params = [];
             }
 
-            const callNext = () => {
-                if (callsQueue.length === 0) {
-                    return;
-                }
-
-                const { fn, params, resolve, reject } = callsQueue.shift();
-
-                processing = true;
-                rpcLib.call(fn, params, (err: any, data: any) => {
-                    processing = false;
-
-                    if (err || !!data.error) {
-                        console.log('Call failed', fn, err || data.error);
-
-                        const errorResult = err || data.error;
-                        const errorResponse = typeof errorResult === 'object' ? JSON.stringify(errorResult) : errorResult;
-
-                        reject(new Error(errorResponse));
-                    } else {
-                        resolve(data.result);
-                    }
-
-                    callNext();
-                });
-            }
-
             const addCallToQueue = (resolve: any, reject: any) => {
                 const queueItem = { fn, params, resolve, reject }
 
                 callsQueue.push(queueItem);
+
                 if (processing) {
                     return;
                 }
@@ -64,12 +68,14 @@ const createRpcInstance = () => {
 }
 
 
-const globalInstance = createRpcInstance()
-const useGlobalInstance = () => {
-    return globalInstance;
+//const globalInstance = createGlobalRpcInstance()
+const createRpcInstance = () => {
+    const rpc = createGlobalRpcInstance()
+    return rpc
+    //return globalInstance;
 }
 //const rpc = createRpcInstance()
 
 export {
-    createRpcInstance: useGlobalInstance
+    createRpcInstance
 }

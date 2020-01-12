@@ -95,7 +95,7 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
                     ...query,
                 }
             }
-            return
+            return query
         }
 
         const replayEvents = async () => {
