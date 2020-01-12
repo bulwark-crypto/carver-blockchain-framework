@@ -1,22 +1,8 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 import { CarverTxType, CarverAddressType } from '../../../../classes/interfaces/carver'
+import { isPosTx, isEmptyNonstandardTx } from '../../../../classes/logic/txUtils'
 
-
-/**
- * Is this a POS transaction?
- */
-const isPosTx = (tx: any) => {
-
-    return tx.vin.length === 1 &&
-        tx.vin[0].txid !== undefined &&
-        tx.vin[0].vout !== undefined &&
-        tx.vout[0].value !== undefined &&
-        tx.vout[0].value === 0 &&
-        tx.vout[0].n === 0 &&
-        tx.vout[0].scriptPubKey &&
-        tx.vout[0].scriptPubKey.type === 'nonstandard';
-}
 const getVinUtxoLabels = (rpcTx: any) => {
     const utxoLabels = [];
 
@@ -46,6 +32,20 @@ const getVinUtxoLabels = (rpcTx: any) => {
  * Analyze a tx and return raw CarverMovement object data (to be finalized after)
  */
 const getRequiredMovements = (tx: any, utxos: any[]) => {
+
+    /**
+     * Zero POS txs do not require any movements, mark them as invalid txs.
+     */
+    if (isEmptyNonstandardTx(tx)) {
+        return {
+            txid: tx.txid,
+            txType: CarverTxType.Invalid,
+            totalAmountIn: 0,
+            totalAmountOut: 0,
+            consolidatedAddressAmounts: []
+        }
+    }
+
     let txType = null; // By default we don't know the tx type
 
     // We'll keep a tally of all inputs/outputs summed by address

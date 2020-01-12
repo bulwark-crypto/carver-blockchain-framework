@@ -31,7 +31,8 @@ export const CarverTxType = {
     TransferOneToMany: 'TRANSFER_ONE_TO_MANY', // One address to many addresses (Fan Out)
     TransferManyToMany: 'TRANSFER_MANY_TO_MANY', // One address to many addresses (Fan Out)
 
-    ProofOfWork: 'PROOF_OF_WORK',       // POW or POW+MN
-    ProofOfStake: 'PROOF_OF_STAKE',      // POS or POS+MN
-    Zerocoin: 'ZEROCOIN'           // > = 0 Send To Zerocoin, <0 = Spend Zerocoin
+    ProofOfWork: 'PROOF_OF_WORK', // POW or POW+MN
+    ProofOfStake: 'PROOF_OF_STAKE', // POS or POS+MN
+    Zerocoin: 'ZEROCOIN', // > = 0 Send To Zerocoin, <0 = Spend Zerocoin
+    Invalid: 'INVALID' // For invalid txs (such as 0 value POS)
 }
