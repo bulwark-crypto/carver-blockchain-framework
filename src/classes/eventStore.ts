@@ -108,11 +108,9 @@ const createEventStore = async ({ emitter, id }: CreateEventStoreParams): Promis
             // Fetch new events to replay            
             while (true) {
                 const query = getQuery();
+
                 //@todo look into cursors. Worried that it'll have some sort of internal MB memory limit. This approach might be a bit slower but won't have memory limitation.
                 const eventsToReplay = await db.collection(eventsCollectionName).find(query).limit(100).toArray(); // batch size of 100
-
-                //const permanentEventsByType = type === '*' ? storedEvents : storedEvents.filter(event => event.type === type);
-                //const eventsToReplay = subscriber.lastPlayedId !== undefined ? permanentEventsByType.filter(event => event.sequence > subscriber.lastPlayedId) : permanentEventsByType;
 
                 if (eventsToReplay.length === 0) {
                     break;

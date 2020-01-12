@@ -54,7 +54,6 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
         }
     });
 
-
     return withState(state)
         .store(commonLanguage.storage.InsertMany, utxos)
         //.store(commonLanguage.storage.UpdateLastTxSequence, sequence)

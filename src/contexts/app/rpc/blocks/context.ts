@@ -10,7 +10,6 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.heightMustBeSequential;
     }
 
-    console.log(height);
     return withState(state)
         .set({ height })
         .emit({
@@ -24,7 +23,6 @@ const withCommandParseGetInfo: Reducer = ({ state, event }) => {
 
     // Take the height from rpc getblock response
     const { blocks } = event.payload;
-
 
 
     // Limit the blocks to sync to first 1000 (expand when event store is completed)

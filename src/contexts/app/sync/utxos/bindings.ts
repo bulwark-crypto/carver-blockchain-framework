@@ -34,7 +34,9 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(utxos)
         .handleStore(utxosContext.commonLanguage.storage.InsertMany, async (utxos) => {
-            await db.collection('utxos').insertMany(utxos);
+            if (utxos.length > 0) {
+                await db.collection('utxos').insertMany(utxos);
+            }
         })
         .handleStore(utxosContext.commonLanguage.storage.GetByLabels, async (labels) => {
             // Create list of txid+n for number of vouts. vouts here is the count of number of vouts in the tx

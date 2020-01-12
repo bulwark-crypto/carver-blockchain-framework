@@ -15,6 +15,26 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     const db = await dbStore.get();
 
+    const initCollections = async () => {
+        const contextVersion = await db.collection('versions').findOne({ id: requiredMovements.id });
+        if (!contextVersion) {
+            await db.collection('requiredMovements').createIndex({ txid: 1 }, { unique: true });
+
+            await db.collection('versions').insertOne({ id: requiredMovements.id, version: 1 });
+        }
+    }
+    await initCollections();
+
+    const getLastRequiredMovement = async () => {
+        const requiredMovements = await db.collection('requiredMovements').find({}).sort({ _id: -1 }).limit(1);
+        for await (const requiredMovement of requiredMovements) {
+            return requiredMovement;
+        }
+
+        return null;
+    }
+    const lastRequiredMovement = await getLastRequiredMovement();
+
     withContext(requiredMovements)
         .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (requiredMovements) => {
             await db.collection('requiredMovements').insertOne(requiredMovements);
@@ -31,19 +51,18 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(utxos)
         .streamEvents({
-            type: utxosContext.commonLanguage.events.TxParsed, callback: async (event) => {
+            type: utxosContext.commonLanguage.events.TxParsed,
+            sequence: !!lastRequiredMovement ? lastRequiredMovement.sequence : 0, // Resume from last sequence
+            callback: async (event) => {
                 const txid = event.payload;
 
-                // Get rpc tx,block and utxos required to parse tx movements
+                // Get rpc tx
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
-                //console.log(txid, txUtxos);
 
                 await requiredMovements.dispatch({
                     type: requiredMovementsContext.commonLanguage.commands.ParseTx,
                     payload: {
-                        rpcTx,
-                        //height: rpcBlock.height,
-                        //utxos: txUtxos
+                        rpcTx
                     },
                     sequence: event.sequence // We'll store block sequence with the tx so we can resume from this state later on
                 })
