@@ -87,7 +87,11 @@ const bindContexts = async (contextStore: ContextStore) => {
             type: rpcGetInfoContext.commonLanguage.events.Updated,
             sessionOnly: true,
             callback: async (event) => {
-                await rpcBlocks.dispatch({ type: rpcBlocksContext.commonLanguage.commands.ParseGetInfo, payload: event.payload, sequence: event.sequence });
+                await rpcBlocks.dispatch({
+                    type: rpcBlocksContext.commonLanguage.commands.SyncAtHeight,
+                    payload: event.payload,
+                    sequence: event.sequence
+                });
             }
         });
 

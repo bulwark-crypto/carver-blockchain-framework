@@ -4,7 +4,7 @@ import { ReducerParams } from '../interfaces/context'
 type Reducer = (params: ReducerParams) => WithStateChain;
 interface ReduceParams {
     type?: string;
-    event: Event;
+    event?: Event;
     callback: (params: ReducerParams) => any;
 }
 interface WithStateChain {
