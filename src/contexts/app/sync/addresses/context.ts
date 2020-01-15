@@ -7,19 +7,23 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 const withCommandParseRequiredMovements: Reducer = ({ state, event }) => {
     const requiredMovements = event.payload;
 
-    const addresses = (requiredMovements.consolidatedAddressAmounts as any[]).map(consolidatedAddressAmount => consolidatedAddressAmount.label)
-
-    console.log('@todo query addresses', addresses)
+    const labels = (requiredMovements.consolidatedAddressAmounts as any[]).map(consolidatedAddressAmount => consolidatedAddressAmount.label)
 
     return withState(state)
-    /*.emit({
-        type: commonLanguage.events.AddressCreated,
-        payload: {}
-    });*/
-
+        .set({ labels })
+        .query(commonLanguage.queries.FindByLabels, labels)
 }
+const withQueryFindByLabels: Reducer = ({ state, event }) => {
+    const addresses = event.payload;
+
+    console.log('find by labels:', state.labels, addresses)
+
+    return state
+}
+
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
+        .reduce({ type: commonLanguage.queries.FindByLabels, event, callback: withQueryFindByLabels })
         .reduce({ type: commonLanguage.commands.ParseRequiredMovements, event, callback: withCommandParseRequiredMovements });
 }
 
@@ -29,6 +33,9 @@ const commonLanguage = {
     },
     events: {
         AddressCreated: 'ADDRESS_CREATED'
+    },
+    queries: {
+        FindByLabels: 'FIND_BY_LABELS'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',
