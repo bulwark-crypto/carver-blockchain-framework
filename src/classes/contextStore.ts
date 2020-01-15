@@ -114,13 +114,13 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 startedDispatching = false;
 
                 // After saving / changing state emit events & queries
-                const response = await contextDispatcher.emitQueries(request);
                 await contextDispatcher.emitEvents(emit);
 
+                const response = await contextDispatcher.emitQueries(request);
                 // If response is returned that means there are is a pending query. It'll be dispatch()'ed again to the context
                 return response
             } catch (err) {
-                console.log(`${id} exception:`, err);
+                console.log(`${id} exception:`);
                 throw err
             }
 

@@ -91,10 +91,10 @@ const start = async () => {
     id: 'REQUIRED_MOVEMENTS'
   });
 
-  /*await contextStore.register({
+  await contextStore.register({
     context: addressesContext,
     id: 'ADDRESSES'
-  });*/
+  });
 
   // Bind all contexts 
   const contextBindings = [
@@ -107,7 +107,7 @@ const start = async () => {
     apiSocketBindings,
     utxosBindings,
     requiredMovementsBindings,
-    //addressesBindings
+    addressesBindings
   ];
   for await (const contextBinding of contextBindings) {
     await contextBinding.bindContexts(contextStore as any);

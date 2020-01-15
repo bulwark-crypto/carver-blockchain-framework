@@ -42,11 +42,15 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleQuery(requiredMovementsContext.commonLanguage.queries.GetUtxosForTx, async ({ rpcTx, utxoLabels, sequence }) => {
             const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByLabels, utxoLabels);
 
+            //@todo only return rpcTx, .set the other arguments
             return {
                 rpcTx,
                 utxos: txUtxos,
                 sequence
             }
+        })
+        .handleStore(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, async (txid) => {
+            return await db.collection('requiredMovements').findOne({ txid });
         });
 
     withContext(utxos)
@@ -58,6 +62,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
                 // Get rpc tx
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
+                console.log('required movement:', rpcTx.height)
 
                 await requiredMovements.dispatch({
                     type: requiredMovementsContext.commonLanguage.commands.ParseTx,

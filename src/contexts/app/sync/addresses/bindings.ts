@@ -28,8 +28,14 @@ const bindContexts = async (contextStore: ContextStore) => {
         .streamEvents({
             type: requiredMovementsContext.commonLanguage.events.TxParsed, callback: async (event) => {
                 //@todo
+                const txid = event.payload
 
-                //await withContext(addresses).dispatch({ type: addressesContext.commonLanguage.commands.ParseRequiredMovements, payload: event.payload });
+                const requiredTxMovements = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
+
+                await addresses.dispatch({
+                    type: addressesContext.commonLanguage.commands.ParseRequiredMovements,
+                    payload: requiredTxMovements
+                });
             }
         });
 }

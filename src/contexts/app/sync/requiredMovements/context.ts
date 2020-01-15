@@ -97,7 +97,7 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
             const utxoLabel = `${vin.txid}:${vin.vout}`;
             const vinUtxo = utxos.find((utxo: any) => utxo.label === utxoLabel);
             if (!vinUtxo) {
-                console.log(utxos);
+                console.log(utxos, tx.txid);
                 throw `UTXO not found: ${utxoLabel}`; //@todo convert to commonLanguage error
             }
             addToAddress(CarverAddressType.Address, vinUtxo.addressLabel, -vinUtxo.amount);
@@ -322,7 +322,8 @@ const commonLanguage = {
         GetUtxosForTx: 'GET_UTXOS_FOR_TX'
     },
     storage: {
-        InsertOne: 'INSERT_ONE'
+        InsertOne: 'INSERT_ONE',
+        FindOneByTxId: 'FIND_ONE_BY_TXID'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',

@@ -7,15 +7,15 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 const withCommandParseRequiredMovements: Reducer = ({ state, event }) => {
     const requiredMovements = event.payload;
 
-    requiredMovements.consolidatedAddressAmounts.forEach((address: any) => {
-        //console.log('address:', address);
-    })
+    const addresses = (requiredMovements.consolidatedAddressAmounts as any[]).map(consolidatedAddressAmount => consolidatedAddressAmount.label)
+
+    console.log('@todo query addresses', addresses)
 
     return withState(state)
-        .emit({
-            type: commonLanguage.events.AddressCreated,
-            payload: {}
-        });
+    /*.emit({
+        type: commonLanguage.events.AddressCreated,
+        payload: {}
+    });*/
 
 }
 const reducer: Reducer = ({ state, event }) => {

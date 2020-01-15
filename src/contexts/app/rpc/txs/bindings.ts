@@ -54,6 +54,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
             const rpcTx = await rpc.call('getrawtransaction', [txid, 1]);
 
+            //@todo only return rpcTx, .set the other arguments
             // Transaction will be returned with block height and NewBlockReached sequence
             return {
                 rpcTx,
