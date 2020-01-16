@@ -5,10 +5,12 @@ import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import addressesContext from './context'
 import requiredMovementsContext from '../requiredMovements/context'
+import txsContext from '../../rpc/txs/context'
 
 const bindContexts = async (contextStore: ContextStore) => {
     const requiredMovements = await contextStore.get(requiredMovementsContext);
     const addresses = await contextStore.get(addressesContext);
+    const txs = await contextStore.get(txsContext);
 
     const db = await dbStore.get();
 
@@ -41,6 +43,13 @@ const bindContexts = async (contextStore: ContextStore) => {
             }
 
             return await db.collection('addresses').find({ label: { $in: labels } }).toArray();
+        })
+        .handleStore(addressesContext.commonLanguage.storage.CreateAddresses, async (addresses) => {
+            if (!addresses) {
+                return;
+            }
+
+            return await db.collection('addresses').insertMany(addresses);
         });
 
     withContext(requiredMovements)
@@ -51,9 +60,14 @@ const bindContexts = async (contextStore: ContextStore) => {
 
                 const requiredTxMovements = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
 
+                const tx = await txs.query(txsContext.commonLanguage.storage.FindOneByTxId, txid)
+
                 await addresses.dispatch({
                     type: addressesContext.commonLanguage.commands.ParseRequiredMovements,
-                    payload: requiredTxMovements
+                    payload: {
+                        requiredMovements: requiredTxMovements,
+                        height: tx.height
+                    }
                 });
             }
         });
