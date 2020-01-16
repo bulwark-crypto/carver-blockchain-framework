@@ -51,6 +51,9 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
     // We'll keep a tally of all inputs/outputs summed by address
     const consolidatedAddressAmounts = new Map();
     const addToAddress = (addressType: any, label: string, amount: number) => {
+        if (!label) {
+            throw `Invalid label: ${label} ${addressType}`
+        }
         if (!consolidatedAddressAmounts.has(label)) {
             consolidatedAddressAmounts.set(label, { label, addressType, amountIn: 0, amountOut: 0, amount: 0 });
         }
@@ -100,7 +103,7 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
                 console.log(utxos, tx.txid);
                 throw `UTXO not found: ${utxoLabel}`; //@todo convert to commonLanguage error
             }
-            addToAddress(CarverAddressType.Address, vinUtxo.addressLabel, -vinUtxo.amount);
+            addToAddress(CarverAddressType.Address, vinUtxo.address, -vinUtxo.amount);
 
             if (isPosTx(tx)) {
                 txType = CarverTxType.ProofOfStake;

@@ -24,7 +24,11 @@ const withQueryFindByLabels: Reducer = ({ state, event }) => {
         const { label, addressType } = consolidatedAddressAmount;
 
         // Ensure we'll only create new addresses once if they don't exist in addresses
-        if (!addresses.some(address => address.label === label) && !addressesToCreate.some(address => address.label === label)) {
+        if (
+            !addresses.some(address => address.label === label) &&
+            !state.addresses.some((address: any) => address.label === label) &&
+            !addressesToCreate.some(address => address.label === label)
+        ) {
             const newCarverAddress = {
                 label,
                 balance: 0,
@@ -43,7 +47,6 @@ const withQueryFindByLabels: Reducer = ({ state, event }) => {
                 sequence: 0,
             };
 
-
             return [
                 ...addressesToCreate,
                 newCarverAddress
@@ -56,11 +59,11 @@ const withQueryFindByLabels: Reducer = ({ state, event }) => {
     // Create new addresses if there are any and call back to same function once those addresses are created.
     if (newAddresses.length > 0) {
         const newAddressLabels = newAddresses.map((newAddress) => newAddress.label)
-        console.log('new addresses:', newAddressLabels)
+        console.log(`${newAddressLabels.length} new addresses on block ${state.height}`)
 
         return withState(state)
             .set({
-                addresses: [...state.addresses, addresses]
+                addresses: [...state.addresses, ...addresses]
             })
             .store(commonLanguage.storage.CreateAddresses, newAddresses)
             .query(commonLanguage.queries.FindByLabels, newAddressLabels)
