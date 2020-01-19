@@ -55,9 +55,9 @@ const bindContexts = async (contextStore: ContextStore) => {
             // Update all addresses in parallel
             await Promise.all(addressesToUpdate.map(
                 async (addressToUpdate: any) => {
-                    const { txid, fields } = addressToUpdate;
+                    const { address, fields } = addressToUpdate;
 
-                    await db.collection('addresses').updateOne({ txid }, { $set: fields });
+                    await db.collection('addresses').updateOne({ _id: address._id }, { $set: fields });
                 }));
         })
 

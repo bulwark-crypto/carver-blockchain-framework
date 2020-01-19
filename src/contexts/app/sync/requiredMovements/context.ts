@@ -107,7 +107,7 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
 
             if (isPosTx(tx)) {
                 txType = CarverTxType.ProofOfStake;
-                posAddressLabel = vinUtxo.addressLabel;
+                posAddressLabel = vinUtxo.address;
             }
         } else {
             console.log(vin);
