@@ -30,7 +30,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             sessionOnly: true,
             callback: async (event) => {
 
-                //await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize, sequence: event.sequence }); // event will be emitted to frontend with id (id, type, payload)
+                await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize, sequence: event.sequence }); // event will be emitted to frontend with id (id, type, payload)
             }
         })
 

@@ -63,6 +63,8 @@ const bindContexts = async (contextStore: ContextStore) => {
                 // Get rpc tx
                 const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
 
+                console.log('requiredMovements:', rpcTx.height)
+
                 await requiredMovements.dispatch({
                     type: requiredMovementsContext.commonLanguage.commands.ParseTx,
                     payload: {

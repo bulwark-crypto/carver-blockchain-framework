@@ -263,6 +263,7 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
     // Finally create our new movement
     const totalAmountIn = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountIn, 0);
     const totalAmountOut = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountOut, 0);
+
     return {
         txid: tx.txid,
         txType,

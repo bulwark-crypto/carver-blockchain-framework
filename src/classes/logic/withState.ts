@@ -67,6 +67,8 @@ const withState = (state: any) => {
 
         return stateChain;
     }
+
+    //@todo remove .request (in favor of .query)
     stateChain.request = (type: string, payload?: any) => {
 
         stateChain.state = {

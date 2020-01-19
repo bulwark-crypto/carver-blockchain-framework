@@ -49,8 +49,19 @@ const bindContexts = async (contextStore: ContextStore) => {
                 return;
             }
 
-            return await db.collection('addresses').insertMany(addresses);
-        });
+            await db.collection('addresses').insertMany(addresses);
+        })
+        .handleStore(addressesContext.commonLanguage.storage.UpdateFields, async (addressesToUpdate) => {
+            // Update all addresses in parallel
+            await Promise.all(addressesToUpdate.map(
+                async (addressToUpdate: any) => {
+                    const { txid, fields } = addressToUpdate;
+
+                    await db.collection('addresses').updateOne({ txid }, { $set: fields });
+                }));
+        })
+
+        ;
 
     withContext(requiredMovements)
         .streamEvents({
@@ -58,16 +69,19 @@ const bindContexts = async (contextStore: ContextStore) => {
                 //@todo
                 const txid = event.payload
 
-                const requiredTxMovements = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
+                const requiredMovement = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
 
                 const tx = await txs.query(txsContext.commonLanguage.storage.FindOneByTxId, txid)
 
+                console.log('address:', tx.height)
+
                 await addresses.dispatch({
-                    type: addressesContext.commonLanguage.commands.ParseRequiredMovements,
+                    type: addressesContext.commonLanguage.commands.ParseRequiredMovement,
                     payload: {
-                        requiredMovements: requiredTxMovements,
+                        requiredMovement,
                         height: tx.height
-                    }
+                    },
+                    sequence: event.sequence
                 });
             }
         });
