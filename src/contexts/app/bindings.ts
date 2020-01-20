@@ -4,6 +4,9 @@ import { ContextStore } from '../../classes/contextStore';
 import { dbStore } from '../../classes/adapters/mongodb/mongoDbInstance'
 import appContext from './context'
 
+/**
+ * Initial APP context binding. Initialize Versions db table (this is used for context version upgrades)
+ */
 const bindContexts = async (contextStore: ContextStore) => {
     const app = await contextStore.get(appContext);
 
@@ -20,6 +23,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         }
 
         // Create unique index on event sequence tracking. Contexts can use these to store last replayed event id and resume from last replayed event by using this sequence on app start.
+        //@todo remove? Don't think this is used anymore.
         const eventSequencesId = 'EVENT_SEQUENCES';
         const eventSequencesVersion = await db.collection('versions').findOne({ id: eventSequencesId });
         if (!eventSequencesVersion) {

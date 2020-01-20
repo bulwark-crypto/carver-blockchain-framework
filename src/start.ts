@@ -32,6 +32,9 @@ import requiredMovementsBindings from './contexts/app/sync/requiredMovements/bin
 import addressesContext from './contexts/app/sync/addresses/context'
 import addressesBindings from './contexts/app/sync/addresses/bindings'
 
+import addressMovementsContext from './contexts/app/sync/addressMovements/context'
+import addressMovementBindings from './contexts/app/sync/addressMovements/bindings'
+
 import apiSessionContext from './contexts/app/api/session/context'
 
 import { withContext } from './classes/logic/withContext'
@@ -96,6 +99,11 @@ const start = async () => {
     id: 'ADDRESSES'
   });
 
+  await contextStore.register({
+    context: addressMovementsContext,
+    id: 'ADDRESS_MOVEMENTS'
+  });
+
   // Bind all contexts 
   const contextBindings = [
     appBindings,
@@ -107,7 +115,8 @@ const start = async () => {
     apiSocketBindings,
     utxosBindings,
     requiredMovementsBindings,
-    addressesBindings
+    addressesBindings,
+    addressMovementBindings
   ];
   for await (const contextBinding of contextBindings) {
     await contextBinding.bindContexts(contextStore as any);

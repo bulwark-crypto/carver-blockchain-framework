@@ -23,6 +23,7 @@ const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
 
 const withProcessAddressMovements: Reducer = ({ state, event }) => {
     const { txType } = event.payload;
+    const { txid } = state.requiredMovement;
 
     let addressesToUpdate = [] as any[];
 
@@ -31,6 +32,11 @@ const withProcessAddressMovements: Reducer = ({ state, event }) => {
 
         if (!address) {
             throw `Could not find address: ${movementData.label}`
+        }
+
+        // Do not update address if this sequence was already parsed
+        if (address.sequence >= state.sequence) {
+            return;
         }
 
         const isReward = txType === CarverTxType.ProofOfWork || txType === CarverTxType.ProofOfStake;
@@ -67,7 +73,7 @@ const withProcessAddressMovements: Reducer = ({ state, event }) => {
     })
 
     return withState(state)
-        .store(commonLanguage.storage.UpdateFields, addressesToUpdate);
+        .store(commonLanguage.storage.UpdateFields, addressesToUpdate)
 }
 const withQueryFindByLabels: Reducer = ({ state, event }) => {
     const addresses = (event.payload as any[])
@@ -140,7 +146,7 @@ const commonLanguage = {
         ParseRequiredMovement: 'PARSE_REQUIRED_MOVEMENT'
     },
     events: {
-        AddressCreated: 'ADDRESS_CREATED'
+        RequiredMovementParsed: 'REQUIRED_MOVEMENT_PARSED'
     },
     queries: {
         FindByLabels: 'FIND_BY_LABELS'
@@ -150,9 +156,6 @@ const commonLanguage = {
         UpdateFields: 'UPDATE_FIELDS'
     },
     errors: {
-        heightMustBeSequential: 'Blocks must be sent in sequential order',
-        unableToFetchTx: 'Unable to fetch TX',
-        noTxVout: 'Unsupported transaction. (No vout[]).'
     }
 }
 

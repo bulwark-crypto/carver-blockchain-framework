@@ -36,6 +36,16 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
     await initCollections();
 
+    const getLastAddress = async () => {
+        const addresses = await db.collection('addresses').find({}).sort({ _id: -1 }).limit(1);
+        for await (const address of addresses) {
+            return address;
+        }
+
+        return null;
+    }
+    const lastAddress = await getLastAddress();
+
     withContext(addresses)
         .handleQuery(addressesContext.commonLanguage.queries.FindByLabels, async (labels) => {
             if (!labels) {
@@ -59,13 +69,13 @@ const bindContexts = async (contextStore: ContextStore) => {
 
                     await db.collection('addresses').updateOne({ _id: address._id }, { $set: fields });
                 }));
-        })
-
-        ;
+        });
 
     withContext(requiredMovements)
         .streamEvents({
-            type: requiredMovementsContext.commonLanguage.events.TxParsed, callback: async (event) => {
+            type: requiredMovementsContext.commonLanguage.events.TxParsed,
+            sequence: !!lastAddress ? lastAddress.sequence - 1 : 0, // Resume from PREVIOUS sequence (we'll want to re-process same sequence to ensure all movements were performed)
+            callback: async (event) => {
                 //@todo
                 const txid = event.payload
 

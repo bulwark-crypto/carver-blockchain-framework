@@ -3,8 +3,8 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withGetNextBlock: Reducer = ({ state, event }) => {
 
-    // Limit the blocks to sync to first 1000 (expand when event store is completed)
-    if (/*state.height > 20 ||*/ state.height >= state.blocks) {
+    // Limit the blocks to sync to first X (expand when event store is completed)
+    if (state.height > 1000 || state.height >= state.blocks) {
         return state;
     }
 
@@ -20,13 +20,18 @@ const withQueryGetBlock: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.heightMustBeSequential;
     }
 
+    const date = new Date(rpcBlock.time * 1000);
+
     return withState(state)
         .set({ height })
         .emit({
             type: commonLanguage.events.NewBlockReached,
             payload: height
         })
-        .store(commonLanguage.storage.InsertOne, rpcBlock)
+        .store(commonLanguage.storage.InsertOne, {
+            ...rpcBlock,
+            date
+        })
         .reduce({ callback: withGetNextBlock });
 }
 
