@@ -2,9 +2,6 @@ import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 import { CarverTxType, CarverAddressType } from '../../../../classes/interfaces/carver'
 
-/**
- * Ensure the required addresses are 
- */
 const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
     const { requiredMovement, height } = event.payload;
     const { sequence } = event;
@@ -82,10 +79,14 @@ const withQueryFindByLabels: Reducer = ({ state, event }) => {
         const { label, addressType } = consolidatedAddressAmount;
 
         // Ensure we'll only create new addresses once if they don't exist in addresses
+        const existingAddresses = [
+            ...state.addresses, // existing addresses
+            ...addresses, // addresses we found by labels
+            ...addressesToCreate // new addresses that we'll be created in this reducer
+        ]
+
         if (
-            !addresses.some(address => address.label === label) &&
-            !state.addresses.some((address: any) => address.label === label) &&
-            !addressesToCreate.some(address => address.label === label)
+            !existingAddresses.some(address => address.label === label)
         ) {
             const address = {
                 label,

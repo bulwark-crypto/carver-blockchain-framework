@@ -20,7 +20,8 @@ const bindContexts = async (contextStore: ContextStore) => {
         const contextVersion = await db.collection('versions').findOne({ id: addressMovements.id });
         if (!contextVersion) {
             // For sorting by most recent address transactions
-            await db.collection('addressMovements').createIndex({ address: 1, _id: 1 }, { unique: true });
+            await db.collection('addressMovementBalances').createIndex({ label: 1 }, { unique: true });
+            //await db.collection('addressMovementBalances').createIndex({ label: 1, _id: 1 }, { unique: true });
 
             await db.collection('versions').insertOne({ id: addressMovements.id, version: 1 });
         }
@@ -28,31 +29,31 @@ const bindContexts = async (contextStore: ContextStore) => {
     await initCollections();
 
     withContext(addressMovements)
-        .handleQuery(addressMovementsContext.commonLanguage.queries.FindByLabels, async (labels) => {
+        .handleQuery(addressMovementsContext.commonLanguage.queries.FindBalancesByLabels, async (labels) => {
             if (!labels) {
                 return [];
             }
 
-            return await db.collection('addressMovements').find({ label: { $in: labels } }).toArray();
+            return await db.collection('addressMovementBalances').find({ label: { $in: labels } }).toArray();
+        })
+        .handleStore(addressMovementsContext.commonLanguage.storage.InsertManyAddressBalances, async (addressBalances) => {
+            if (!addressBalances) {
+                return;
+            }
+
+            await db.collection('addressMovementBalances').insertMany(addressBalances);
         })/*
-    .handleStore(addressesContext.commonLanguage.storage.CreateAddresses, async (addresses) => {
-        if (!addresses) {
-            return;
-        }
+.handleStore(addressesContext.commonLanguage.storage.UpdateFields, async (addressesToUpdate) => {
+    // Update all addresses in parallel
+    await Promise.all(addressesToUpdate.map(
+        async (addressToUpdate: any) => {
+            const { address, fields } = addressToUpdate;
 
-        await db.collection('addresses').insertMany(addresses);
-    })
-    .handleStore(addressesContext.commonLanguage.storage.UpdateFields, async (addressesToUpdate) => {
-        // Update all addresses in parallel
-        await Promise.all(addressesToUpdate.map(
-            async (addressToUpdate: any) => {
-                const { address, fields } = addressToUpdate;
+            await db.collection('addresses').updateOne({ _id: address._id }, { $set: fields });
+        }));
+})
 
-                await db.collection('addresses').updateOne({ _id: address._id }, { $set: fields });
-            }));
-    })
-
-    ;*/
+;*/
 
     withContext(requiredMovements)
         .streamEvents({
@@ -65,8 +66,6 @@ const bindContexts = async (contextStore: ContextStore) => {
                 const tx = await txs.query(txsContext.commonLanguage.storage.FindOneByTxId, txid)
 
                 const block = await blocks.query(blocksContext.commonLanguage.storage.FindOneByHeight, tx.height)
-
-                console.log('addressMovments:', tx.height)
 
                 await addressMovements.dispatch({
                     type: addressMovementsContext.commonLanguage.commands.ParseRequiredMovement,
