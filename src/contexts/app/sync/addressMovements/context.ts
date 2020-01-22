@@ -3,7 +3,7 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 import { CarverTxType, CarverAddressType } from '../../../../classes/interfaces/carver'
 
 const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
-    const { requiredMovement, height } = event.payload;
+    const { requiredMovement, height, date } = event.payload;
     const { sequence } = event;
 
     const labels = (requiredMovement.consolidatedAddressAmounts as any[]).map(consolidatedAddressAmount => consolidatedAddressAmount.label)
@@ -11,6 +11,7 @@ const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
     return withState(state)
         .set({
             requiredMovement,
+            date,
             height,
             sequence,
             addressBalances: [],
@@ -20,10 +21,50 @@ const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
 }
 
 const withProcessAddressMovements: Reducer = ({ state, event }) => {
+    const { sequence, height, date } = state;
+    const { txType } = state.requiredMovement;
 
-    console.log('all addresses created', state.addressBalances.length)
-    return state;
+    let addressesToUpdate = [] as any[];
+    let newAddressMovements = [] as any[]
+    state.requiredMovement.consolidatedAddressAmounts.forEach((movementData: any) => {
+        const address = (state.addressBalances as any[]).find(addressBalance => addressBalance.label)
 
+        const balance = address.balance - movementData.amount;
+        const { label } = address
+
+        const isReward = txType === CarverTxType.ProofOfWork || txType === CarverTxType.ProofOfStake;
+
+        const addressMovement = {
+            date,
+            height,
+
+            label,
+            txid: state.requiredMovement.txid,
+            amountIn: movementData.amountIn,
+            amountOut: movementData.amountOut,
+            balance,
+            sequence,
+            //previousAddressMovement: lastMovement,
+            isReward
+        };
+        newAddressMovements.push(addressMovement)
+
+        let fieldsToUpdate = {
+            sequence,
+            balance
+        } as any
+
+        addressesToUpdate.push({
+            label,
+            fields: fieldsToUpdate
+        });
+    });
+
+    console.log('addressMovements:', state.height)
+
+    return withState(state)
+        .store(commonLanguage.storage.UpdateAddressBalances, addressesToUpdate)
+        .store(commonLanguage.storage.InsertManyAddressMovements, newAddressMovements)
 }
 const withQueryFindBalancesByAddresses: Reducer = ({ state, event }) => {
     const addressBalances = (event.payload as any[])
@@ -96,12 +137,14 @@ const commonLanguage = {
     },
     storage: {
         InsertManyAddressBalances: 'INSERT_MANY_ADDRESS_BALANCES',
-        UpdateFields: 'UPDATE_FIELDS'
+        UpdateAddressBalances: 'UPDATE_ADDRESS_BALANCES',
+        InsertManyAddressMovements: 'INSERT_MANY_ADDRESS_MOVEMENTS'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',
         unableToFetchTx: 'Unable to fetch TX',
-        noTxVout: 'Unsupported transaction. (No vout[]).'
+        noTxVout: 'Unsupported transaction. (No vout[]).',
+
     }
 }
 

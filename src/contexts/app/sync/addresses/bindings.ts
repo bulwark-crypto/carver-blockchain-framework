@@ -65,16 +65,16 @@ const bindContexts = async (contextStore: ContextStore) => {
             // Update all addresses in parallel
             await Promise.all(addressesToUpdate.map(
                 async (addressToUpdate: any) => {
-                    const { address, fields } = addressToUpdate;
+                    const { label, fields } = addressToUpdate;
 
-                    await db.collection('addresses').updateOne({ _id: address._id }, { $set: fields });
+                    await db.collection('addresses').updateOne({ label }, { $set: fields });
                 }));
         });
 
     withContext(requiredMovements)
         .streamEvents({
             type: requiredMovementsContext.commonLanguage.events.TxParsed,
-            sequence: !!lastAddress ? lastAddress.sequence - 1 : 0, // Resume from PREVIOUS sequence (we'll want to re-process same sequence to ensure all movements were performed)
+            sequence: !!lastAddress ? lastAddress.sequence : 0,
             callback: async (event) => {
                 //@todo
                 const txid = event.payload

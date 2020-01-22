@@ -28,6 +28,16 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
     await initCollections();
 
+    const getLastAddressMovementBalance = async () => {
+        const addressMovementBalances = await db.collection('addressMovementBalances').find({}).sort({ _id: -1 }).limit(1);
+        for await (const addressMovementBalance of addressMovementBalances) {
+            return addressMovementBalance;
+        }
+
+        return null;
+    }
+    const lastAddressMovementBalance = await getLastAddressMovementBalance();
+
     withContext(addressMovements)
         .handleQuery(addressMovementsContext.commonLanguage.queries.FindBalancesByLabels, async (labels) => {
             if (!labels) {
@@ -42,22 +52,34 @@ const bindContexts = async (contextStore: ContextStore) => {
             }
 
             await db.collection('addressMovementBalances').insertMany(addressBalances);
-        })/*
-.handleStore(addressesContext.commonLanguage.storage.UpdateFields, async (addressesToUpdate) => {
-    // Update all addresses in parallel
-    await Promise.all(addressesToUpdate.map(
-        async (addressToUpdate: any) => {
-            const { address, fields } = addressToUpdate;
+        })
+        .handleStore(addressMovementsContext.commonLanguage.storage.InsertManyAddressMovements, async (addressMovements) => {
+            if (!addressMovements) {
+                return;
+            }
 
-            await db.collection('addresses').updateOne({ _id: address._id }, { $set: fields });
-        }));
-})
+            await db.collection('addressMovements').insertMany(addressMovements);
+        })
+        .handleStore(addressMovementsContext.commonLanguage.storage.UpdateAddressBalances, async (addressesBalancesToUpdate) => {
+            // Update all addresses in parallel
+            await Promise.all(addressesBalancesToUpdate.map(
+                async (addressesBalanceToUpdate: any) => {
+                    console.log('update:', addressesBalanceToUpdate);
+                    const { label, fields } = addressesBalanceToUpdate;
 
-;*/
+                    await db.collection('addressMovementBalances').updateOne({ label }, { $set: fields });
+                }));
+        })
+
+        ;
+
 
     withContext(requiredMovements)
         .streamEvents({
-            type: requiredMovementsContext.commonLanguage.events.TxParsed, callback: async (event) => {
+            type: requiredMovementsContext.commonLanguage.events.TxParsed,
+            sequence: !!lastAddressMovementBalance ? lastAddressMovementBalance.sequence : 0,
+
+            callback: async (event) => {
                 //@todo
                 const txid = event.payload
 

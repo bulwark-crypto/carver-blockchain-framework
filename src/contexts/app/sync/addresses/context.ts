@@ -64,7 +64,7 @@ const withProcessAddressMovements: Reducer = ({ state, event }) => {
         }
 
         addressesToUpdate.push({
-            address,
+            label: address.label,
             fields: fieldsToUpdate
         });
     })
