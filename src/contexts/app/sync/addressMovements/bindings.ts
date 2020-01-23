@@ -19,9 +19,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     const initCollections = async () => {
         const contextVersion = await db.collection('versions').findOne({ id: addressMovements.id });
         if (!contextVersion) {
-            // For sorting by most recent address transactions
             await db.collection('addressMovementBalances').createIndex({ label: 1 }, { unique: true });
-            //await db.collection('addressMovementBalances').createIndex({ label: 1, _id: 1 }, { unique: true });
 
             await db.collection('versions').insertOne({ id: addressMovements.id, version: 1 });
         }
@@ -72,10 +70,7 @@ const bindContexts = async (contextStore: ContextStore) => {
 
                     await db.collection('addressMovementBalances').updateOne({ label }, { $set: fields });
                 }));
-        })
-
-        ;
-
+        });
 
     withContext(requiredMovements)
         .streamEvents({
@@ -83,7 +78,6 @@ const bindContexts = async (contextStore: ContextStore) => {
             sequence: !!lastAddressMovementBalance ? lastAddressMovementBalance.sequence : 0,
 
             callback: async (event) => {
-                //@todo
                 const txid = event.payload
 
                 const requiredMovement = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);

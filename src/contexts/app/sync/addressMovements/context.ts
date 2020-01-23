@@ -11,11 +11,10 @@ const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
     return withState(state)
         .set({
             requiredMovement,
+
             date,
             height,
             sequence,
-            addressBalances: [],
-            labels
         })
         .query(commonLanguage.queries.FindBalancesByLabels, labels)
 }
@@ -89,7 +88,6 @@ const withQueryFindBalancesByAddresses: Reducer = ({ state, event }) => {
         .store(commonLanguage.storage.UpdateAddressBalances, addressesBalancesToUpdate)
         .store(commonLanguage.storage.InsertManyAddressBalances, addressesBalancesToInsert)
         .store(commonLanguage.storage.InsertManyAddressMovements, newAddressMovements)
-
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -114,10 +112,6 @@ const commonLanguage = {
         InsertManyAddressMovements: 'INSERT_MANY_ADDRESS_MOVEMENTS'
     },
     errors: {
-        heightMustBeSequential: 'Blocks must be sent in sequential order',
-        unableToFetchTx: 'Unable to fetch TX',
-        noTxVout: 'Unsupported transaction. (No vout[]).',
-
     }
 }
 
