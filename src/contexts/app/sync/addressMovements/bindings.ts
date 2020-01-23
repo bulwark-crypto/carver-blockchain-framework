@@ -40,31 +40,34 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(addressMovements)
         .handleQuery(addressMovementsContext.commonLanguage.queries.FindBalancesByLabels, async (labels) => {
-            if (!labels) {
+            if (labels.length === 0) {
                 return [];
             }
 
             return await db.collection('addressMovementBalances').find({ label: { $in: labels } }).toArray();
         })
         .handleStore(addressMovementsContext.commonLanguage.storage.InsertManyAddressBalances, async (addressBalances) => {
-            if (!addressBalances) {
+            if (addressBalances.length === 0) {
                 return;
             }
 
             await db.collection('addressMovementBalances').insertMany(addressBalances);
         })
         .handleStore(addressMovementsContext.commonLanguage.storage.InsertManyAddressMovements, async (addressMovements) => {
-            if (!addressMovements) {
+            if (addressMovements.length === 0) {
                 return;
             }
 
             await db.collection('addressMovements').insertMany(addressMovements);
         })
         .handleStore(addressMovementsContext.commonLanguage.storage.UpdateAddressBalances, async (addressesBalancesToUpdate) => {
+            if (addressesBalancesToUpdate.length === 0) {
+                return;
+            }
+
             // Update all addresses in parallel
             await Promise.all(addressesBalancesToUpdate.map(
                 async (addressesBalanceToUpdate: any) => {
-                    console.log('update:', addressesBalanceToUpdate);
                     const { label, fields } = addressesBalanceToUpdate;
 
                     await db.collection('addressMovementBalances').updateOne({ label }, { $set: fields });
@@ -88,6 +91,8 @@ const bindContexts = async (contextStore: ContextStore) => {
                 const tx = await txs.query(txsContext.commonLanguage.storage.FindOneByTxId, txid)
 
                 const block = await blocks.query(blocksContext.commonLanguage.storage.FindOneByHeight, tx.height)
+
+                console.log('addressMovements:', tx.height)
 
                 await addressMovements.dispatch({
                     type: addressMovementsContext.commonLanguage.commands.ParseRequiredMovement,

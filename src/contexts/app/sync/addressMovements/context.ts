@@ -20,17 +20,35 @@ const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
         .query(commonLanguage.queries.FindBalancesByLabels, labels)
 }
 
-const withProcessAddressMovements: Reducer = ({ state, event }) => {
+const withQueryFindBalancesByAddresses: Reducer = ({ state, event }) => {
+    const addressBalances = (event.payload as any[])
+
     const { sequence, height, date } = state;
     const { txType } = state.requiredMovement;
 
-    let addressesToUpdate = [] as any[];
-    let newAddressMovements = [] as any[]
-    state.requiredMovement.consolidatedAddressAmounts.forEach((movementData: any) => {
-        const address = (state.addressBalances as any[]).find(addressBalance => addressBalance.label)
+    const getAddressBalanceByLabel = (label: string) => {
+        const addressBalance = addressBalances.find(addressBalance => addressBalance.label === label);
+        if (addressBalance) {
+            return addressBalance;
+        }
+        return {
+            label,
+            balance: 0,
+            sequence: 0,
+            isNew: true
+        }
+    }
 
-        const balance = address.balance - movementData.amount;
-        const { label } = address
+    const newAddressMovements = [] as any[];
+
+    const addressesBalancesToUpdate = [] as any[];
+    const addressesBalancesToInsert = [] as any[];
+
+    state.requiredMovement.consolidatedAddressAmounts.forEach((movementData: any) => {
+        const { isNew, ...addressBalance } = getAddressBalanceByLabel(movementData.label)
+
+        const balance = addressBalance.balance - movementData.amount;
+        const { label } = addressBalance
 
         const isReward = txType === CarverTxType.ProofOfWork || txType === CarverTxType.ProofOfStake;
 
@@ -49,73 +67,28 @@ const withProcessAddressMovements: Reducer = ({ state, event }) => {
         };
         newAddressMovements.push(addressMovement)
 
-        let fieldsToUpdate = {
+        const fieldsToUpdate = {
             sequence,
             balance
         } as any
 
-        addressesToUpdate.push({
-            label,
-            fields: fieldsToUpdate
-        });
+        if (isNew) {
+            addressesBalancesToInsert.push({
+                ...addressBalance,
+                ...fieldsToUpdate
+            })
+        } else {
+            addressesBalancesToUpdate.push({
+                label,
+                fields: fieldsToUpdate
+            });
+        }
     });
 
-    console.log('addressMovements:', state.height)
-
     return withState(state)
-        .store(commonLanguage.storage.UpdateAddressBalances, addressesToUpdate)
+        .store(commonLanguage.storage.UpdateAddressBalances, addressesBalancesToUpdate)
+        .store(commonLanguage.storage.InsertManyAddressBalances, addressesBalancesToInsert)
         .store(commonLanguage.storage.InsertManyAddressMovements, newAddressMovements)
-}
-const withQueryFindBalancesByAddresses: Reducer = ({ state, event }) => {
-    const addressBalances = (event.payload as any[])
-
-    const newAddressBalances = (state.requiredMovement.consolidatedAddressAmounts as any[]).reduce((addressesBalancesToCreate: any[], consolidatedAddressAmount: any) => {
-        const { label, addressType } = consolidatedAddressAmount;
-
-        // Ensure we'll only create new addresses balances once if they don't exist in addresses
-        const existingAddresses = [
-            ...state.addressBalances, // existing addresses balances
-            ...addressBalances, // address balances we found by labels
-            ...addressesBalancesToCreate // new address balances that we'll be created in this reducer
-        ]
-
-        if (
-            !existingAddresses.some(address => address.label === label)
-        ) {
-            const addressBalance = {
-                label,
-                balance: 0,
-                sequence: 0,
-            };
-
-            return [
-                ...addressesBalancesToCreate,
-                addressBalance
-            ]
-        }
-
-        return addressesBalancesToCreate
-    }, []) as any[];
-
-
-    // Create new address balances if there are any and call back to same function once those address balances are created.
-    if (newAddressBalances.length > 0) {
-        const newAddressLabels = newAddressBalances.map((newAddressBalance) => newAddressBalance.label)
-
-        return withState(state)
-            .set({
-                addressBalances: [...state.addressBalances, ...addressBalances]
-            })
-            .store(commonLanguage.storage.InsertManyAddressBalances, newAddressBalances)
-            .query(commonLanguage.queries.FindBalancesByLabels, newAddressLabels)
-
-    }
-
-    return withState(state)
-        .set({
-            addressBalances: [...state.addressBalances, ...addressBalances]
-        })
-        .reduce({ event, callback: withProcessAddressMovements })
 
 }
 
