@@ -14,22 +14,11 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     const db = await dbStore.get();
 
-    /*
     const initCollections = async () => {
         const contextVersion = await db.collection('versions').findOne({ id: addresses.id });
         if (!contextVersion) {
             await db.collection('addresses').createIndex({ label: 1 }, { unique: true });
-
-            await db.collection('versions').insertOne({ id: addresses.id, version: 1 });
-        }
-    }
-    await initCollections();
-    */
-
-    const initCollections = async () => {
-        const contextVersion = await db.collection('versions').findOne({ id: addresses.id });
-        if (!contextVersion) {
-            await db.collection('addresses').createIndex({ label: 1 }, { unique: true });
+            await db.collection('addresses').createIndex({ sequence: 1 }); // This would be TxParsed sequence
 
             await db.collection('versions').insertOne({ id: addresses.id, version: 1 });
         }
@@ -37,7 +26,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     await initCollections();
 
     const getLastAddress = async () => {
-        const addresses = await db.collection('addresses').find({}).sort({ _id: -1 }).limit(1);
+        const addresses = await db.collection('addresses').find({}).sort({ sequence: -1 }).limit(1);
         for await (const address of addresses) {
             return address;
         }
@@ -48,20 +37,24 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(addresses)
         .handleQuery(addressesContext.commonLanguage.queries.FindByLabels, async (labels) => {
-            if (!labels) {
+            if (labels.length === 0) {
                 return [];
             }
 
             return await db.collection('addresses').find({ label: { $in: labels } }).toArray();
         })
-        .handleStore(addressesContext.commonLanguage.storage.CreateAddresses, async (addresses) => {
-            if (!addresses) {
+        .handleStore(addressesContext.commonLanguage.storage.InsertMany, async (addresses) => {
+            if (addresses.length === 0) {
                 return;
             }
 
             await db.collection('addresses').insertMany(addresses);
         })
-        .handleStore(addressesContext.commonLanguage.storage.UpdateFields, async (addressesToUpdate) => {
+        .handleStore(addressesContext.commonLanguage.storage.UpdateMany, async (addressesToUpdate) => {
+            if (addressesToUpdate.length === 0) {
+                return;
+            }
+
             // Update all addresses in parallel
             await Promise.all(addressesToUpdate.map(
                 async (addressToUpdate: any) => {

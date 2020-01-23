@@ -20,6 +20,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         const contextVersion = await db.collection('versions').findOne({ id: addressMovements.id });
         if (!contextVersion) {
             await db.collection('addressMovementBalances').createIndex({ label: 1 }, { unique: true });
+            await db.collection('addressMovementBalances').createIndex({ sequence: 1 });
 
             await db.collection('versions').insertOne({ id: addressMovements.id, version: 1 });
         }
@@ -27,7 +28,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     await initCollections();
 
     const getLastAddressMovementBalance = async () => {
-        const addressMovementBalances = await db.collection('addressMovementBalances').find({}).sort({ _id: -1 }).limit(1);
+        const addressMovementBalances = await db.collection('addressMovementBalances').find({}).sort({ sequence: -1 }).limit(1);
         for await (const addressMovementBalance of addressMovementBalances) {
             return addressMovementBalance;
         }

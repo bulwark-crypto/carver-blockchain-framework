@@ -13,22 +13,48 @@ const withCommandParseRequiredMovement: Reducer = ({ state, event }) => {
             requiredMovement,
             height,
             sequence,
-            addresses: []
         })
         .query(commonLanguage.queries.FindByLabels, labels)
 }
 
-const withProcessAddressMovements: Reducer = ({ state, event }) => {
-    const { txType } = event.payload;
-    const { txid } = state.requiredMovement;
+const withQueryFindByLabels: Reducer = ({ state, event }) => {
+    const { txType, addressType } = state.requiredMovement;
 
+    const addresses = (event.payload as any[])
+
+    const getAddressByLabel = (label: string) => {
+        const address = addresses.find(address => address.label === label);
+        if (address) {
+            return address;
+        }
+        return {
+            label,
+            balance: 0,
+
+            height: state.height,
+            //date, //@todo
+            addressType,
+
+            // for stats
+            valueOut: 0,
+            valueIn: 0,
+            countIn: 0,
+            countOut: 0,
+
+            sequence: 0,
+            isNew: true
+        }
+    }
+
+    let addressesToInsert = [] as any[];
     let addressesToUpdate = [] as any[];
 
     state.requiredMovement.consolidatedAddressAmounts.forEach((movementData: any) => {
-        const address = state.addresses.find((stateAddress: any) => stateAddress.label === movementData.label);
+        const { label } = movementData;
+        const { isNew, ...address } = getAddressByLabel(label)
 
         if (!address) {
-            throw `Could not find address: ${movementData.label}`
+            throw `Could not find address: ${label}`
         }
 
         // Do not update address if this sequence was already parsed
@@ -63,77 +89,24 @@ const withProcessAddressMovements: Reducer = ({ state, event }) => {
             fieldsToUpdate.balance = address.balance + movementData.amountIn;
         }
 
-        addressesToUpdate.push({
-            label: address.label,
-            fields: fieldsToUpdate
-        });
+
+        if (isNew) {
+            addressesToInsert.push({
+                ...address,
+                ...fieldsToUpdate
+            })
+        } else {
+            addressesToUpdate.push({
+                label,
+                fields: fieldsToUpdate
+            });
+        }
     })
 
-    return withState(state)
-        .store(commonLanguage.storage.UpdateFields, addressesToUpdate)
-}
-const withQueryFindByLabels: Reducer = ({ state, event }) => {
-    const addresses = (event.payload as any[])
-
-    const newAddresses = (state.requiredMovement.consolidatedAddressAmounts as any[]).reduce((addressesToCreate: any[], consolidatedAddressAmount: any) => {
-        const { label, addressType } = consolidatedAddressAmount;
-
-        // Ensure we'll only create new addresses once if they don't exist in addresses
-        const existingAddresses = [
-            ...state.addresses, // existing addresses
-            ...addresses, // addresses we found by labels
-            ...addressesToCreate // new addresses that we'll be created in this reducer
-        ]
-
-        if (
-            !existingAddresses.some(address => address.label === label)
-        ) {
-            const address = {
-                label,
-                balance: 0,
-
-                height: state.height,
-                //date, //@todo
-                addressType,
-
-
-                // for stats
-                valueOut: 0,
-                valueIn: 0,
-                countIn: 0,
-                countOut: 0,
-
-                sequence: 0,
-            };
-
-            return [
-                ...addressesToCreate,
-                address
-            ]
-        }
-
-        return addressesToCreate
-    }, []) as any[];
-
-    // Create new addresses if there are any and call back to same function once those addresses are created.
-    if (newAddresses.length > 0) {
-        const newAddressLabels = newAddresses.map((newAddress) => newAddress.label)
-
-        return withState(state)
-            .set({
-                addresses: [...state.addresses, ...addresses]
-            })
-            .store(commonLanguage.storage.CreateAddresses, newAddresses)
-            .query(commonLanguage.queries.FindByLabels, newAddressLabels)
-
-    }
-
 
     return withState(state)
-        .set({
-            addresses: [...state.addresses, ...addresses]
-        })
-        .reduce({ event, callback: withProcessAddressMovements })
+        .store(commonLanguage.storage.InsertMany, addressesToInsert)
+        .store(commonLanguage.storage.UpdateMany, addressesToUpdate)
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -153,8 +126,8 @@ const commonLanguage = {
         FindByLabels: 'FIND_BY_LABELS'
     },
     storage: {
-        CreateAddresses: 'CREATE_ADDRESSES',
-        UpdateFields: 'UPDATE_FIELDS'
+        InsertMany: 'INSERT_MANY',
+        UpdateMany: 'UPDATE_MANY'
     },
     errors: {
     }
