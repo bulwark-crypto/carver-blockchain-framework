@@ -25,7 +25,7 @@ const withRequestApiSessionReserveSocket: Reducer = ({ state, event }) => {
             activeSessions
         })
         .emit({
-            type: 'API:SESSION:NEW',
+            type: commonLanguage.events.SessionReserved,
             payload: newSession
         });
 }
@@ -47,6 +47,9 @@ const commonLanguage = {
     commands: {
         ReserveNewSocket: 'RESERVE_NEW_SOCKET',
         Connect: 'CONNECT',
+    },
+    events: {
+        SessionReserved: 'SESSION_RESERVED'
     },
     queries: {
         GetNewUserContext: 'GET_NEW_USER_CONTEXT'

@@ -27,7 +27,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
                         withContext(carverUser).dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Emit, payload: { id, ...event } }); // event will be emitted to frontend with id (id, type, payload)
                     }
                 })
-                .dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id, variant } })
+                .dispatch({ type: 'Initialize', payload: { id, variant } }) // Initialize is called on each widget
 
             return {
                 id

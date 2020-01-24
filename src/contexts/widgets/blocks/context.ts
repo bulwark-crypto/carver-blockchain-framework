@@ -3,7 +3,7 @@ import { withState, Reducer } from '../../../classes/logic/withState'
 
 const withInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
-        throw commonLanguage.isAlreadyInitialized;
+        throw commonLanguage.errors.isAlreadyInitialized;
     }
     const { type, payload } = event;
     const { id, variant } = payload;
@@ -14,7 +14,7 @@ const withInitialize: Reducer = ({ state, event }) => {
             id,
             variant
         })
-        .query('LATEST_BLOCK_DETAILS');
+        .query(commonLanguage.queries.GetWidgetData);
 }
 const withQueryLatestBlockDetails: Reducer = ({ state, event }) => {
     const response = event.payload
@@ -22,7 +22,7 @@ const withQueryLatestBlockDetails: Reducer = ({ state, event }) => {
 
     return withState(state)
         .emit({
-            type: 'INITIALIZED',
+            type: commonLanguage.events.Intialized,
             payload: {
                 variant,
                 ...response,
@@ -37,7 +37,15 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
-    isAlreadyInitialized: 'You can only initialize state once'
+    queries: {
+        GetWidgetData: 'GET_WIDGET_DATA'
+    },
+    events: {
+        Intialized: 'INTIALIZED'
+    },
+    errors: {
+        isAlreadyInitialized: 'You can only initialize state once'
+    }
 }
 
 const initialState = {}
