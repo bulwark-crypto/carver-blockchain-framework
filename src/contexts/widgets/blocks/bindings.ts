@@ -11,8 +11,8 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
     const rpcGetInfo = await coreContextStore.get(rpcGetInfoContext);
 
     withContext(blocksWidget)
-        .handleQuery('LATEST_BLOCK_DETAILS', async () => {
-            const { blocks } = rpcGetInfo.stateStore.state.getInfo; // State here would be the latest getInfo
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.GetInitialState, async () => {
+            const blocks = await rpcGetInfo.query(rpcGetInfoContext.commonLanguage.storage.FindCurrentBlocksCount);
 
             return {
                 blocks

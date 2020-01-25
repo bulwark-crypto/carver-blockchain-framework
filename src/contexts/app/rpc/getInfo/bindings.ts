@@ -20,6 +20,9 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleQuery(rpcGetInfoContext.commonLanguage.queries.GetLatestRpcGetInfo, async () => {
             const info = await rpc.call('getinfo');
             return info;
+        })
+        .handleStore(rpcGetInfoContext.commonLanguage.storage.FindCurrentBlocksCount, async () => {
+            return rpcGetInfo.stateStore.state.blocks;
         });
 
     withContext(app)

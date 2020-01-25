@@ -1,7 +1,7 @@
 import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 
-const withInitialize: Reducer = ({ state, event }) => {
+const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
@@ -14,10 +14,10 @@ const withInitialize: Reducer = ({ state, event }) => {
             id,
             variant
         })
-        .query(commonLanguage.queries.GetWidgetData);
+        .query(commonLanguage.queries.GetInitialState);
 }
-const withQueryLatestBlockDetails: Reducer = ({ state, event }) => {
-    const response = event.payload
+const withQueryGetInitialState: Reducer = ({ state, event }) => {
+    const initialWidgetState = event.payload
     const { variant } = state;
 
     return withState(state)
@@ -25,20 +25,23 @@ const withQueryLatestBlockDetails: Reducer = ({ state, event }) => {
             type: commonLanguage.events.Intialized,
             payload: {
                 variant,
-                ...response,
+                ...initialWidgetState,
             }
         });
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: 'INITIALIZE', event, callback: withInitialize })
-        .reduce({ type: 'LATEST_BLOCK_DETAILS', event, callback: withQueryLatestBlockDetails });
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
+        .reduce({ type: commonLanguage.queries.GetInitialState, event, callback: withQueryGetInitialState });
 }
 
 const commonLanguage = {
+    commands: {
+        Initialize: 'INITIALIZE'
+    },
     queries: {
-        GetWidgetData: 'GET_WIDGET_DATA'
+        GetInitialState: 'GET_INITIAL_STATE'
     },
     events: {
         Intialized: 'INTIALIZED'
@@ -54,4 +57,4 @@ export default {
     initialState,
     reducer,
     commonLanguage
-} as Context
+}

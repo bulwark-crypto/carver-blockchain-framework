@@ -6,7 +6,7 @@ export interface EventStore {
 }
 
 export interface ReplayEventsParams {
-    type: string;
+    type?: string;
     sequence?: number;
     callback: (event: Event) => Promise<void>;
     /**

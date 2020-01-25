@@ -39,7 +39,7 @@ export interface RegisteredContext {
     dispatch: (event: Event) => Promise<void>;
     handleQuery: (type: string, callback: (event: Event) => Promise<any>) => void;
     handleStore: (type: string, callback: (payload: any) => Promise<any>) => void;
-    query: (query: string, payload: any) => Promise<any>;
+    query: (query: string, payload?: any) => Promise<any>;
 
     stateStore: StateStore;
     eventStore: EventStore;
@@ -106,6 +106,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 const { store, emit, request, ...stateWithoutSideEffects } = state;
 
                 // Save to permanent store / event store
+                //@todo add db transaction for this storing to ensure they both have guranteed saving
                 await contextDispatcher.saveToPermanentStore(store);
                 await contextDispatcher.saveToEventStore(emit);
 

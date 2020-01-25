@@ -22,12 +22,14 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             await withContext(blocksWidget)
                 // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
                 .streamEvents({
-                    type: '*', callback: async (event) => {
+                    //@todo in-memory streaming (don't store these)
+                    callback: async (event) => {
                         console.log('This will catch all widget events', event);
-                        withContext(carverUser).dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Emit, payload: { id, ...event } }); // event will be emitted to frontend with id (id, type, payload)
+                        withContext(carverUser)
+                            .dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Emit, payload: { id, ...event } }); // event will be emitted to frontend with id (id, type, payload)
                     }
                 })
-                .dispatch({ type: 'Initialize', payload: { id, variant } }) // Initialize is called on each widget
+                .dispatch({ type: 'INITIALIZE', payload: { id, variant } }) // INITIALIZE is called on each widget
 
             return {
                 id

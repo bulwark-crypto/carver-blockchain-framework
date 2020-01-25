@@ -40,16 +40,24 @@ const checkRpcErrors = (err: string) => {
 const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
     const rpcGetInfo = event.payload;
 
+    const { blocks } = rpcGetInfo;
+
+    //@todo compare height and only emit if changed
+
     return withState(state)
+        .set({
+            blocks
+        })
         .emit({
             type: commonLanguage.events.Updated,
-            payload: rpcGetInfo,// @todo store the info in permanent store and emit a lightweight event?
+            payload: rpcGetInfo,// @todo store the info in permanent store and emit a lightweight event? (right now it emits rpcgetinfo )
         })
 
 }
 
 const withInitialize: Reducer = ({ state, event }) => {
-    return withState(state).query(commonLanguage.queries.GetLatestRpcGetInfo);
+    return withState(state)
+        .query(commonLanguage.queries.GetLatestRpcGetInfo);
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -64,13 +72,16 @@ const initialState = {
 
 const commonLanguage = {
     commands: {
-        Initialize: 'INITIALIZED', //@todo this should be APP:INITIALIZED->INITIALIZE
+        Initialize: 'INITIALIZE', //@todo this should be APP:INITIALIZED->INITIALIZE
     },
     events: {
         Updated: 'UPDATED'
     },
     queries: {
         GetLatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
+    },
+    storage: {
+        FindCurrentBlocksCount: 'FIND_CURRENT_BLOCKS_COUNT',
     },
     errors: {
         // Connection issues
