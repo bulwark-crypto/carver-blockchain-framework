@@ -18,7 +18,6 @@ interface WithStateChain {
     emit: (event: Event) => WithStateChain;
     store: (query: string, payload?: any) => WithStateChain;
     set: (params: any) => WithStateChain;
-    request: (type: string, payload?: any) => WithStateChain;
     query: (type: string, payload?: any) => WithStateChain;
 }
 const withState = (state: any) => {
@@ -68,20 +67,18 @@ const withState = (state: any) => {
         return stateChain;
     }
 
-    //@todo remove .request (in favor of .query)
-    stateChain.request = (type: string, payload?: any) => {
+    stateChain.query = (type: string, payload?: any) => {
 
         stateChain.state = {
             ...stateChain.state,
-            request: [
-                ...(stateChain.state.request ? stateChain.state.request : []),
+            query: [
+                ...(stateChain.state.query ? stateChain.state.query : []),
                 { type, payload }
             ]
         };
 
         return stateChain;
     }
-    stateChain.query = stateChain.request;
 
     return stateChain;
 }

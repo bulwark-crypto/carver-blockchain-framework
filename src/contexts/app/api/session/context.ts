@@ -34,7 +34,7 @@ const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
     const { id } = event.payload
     console.log('(apiSession) client connected', id);
 
-    return withState(state).request(commonLanguage.queries.GetNewUserContext, { id });
+    return withState(state).query(commonLanguage.queries.GetNewUserContext, { id });
 }
 
 const reducer: Reducer = ({ state, event }) => {

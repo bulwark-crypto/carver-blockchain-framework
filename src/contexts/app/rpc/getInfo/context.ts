@@ -72,7 +72,7 @@ const initialState = {
 
 const commonLanguage = {
     commands: {
-        Initialize: 'INITIALIZE', //@todo this should be APP:INITIALIZED->INITIALIZE
+        Initialize: 'INITIALIZE'
     },
     events: {
         Updated: 'UPDATED'
@@ -81,7 +81,7 @@ const commonLanguage = {
         GetLatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
     },
     storage: {
-        FindCurrentBlocksCount: 'FIND_CURRENT_BLOCKS_COUNT',
+        FindCurrentBlocksCount: 'FIND_CURRENT_BLOCKS_COUNT'
     },
     errors: {
         // Connection issues

@@ -12,6 +12,10 @@ import { EventStore } from './interfaces/eventStore';
 
 interface RegisterContextParams {
     context: any;
+    /**
+     * If set to true events eimtted in Reducer will not be stored in database.
+     */
+    storeEvents?: boolean;
     id: string;
 }
 interface CreateContextStoreOptions {
@@ -48,7 +52,7 @@ export interface RegisteredContext {
 const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
     const registeredContexts: RegisteredContext[] = [];
 
-    const register = async <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options: any = { /*This could contain event storing options*/ }) => {
+    const register = async <EventType, TypeOfEventType>({ id, storeEvents, context }: RegisterContextParams) => {
 
         //@todo during registration process ensure the commonLanguage of context does not contain any duplicate strings
 
@@ -61,7 +65,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
         const emitter = new EventEmitter();
 
-        const eventStore = await createEventStore({ emitter, id });
+        const eventStore = await createEventStore({ emitter, id, storeEvents });
 
         //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
@@ -88,11 +92,12 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             storeHandlers.set(type, callback)
         }
 
+        const dispatchQueue = [] as any[];
         let startedDispatching = false;
         const dispatchNext = async (event: Event) => {
             if (startedDispatching) {
-                console.log(event);
-                throw `You can only dispatch ${id} one at a time`;
+                dispatchQueue.push(event);
+                return;
             }
             startedDispatching = true;
             try {
@@ -103,7 +108,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 // Notice that we store the new reducer after emitting the side effects
                 const state = reducerResults.isStateChain ? reducerResults.state : reducerResults;
 
-                const { store, emit, request, ...stateWithoutSideEffects } = state;
+                const { store, emit, query, ...stateWithoutSideEffects } = state;
 
                 // Save to permanent store / event store
                 //@todo add db transaction for this storing to ensure they both have guranteed saving
@@ -117,7 +122,15 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 // After saving / changing state emit events & queries
                 await contextDispatcher.emitEvents(emit);
 
-                const response = await contextDispatcher.emitQueries(request);
+                const response = await contextDispatcher.emitQueries(query);
+
+                // Utilize the queue if there are no additional queries to emit
+                if (!response) {
+                    if (dispatchQueue.length > 0) {
+                        return dispatchQueue.shift();
+                    }
+                }
+
                 // If response is returned that means there are is a pending query. It'll be dispatch()'ed again to the context
                 return response
             } catch (err) {
@@ -126,6 +139,9 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             }
 
         }
+
+
+
         const dispatch = async (event: Event) => {
             // Keep dispatching until there is no futher response from the context
             while (true) {

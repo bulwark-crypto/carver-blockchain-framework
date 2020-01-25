@@ -31,7 +31,7 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
     const widget = event.payload;
 
     return withState(state)
-        .request(commonLanguage.queries.GetNewWidgetContext, { ...widget, id: state.widgetContexts.length })
+        .query(commonLanguage.queries.GetNewWidgetContext, { ...widget, id: state.widgetContexts.length })
 }
 
 const withQueryGetNetworkStats: Reducer = ({ state, event }) => {
@@ -47,7 +47,7 @@ const withCommandConnect: Reducer = ({ state, event }) => {
 
     //@todo emit 
     return withState(state)
-        .request(commonLanguage.queries.GetNetworkStatus)
+        .query(commonLanguage.queries.GetNetworkStatus)
         .set({ isConnected: true })
 }
 

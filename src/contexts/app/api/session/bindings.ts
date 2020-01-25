@@ -63,7 +63,11 @@ const bindContexts = async (contextStore: ContextStore) => {
     withContext(apiSession)
         .handleQuery(apiSessionContext.commonLanguage.queries.GetNewUserContext, async ({ id }) => {
 
-            const carverUser = await usersContextStore.register({ id, context: carverUserContext })
+            const carverUser = await usersContextStore.register({
+                id,
+                storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
+                context: carverUserContext
+            })
             await carverUserBindings.bindContexts(usersContextStore, id);
 
             //@todo figure out how to pass widget events to frontend

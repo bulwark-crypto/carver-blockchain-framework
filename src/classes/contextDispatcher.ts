@@ -46,7 +46,6 @@ const bindContextDispatcher = ({ emitter, storeHandlers, queryHandlers, eventSto
         // Notify all subscribers that there is a new event of the types in permanent store
         // This will also notify eventStore streamEvents() listeners if they are already not replaying
         emit.forEach((event) => {
-
             emitter.emit(event.type, event);
 
             // The event is emitted second time to any wildcard listeners (ex: any widget events)

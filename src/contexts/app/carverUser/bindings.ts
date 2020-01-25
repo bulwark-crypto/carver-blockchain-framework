@@ -16,12 +16,19 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
         .handleQuery(carverUserContext.commonLanguage.queries.GetNewWidgetContext, async ({ id, variant }) => {
 
             //@todo create widgets based on variant
-            const blocksWidget = await userWidgetsContextStore.register({ id, context: blocksWidgetContext })
+            const blocksWidget = await userWidgetsContextStore.register({
+                id,
+                storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
+                context: blocksWidgetContext
+            })
             await blocksWidgetBindings.bindContexts(userWidgetsContextStore, id);
+
 
             await withContext(blocksWidget)
                 // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
                 .streamEvents({
+                    type: '*',
+
                     //@todo in-memory streaming (don't store these)
                     callback: async (event) => {
                         console.log('This will catch all widget events', event);

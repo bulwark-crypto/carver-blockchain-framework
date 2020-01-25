@@ -16,7 +16,7 @@ export interface State {
      * - Can not be queried
      * - Not stored
      */
-    request?: Event[];
+    query?: Event[];
 
     /**
      * - Can be queried
