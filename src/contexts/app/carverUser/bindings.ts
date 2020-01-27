@@ -31,7 +31,6 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
 
                     //@todo in-memory streaming (don't store these)
                     callback: async (event) => {
-                        console.log('This will catch all widget events', event);
                         withContext(carverUser)
                             .dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Emit, payload: { id, ...event } }); // event will be emitted to frontend with id (id, type, payload)
                     }

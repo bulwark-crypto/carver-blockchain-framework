@@ -49,7 +49,7 @@ const bindContextDispatcher = ({ emitter, storeHandlers, queryHandlers, eventSto
             emitter.emit(event.type, event);
 
             // The event is emitted second time to any wildcard listeners (ex: any widget events)
-            emitter.emit('*', { type: event.type, event });
+            emitter.emit('*', event);
         });
     }
     const emitQueries = async (queries: any) => {

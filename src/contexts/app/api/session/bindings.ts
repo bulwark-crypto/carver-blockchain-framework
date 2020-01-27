@@ -75,8 +75,9 @@ const bindContexts = async (contextStore: ContextStore) => {
             const forwardEventToSocket = async (event: Event) => {
                 // Forward any events a user emits back to socket (ex: widgets will emit on carver user)
                 if (socketMap.has(id)) {
-                    socketMap.get(id).emit(event.type, event.payload)
+                    socketMap.get(id).emit('emit', event)
                 }
+                console.log('* send to socket:', event);
             }
 
             console.log(`Initializing New Carver User ${id}`);
