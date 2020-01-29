@@ -18,15 +18,11 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
 }
 const withQueryGetInitialState: Reducer = ({ state, event }) => {
     const initialWidgetState = event.payload
-    const { variant } = state;
 
     return withState(state)
         .emit({
             type: commonLanguage.events.Intialized,
-            payload: {
-                variant,
-                ...initialWidgetState,
-            }
+            payload: initialWidgetState
         });
 }
 
@@ -51,7 +47,9 @@ const commonLanguage = {
     }
 }
 
-const initialState = {}
+const initialState = {
+    display: 'keyValue'
+}
 
 export default {
     initialState,

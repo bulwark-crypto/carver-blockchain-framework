@@ -40,13 +40,11 @@ const checkRpcErrors = (err: string) => {
 const withQueryRpcGetinfo: Reducer = ({ state, event }) => {
     const rpcGetInfo = event.payload;
 
-    const { blocks } = rpcGetInfo;
-
     //@todo compare height and only emit if changed
 
     return withState(state)
         .set({
-            blocks
+            last: rpcGetInfo
         })
         .emit({
             type: commonLanguage.events.Updated,
@@ -81,7 +79,7 @@ const commonLanguage = {
         GetLatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
     },
     storage: {
-        FindCurrentBlocksCount: 'FIND_CURRENT_BLOCKS_COUNT'
+        FindLastGetInfo: 'FIND_LAST_GETINFO'
     },
     errors: {
         // Connection issues

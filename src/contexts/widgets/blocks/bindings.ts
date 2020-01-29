@@ -12,10 +12,27 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
 
     withContext(blocksWidget)
         .handleQuery(blocksWidgetContext.commonLanguage.queries.GetInitialState, async () => {
-            const blocks = await rpcGetInfo.query(rpcGetInfoContext.commonLanguage.storage.FindCurrentBlocksCount);
+            const { variant, display } = blocksWidget.stateStore.state;
+
+            const {
+                version,
+                protocolversion,
+                blocks,
+                difficulty,
+                moneysupply
+            } = await rpcGetInfo.query(rpcGetInfoContext.commonLanguage.storage.FindLast);
 
             return {
-                blocks
+                version,
+                protocolversion,
+                blocks,
+                difficulty,
+                moneysupply,
+
+                configuration: {
+                    variant,
+                    display
+                }
             }
         });
 }

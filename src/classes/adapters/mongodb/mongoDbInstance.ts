@@ -5,7 +5,7 @@ const createDbInstance = () => {
     let db = null as Db
 
     const initialize = async (url: string, dbName: string) => {
-        const client = await MongoClient.connect(config.db.url, { useNewUrlParser: true });
+        const client = await MongoClient.connect(config.db.url, { useNewUrlParser: true, useUnifiedTopology: true });
         db = client.db(dbName);
 
         return db;

@@ -40,11 +40,9 @@ const bindContexts = async (contextStore: ContextStore) => {
             const id = getSocketSessionId(socket);
             socketMap.set(id, socket);
 
-            console.log('new socket!', id);
-
             const carverUser = await usersContextStore.get(carverUserContext, id);
 
-            console.log(`Websocket User Connected: ${id}`, carverUser);
+            console.log(`Websocket User Connected: ${id}`);
 
             socket.on('emit', async ({ type, payload }) => {
                 // Pass down this event to the context (with the socket identifier so we know which context triggered this event). 
