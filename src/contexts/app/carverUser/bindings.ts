@@ -29,13 +29,13 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
                 .streamEvents({
                     type: '*',
 
-                    //@todo in-memory streaming (don't store these)
                     callback: async (event) => {
-                        withContext(carverUser)
+                        //@todo this would be a good place for event batching (add all events into a queue and send them in batches to frontend after interval.). This would throttle number of calls to frontend (we can also send them out in chunks at at ime)
+                        await withContext(carverUser)
                             .dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Emit, payload: { id, ...event } }); // event will be emitted to frontend with id (id, type, payload)
                     }
                 })
-                .dispatch({ type: 'INITIALIZE', payload: { id, variant } }) // INITIALIZE is called on each widget
+                .dispatch({ type: 'INITIALIZE', payload: { id, variant } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
 
             return {
                 id

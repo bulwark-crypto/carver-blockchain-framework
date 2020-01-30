@@ -122,6 +122,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 // After saving / changing state emit events & queries
                 await contextDispatcher.emitEvents(emit);
 
+                //@todo this might be a good place to add timer. Dispatch an event with stats of how many queries were ran & how long they it took them to execute (For analytics and performance tuning)
                 const response = await contextDispatcher.emitQueries(query);
 
                 // Utilize the queue if there are no additional queries to emit

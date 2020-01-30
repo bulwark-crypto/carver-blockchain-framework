@@ -79,7 +79,28 @@ const bindContexts = async (contextStore: ContextStore) => {
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, async (height) => {
             return await db.collection('blocks').findOne({ height })
-        });
+        })
+        .handleStore(rpcBlocksContext.commonLanguage.storage.FindCountOfPages, async ({ page, limit }) => {
+            //@todo add caching
+            const count = await db
+                .collection('blocks')
+                .estimatedDocumentCount();
+
+            return count;
+
+        })
+        .handleStore(rpcBlocksContext.commonLanguage.storage.FindManyByPage, async ({ page, limit }) => {
+            //@todo add caching
+            const blocks = await db
+                .collection('blocks')
+                .find({})
+                .limit(limit)
+                .skip(page * limit);
+            return blocks.toArray();
+        })
+
+        ;
+
 
 
     withContext(rpcGetInfo)

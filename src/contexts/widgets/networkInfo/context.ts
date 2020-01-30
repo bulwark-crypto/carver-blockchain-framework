@@ -47,7 +47,7 @@ const commonLanguage = {
 
 const initialState = {
     variant: 'blocks',
-    display: 'table'
+    display: 'keyValue'
 }
 
 export default {

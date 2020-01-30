@@ -79,7 +79,7 @@ const commonLanguage = {
         GetLatestRpcGetInfo: 'LATEST_RPC_GET_INFO'
     },
     storage: {
-        FindLastGetInfo: 'FIND_LAST_GETINFO'
+        FindLast: 'FIND_LAST'
     },
     errors: {
         // Connection issues

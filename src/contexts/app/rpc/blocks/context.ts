@@ -79,6 +79,8 @@ const commonLanguage = {
     storage: {
         InsertOne: 'INSERT_ONE',
         FindOneByHeight: 'FIND_ONE_BY_HEIGHT',
+        FindManyByPage: 'FIND_MANY_BY_PAGE',
+        FindCountOfPages: 'FIND_COUNT_OF_PAGES'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'
