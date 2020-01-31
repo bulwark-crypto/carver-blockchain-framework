@@ -1,6 +1,11 @@
 import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 
+interface EmitToWidgetPayload {
+    id: string;
+    payload: any;
+}
+
 const withQueryGetNewWidgetContext: Reducer = ({ state, event }) => {
     const widgetContext = event.payload;
 
@@ -17,8 +22,16 @@ const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
             payload: event.payload
         });
 }
+const withCommandWidgetsCommand: Reducer = ({ state, event }) => {
+
+    return withState(state)
+        .query(commonLanguage.queries.EmitToWidget, event.payload as EmitToWidgetPayload);
+}
+
 const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
     const { id } = event.payload;
+
+    //@todo remove from widgetsContext
 
     return withState(state)
         .emit({
@@ -61,12 +74,15 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
     return withState(state).set({ id, isInitialized: true });
 }
 const reducer: Reducer = ({ state, event }) => {
+    //@todo add rate limit for incoming commands
+
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
 
         .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
         .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
+        .reduce({ type: commonLanguage.commands.Widgets.Command, event, callback: withCommandWidgetsCommand })
         .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
 
         .reduce({ type: commonLanguage.queries.GetNetworkStatus, event, callback: withQueryGetNetworkStats })
@@ -81,6 +97,7 @@ const commonLanguage = {
         Widgets: {
             Add: 'WIDGETS:ADD',
             Remove: 'WIDGETS:REMOVE',
+            Command: 'WIDGETS:COMMAND',
             Emit: 'WIDGETS:EMIT',
         }
     },
@@ -93,6 +110,7 @@ const commonLanguage = {
     queries: {
         GetNetworkStatus: 'GET_NETWORK_STATUS',
         GetNewWidgetContext: 'GET_NEW_WIDGET_CONTEXT',
+        EmitToWidget: 'EMIT_TO_WIDGET'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',

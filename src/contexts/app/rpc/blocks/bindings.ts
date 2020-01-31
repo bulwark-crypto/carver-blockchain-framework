@@ -95,7 +95,9 @@ const bindContexts = async (contextStore: ContextStore) => {
                 .collection('blocks')
                 .find({})
                 .limit(limit)
-                .skip(page * limit);
+                .skip(page * limit)
+                .sort({ height: -1 })
+                ;
             return blocks.toArray();
         })
 
