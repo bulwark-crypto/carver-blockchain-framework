@@ -27,7 +27,7 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
             // Only return partial getinfo information (Other known fields are not useful)
             const data = blocks.map(({ height, hash, date, tx, moneysupply }: any) => {
                 return {
-                    id: hash,
+                    id: height, //@todo id is only temporary until you can specify which key to use for id on frontend tables
                     height,
                     hash,
                     txsCount: tx.length,
