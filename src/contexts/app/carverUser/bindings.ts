@@ -15,8 +15,9 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     withContext(carverUser)
 
 
-        .handleQuery(carverUserContext.commonLanguage.queries.EmitToWidget, async ({ id, payload }) => {
-            console.log('@todo emit to widget', id, payload);
+        .handleQuery(carverUserContext.commonLanguage.queries.EmitToWidget, async ({ id, type, payload }) => {
+            const userWidget = await userWidgetsContextStore.getById(id);
+            await userWidget.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.GetNewWidgetContext, async ({ id, variant }) => {
 

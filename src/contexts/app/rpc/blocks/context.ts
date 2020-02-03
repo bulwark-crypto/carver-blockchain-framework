@@ -80,7 +80,7 @@ const commonLanguage = {
         InsertOne: 'INSERT_ONE',
         FindOneByHeight: 'FIND_ONE_BY_HEIGHT',
         FindManyByPage: 'FIND_MANY_BY_PAGE',
-        FindCountOfPages: 'FIND_COUNT_OF_PAGES'
+        FindCount: 'FIND_COUNT'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order'

@@ -28,6 +28,7 @@ interface ContextStore {
     parent?: ContextStore;
     register: <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
     get: (context: any, id?: string) => Promise<RegisteredContext>;
+    getById: (id: string) => Promise<RegisteredContext>;
     getParent: (id: string) => ContextStore;
 }
 export interface RegisteredContext {
@@ -184,6 +185,9 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
     const get = async <EventType, TypeOfEventType>(context: Context, id: string = null) => {
         return registeredContexts.find(registeredContext => registeredContext.context === context && (!!id ? registeredContext.id === id : true));
     };
+    const getById = async <EventType, TypeOfEventType>(id: string) => {
+        return registeredContexts.find(registeredContext => registeredContext.id === id);
+    };
 
     const getParent = (id: string) => {
         let context = parent;
@@ -207,6 +211,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         parent,
         register,
         get,
+        getById,
         getParent
     };
 }

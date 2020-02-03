@@ -23,7 +23,6 @@ const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
         });
 }
 const withCommandWidgetsCommand: Reducer = ({ state, event }) => {
-
     return withState(state)
         .query(commonLanguage.queries.EmitToWidget, event.payload as EmitToWidgetPayload);
 }
