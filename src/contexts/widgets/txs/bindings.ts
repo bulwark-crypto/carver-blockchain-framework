@@ -16,7 +16,8 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
         return txs.map((tx: any) => {
             return {
                 id: tx.txid, //@todo id is only temporary until you can specify which key to use for id on frontend tables
-                ...tx
+                txid: tx.txid,
+                height: tx.height
             };
         });
     }
