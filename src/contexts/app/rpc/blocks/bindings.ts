@@ -81,28 +81,23 @@ const bindContexts = async (contextStore: ContextStore) => {
             return await db.collection('blocks').findOne({ height })
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindCount, async () => {
-            //@todo add caching (this can be set in state)
-            const count = await db
-                .collection('blocks')
-                .estimatedDocumentCount();
+            // Current height will equal number of blocks. So we don't even need to query db to find number of blocks in db.
+            const { height } = rpcBlocks.stateStore.state;
 
-            return count;
+            return height;
 
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindManyByPage, async ({ page, limit }) => {
-            console.log('*query:', page, 'limit:', limit);
             //@todo add caching
             const blocks = await db
                 .collection('blocks')
                 .find({})
                 .sort({ height: -1 })
                 .skip(page * limit)
-                .limit(limit)
-                ;
-            return blocks.toArray();
-        })
+                .limit(limit);
 
-        ;
+            return blocks.toArray();
+        });
 
 
 

@@ -1,8 +1,9 @@
 import { withContext } from '../../../classes/logic/withContext';
 import { createContextStore, ContextStore } from '../../../classes/contextStore';
 
-import blocksWidgetContext from '../../widgets/blocks/context'
+import commonTableWidgetContext from '../../widgets/common/table/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'
+import txsWidgetBindings from '../../widgets/txs/bindings'
 
 import carverUserContext from './context'
 
@@ -21,16 +22,27 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
         })
         .handleQuery(carverUserContext.commonLanguage.queries.GetNewWidgetContext, async ({ id, variant }) => {
 
+            const getContext = () => {
+                //@todo move this into some config outside of this context
+                switch (variant) {
+                    case 'blocks':
+                        return { context: commonTableWidgetContext, bindings: blocksWidgetBindings };
+                    case 'txs':
+                        return { context: commonTableWidgetContext, bindings: txsWidgetBindings };
+                }
+            }
+
+            const { context, bindings } = getContext();
+
             //@todo create widgets based on variant
-            const blocksWidget = await userWidgetsContextStore.register({
+            const newWidget = await userWidgetsContextStore.register({
                 id,
                 storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
-                context: blocksWidgetContext
+                context
             })
-            await blocksWidgetBindings.bindContexts(userWidgetsContextStore, id);
+            await bindings.bindContexts(userWidgetsContextStore, id);
 
-
-            await withContext(blocksWidget)
+            await withContext(newWidget)
                 // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
                 .streamEvents({
                     type: '*',

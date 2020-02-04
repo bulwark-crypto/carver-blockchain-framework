@@ -70,6 +70,26 @@ const bindContexts = async (contextStore: ContextStore) => {
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.FindOneByTxId, async (txid) => {
             return await db.collection('txs').findOne({ txid });
+        })
+        .handleStore(rpcTxsContext.commonLanguage.storage.FindCount, async () => {
+            //@todo get initial, keep internal track to avoid db query
+            const count = await db
+                .collection('txs')
+                .estimatedDocumentCount();
+
+            return count;
+
+        })
+        .handleStore(rpcTxsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit }) => {
+            //@todo add caching
+            const blocks = await db
+                .collection('txs')
+                .find({})
+                .sort({ _id: -1 })
+                .skip(page * limit)
+                .limit(limit);
+
+            return blocks.toArray();
         });
 
 

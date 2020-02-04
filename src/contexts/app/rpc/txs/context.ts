@@ -87,7 +87,9 @@ const commonLanguage = {
     storage: {
         InsertOne: 'INSERT_ONE',
         GetByHeight: 'GET_BY_HEIGHT',
-        FindOneByTxId: 'FIND_ONE_BY_TX_ID'
+        FindOneByTxId: 'FIND_ONE_BY_TX_ID',
+        FindManyByPage: 'FIND_MANY_BY_PAGE',
+        FindCount: 'FIND_COUNT'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',

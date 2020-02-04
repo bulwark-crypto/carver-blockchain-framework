@@ -1,18 +1,22 @@
-import { Context } from '../../../classes/interfaces/context'
-import { withState, Reducer } from '../../../classes/logic/withState'
+import { Context } from '../../../../classes/interfaces/context'
+import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
-    const { id } = event.payload;
+    const { id, variant } = event.payload;
 
     return withState(state)
         .set({
             isInitialized: true,
-            id
+            id,
+            configuration: {
+                ...state.configuration,
+                variant
+            }
         })
-        .query(commonLanguage.queries.GetInitialState);
+        .query(commonLanguage.queries.GetRows, state.pageQuery);
 }
 const withCommandUpdatePage: Reducer = ({ state, event }) => {
     const { page } = event.payload;
@@ -43,7 +47,7 @@ const withQueryGetPage: Reducer = ({ state, event }) => {
             }
         });
 }
-const withQueryGetInitialState: Reducer = ({ state, event }) => {
+const withQueryGetRows: Reducer = ({ state, event }) => {
     const initialState = event.payload
 
     return withState(state)
@@ -52,7 +56,10 @@ const withQueryGetInitialState: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Intialized,
-            payload: initialState
+            payload: {
+                ...state,
+                ...initialState  // If state contains any private data we can remove it from emitting here
+            }
         });
 }
 
@@ -62,7 +69,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.UpdatePage, event, callback: withCommandUpdatePage })
         .reduce({ type: commonLanguage.commands.UpdateLimit, event, callback: withCommandUpdateLimit })
         .reduce({ type: commonLanguage.queries.GetPage, event, callback: withQueryGetPage })
-        .reduce({ type: commonLanguage.queries.GetInitialState, event, callback: withQueryGetInitialState });
+        .reduce({ type: commonLanguage.queries.GetRows, event, callback: withQueryGetRows });
 }
 
 const commonLanguage = {
@@ -72,7 +79,7 @@ const commonLanguage = {
         UpdateLimit: 'UPDATE_LIMIT',
     },
     queries: {
-        GetInitialState: 'GET_INITIAL_STATE',
+        GetRows: 'GET_ROWS',
         GetPage: 'GET_PAGE',
     },
     events: {
@@ -85,8 +92,12 @@ const commonLanguage = {
 }
 
 const initialState = {
-    variant: 'blocks',
-    display: 'table'
+    pageQuery: { page: 0, limit: 10 },
+
+    configuration: {
+        variant: 'blocks',
+        display: 'table'
+    }
 }
 
 export default {

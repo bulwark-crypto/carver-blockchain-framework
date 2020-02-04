@@ -1,7 +1,7 @@
 import { withContext } from '../../../classes/logic/withContext';
 import { ContextStore } from '../../../classes/contextStore';
 
-import blocksWidgetContext from './context'
+import blocksWidgetContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
 
 const bindContexts = async (contextStore: ContextStore, id: string) => {
@@ -25,12 +25,9 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
         });
     }
 
-    const limit = 10; // How many blocks to fetch per page?
-
     withContext(blocksWidget)
         .handleQuery(blocksWidgetContext.commonLanguage.queries.GetPage, async (pageQuery) => {
             const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
-
             const rows = getRowsFromBlocks(blocks);
 
             return {
@@ -38,26 +35,14 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
                 pageQuery
             };
         })
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.GetInitialState, async () => {
-            const { variant, display } = blocksWidget.stateStore.state;
-
-            const pageQuery = { page: 0, limit };
-
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.GetRows, async (pageQuery) => {
             const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQuery);
             const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
-
             const rows = getRowsFromBlocks(blocks);
 
             return {
                 rows,
-                page: 0, // Start from first page
-                count,
-                pageQuery,
-
-                configuration: {
-                    variant,
-                    display
-                }
+                count
             }
         });
 }
