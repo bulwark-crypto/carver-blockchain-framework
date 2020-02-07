@@ -4,7 +4,8 @@ import { createContextStore, ContextStore } from '../../../../classes/contextSto
 
 import apiSessionContext from '../session/context'
 
-import * as uniqid from 'uniqid'
+import * as uuidv4 from 'uuid/v4'
+
 
 interface GetNewSessionParams {
     sourceIdentifier: string;
@@ -17,7 +18,11 @@ const bindContexts = async (contextStore: ContextStore) => {
         const port = 3001 //@todo move to config
 
         const getNewSession = async ({ sourceIdentifier }: GetNewSessionParams) => {
-            const id = uniqid();
+
+            const getNewSessionId = () => {
+                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
+            }
+            const id = getNewSessionId();
 
             const payload = {
                 id,

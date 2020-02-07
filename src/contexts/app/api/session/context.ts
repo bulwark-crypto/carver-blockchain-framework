@@ -30,16 +30,25 @@ const withRequestApiSessionReserveSocket: Reducer = ({ state, event }) => {
         });
 }
 
+const withQueryInsertNewUserContext: Reducer = ({ state, event }) => {
+    const { id } = event.payload;
+
+    return withState(state)
+        .query(commonLanguage.queries.EmitUserPublicState, { id });
+}
+
 const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
     const { id } = event.payload
     console.log('(apiSession) client connected', id);
 
-    return withState(state).query(commonLanguage.queries.GetNewUserContext, { id });
+    return withState(state)
+        .query(commonLanguage.queries.InsertNewUserContext, { id });
 }
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.ReserveNewSocket, event, callback: withRequestApiSessionReserveSocket })
+        .reduce({ type: commonLanguage.queries.InsertNewUserContext, event, callback: withQueryInsertNewUserContext })
         .reduce({ type: commonLanguage.commands.Connect, event, callback: withRequestApiSessionConnect });
 }
 
@@ -52,7 +61,8 @@ const commonLanguage = {
         SessionReserved: 'SESSION_RESERVED'
     },
     queries: {
-        GetNewUserContext: 'GET_NEW_USER_CONTEXT'
+        InsertNewUserContext: 'INSERT_NEW_USER_CONTEXT',
+        EmitUserPublicState: 'EMIT_USER_PUBLIC_STATE',
     }
 }
 

@@ -1,40 +1,23 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
-const withCommandInitialize: Reducer = ({ state, event }) => {
-    if (state.isInitialized) {
-        throw commonLanguage.errors.isAlreadyInitialized;
-    }
-    const { id, variant } = event.payload;
-
-    return withState(state)
-        .set({
-            isInitialized: true,
-            id,
-            configuration: {
-                ...state.configuration,
-                variant
-            }
-        })
-        .query(commonLanguage.queries.GetRows, state.pageQuery);
-}
 const withCommandUpdatePage: Reducer = ({ state, event }) => {
     const { page } = event.payload;
     const { limit } = state.pageQuery;
 
     return withState(state)
-        .query(commonLanguage.queries.GetPage, { page, limit })
+        .query(commonLanguage.queries.FindPage, { page, limit })
 }
-const withCommandUpdateLimit: Reducer = ({ state, event }) => {
 
+const withCommandUpdateLimit: Reducer = ({ state, event }) => {
     const { limit } = event.payload;
     const { page } = state.pageQuery;
 
     return withState(state)
-        .query(commonLanguage.queries.GetPage, { page, limit })
+        .query(commonLanguage.queries.FindPage, { page, limit })
 }
 
-const withQueryGetPage: Reducer = ({ state, event }) => {
+const withQueryFindPage: Reducer = ({ state, event }) => {
     const { rows, pageQuery } = event.payload;
 
     return withState(state)
@@ -47,20 +30,34 @@ const withQueryGetPage: Reducer = ({ state, event }) => {
             }
         });
 }
-const withQueryGetRows: Reducer = ({ state, event }) => {
-    const initialState = event.payload
+
+const withQueryFindRows: Reducer = ({ state, event }) => {
+    const { rows, count } = event.payload
 
     return withState(state)
         .set({
-            ...initialState
+            rows,
+            count
         })
-        .emit({
-            type: commonLanguage.events.Intialized,
-            payload: {
-                ...state,
-                ...initialState  // If state contains any private data we can remove it from emitting here
+}
+
+const withCommandInitialize: Reducer = ({ state, event }) => {
+    if (state.isInitialized) {
+        throw commonLanguage.errors.isAlreadyInitialized;
+    }
+    const { id, variant } = event.payload;
+
+    return withState(state)
+        .set({
+            isInitialized: true,
+            id,
+
+            configuration: {
+                ...state.configuration,
+                variant
             }
-        });
+        })
+        .query(commonLanguage.queries.FindRows, state.pageQuery); // When context is initialized 
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -68,8 +65,8 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.UpdatePage, event, callback: withCommandUpdatePage })
         .reduce({ type: commonLanguage.commands.UpdateLimit, event, callback: withCommandUpdateLimit })
-        .reduce({ type: commonLanguage.queries.GetPage, event, callback: withQueryGetPage })
-        .reduce({ type: commonLanguage.queries.GetRows, event, callback: withQueryGetRows });
+        .reduce({ type: commonLanguage.queries.FindPage, event, callback: withQueryFindPage })
+        .reduce({ type: commonLanguage.queries.FindRows, event, callback: withQueryFindRows });
 }
 
 const commonLanguage = {
@@ -79,12 +76,15 @@ const commonLanguage = {
         UpdateLimit: 'UPDATE_LIMIT',
     },
     queries: {
-        GetRows: 'GET_ROWS',
-        GetPage: 'GET_PAGE',
+        FindRows: 'FIND_ROWS',
+        FindPage: 'FIND_PAGE',
     },
     events: {
         Intialized: 'INTIALIZED',
         StateUpdated: 'STATE_UPDATED',
+    },
+    storage: {
+        FindPublicState: 'FIND_PUBLIC_STATE'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once'
@@ -92,7 +92,12 @@ const commonLanguage = {
 }
 
 const initialState = {
-    pageQuery: { page: 0, limit: 10 },
+    pageQuery: {
+        page: 0,
+        limit: 10
+    },
+    rows: [] as any[],
+    count: 0,
 
     configuration: {
         variant: 'blocks',

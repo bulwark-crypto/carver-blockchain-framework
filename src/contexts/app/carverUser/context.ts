@@ -1,20 +1,32 @@
 import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 
+import * as uuidv4 from 'uuid/v4'
+
 interface EmitToWidgetPayload {
     id: string;
     payload: any;
 }
 
-const withQueryGetNewWidgetContext: Reducer = ({ state, event }) => {
-    const widgetContext = event.payload;
+const withQueryInsertNewWidgetContext: Reducer = ({ state, event }) => {
+    const { id, publicState } = event.payload;
 
     return withState(state)
-        .set({ widgetContexts: [...state.widgetContexts, widgetContext] })
+        .emit({
+            type: commonLanguage.events.PublicState.Set,
+            payload: publicState,
+            id
+        })
+        .set({
+            widgetContexts: [
+                ...state.widgetContexts,
+                id
+            ]
+        })
 
 }
 const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
-    //@todo add rate limit
+    //@todo add rate limit. We can also queue events and emit them as a batch
 
     return withState(state)
         .emit({
@@ -40,10 +52,19 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
 }
 
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
-    const widget = event.payload;
+    const { variant } = event.payload;
+
+    // At the moment each widget context id is simply it's length 
+    const getNextWidgetId = () => {
+        return uuidv4(); // Each new widget gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
+    }
+    const id = getNextWidgetId();
 
     return withState(state)
-        .query(commonLanguage.queries.GetNewWidgetContext, { ...widget, id: state.widgetContexts.length })
+        .query(commonLanguage.queries.InsertNewWidgetContext, {
+            id,
+            variant
+        })
 }
 
 const withQueryGetNetworkStats: Reducer = ({ state, event }) => {
@@ -59,7 +80,6 @@ const withCommandConnect: Reducer = ({ state, event }) => {
 
     //@todo emit 
     return withState(state)
-        .query(commonLanguage.queries.GetNetworkStatus)
         .set({ isConnected: true })
 }
 
@@ -84,8 +104,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Widgets.Command, event, callback: withCommandWidgetsCommand })
         .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
 
-        .reduce({ type: commonLanguage.queries.GetNetworkStatus, event, callback: withQueryGetNetworkStats })
-        .reduce({ type: commonLanguage.queries.GetNewWidgetContext, event, callback: withQueryGetNewWidgetContext });
+        .reduce({ type: commonLanguage.queries.InsertNewWidgetContext, event, callback: withQueryInsertNewWidgetContext });
 }
 
 const commonLanguage = {
@@ -101,15 +120,21 @@ const commonLanguage = {
         }
     },
     events: {
+        PublicState: {
+            Set: 'SET',
+            Added: 'ADDED'
+        },
         Widgets: {
             Emitted: 'WIDGETS:EMITTED',
             Removed: 'WIDGETS:REMOVED',
         }
     },
     queries: {
-        GetNetworkStatus: 'GET_NETWORK_STATUS',
-        GetNewWidgetContext: 'GET_NEW_WIDGET_CONTEXT',
+        InsertNewWidgetContext: 'INSERT_NEW_WIDGET_CONTEXT',
         EmitToWidget: 'EMIT_TO_WIDGET'
+    },
+    storage: {
+        FindPublicState: 'FIND_PUBLIC_STATE'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',
@@ -121,7 +146,6 @@ const initialState = {
     id: null as string,
     isInitialized: false,
     isConnected: false,
-    counter: 0,
     widgetContexts: [] as any[]
 }
 

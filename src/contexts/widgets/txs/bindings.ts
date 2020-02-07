@@ -23,7 +23,7 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
     }
 
     withContext(blocksWidget)
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.GetPage, async (pageQuery) => {
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.FindPage, async (pageQuery) => {
             const txs = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromTxs(txs);
 
@@ -32,7 +32,7 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
                 pageQuery
             };
         })
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.GetRows, async (pageQuery) => {
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.FindRows, async (pageQuery) => {
             const count = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindCount, pageQuery);
             const txs = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromTxs(txs);
@@ -41,7 +41,13 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
                 rows,
                 count
             }
-        });
+        })
+        .handleStore(blocksWidgetContext.commonLanguage.storage.FindPublicState, async () => {
+            // Right now entire state is public we can hide some fields from public view here
+            const state = rpcTxs.stateStore.state;
+
+            return state;
+        })
 }
 
 export default {
