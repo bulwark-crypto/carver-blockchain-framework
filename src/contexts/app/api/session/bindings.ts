@@ -55,7 +55,11 @@ const bindContexts = async (contextStore: ContextStore) => {
                 // The single socket context management is done internally by "apiSession" context
                 withContext(carverUser)
                     .dispatch({ type, payload });
-            })
+            });
+
+            // Now that we are connected we can emit public state to the socket
+            const publicState = await carverUser.query(carverUserContext.commonLanguage.storage.FindPublicState, id);
+            forwardEventToSocket(id, publicState);
 
             // @todo we can issue a new socket connection event here
         })
@@ -65,11 +69,14 @@ const bindContexts = async (contextStore: ContextStore) => {
     initSocketServer();
 
     const forwardEventToSocket = async (id: string, event: Event) => {
+        console.log('forward to:', id, event);
         // Forward any events a user emits back to socket (ex: widgets will emit on carver user)
-        if (socketMap.has(id)) {
-            socketMap.get(id).emit('emit', event)
+        if (!socketMap.has(id)) {
+            throw apiSessionContext.commonLanguage.errors.IdNotFound;
         }
-        console.log('* send to socket:', event);
+
+        const { type, ...eventWithoutType } = event;
+        socketMap.get(id).emit(type, eventWithoutType)
     }
 
     const createWidgetContext = async (id: string) => {
@@ -96,14 +103,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
 
     withContext(apiSession)
-        .handleQuery(apiSessionContext.commonLanguage.queries.EmitUserPublicState, async ({ id }) => {
-            // Find current public state for this user (and emit it to frontend)
-            const carverUser = await usersContextStore.getById(id);
-            const publicState = await carverUser.query(carverUserContext.commonLanguage.storage.FindPublicState);
-
-            forwardEventToSocket(id, publicState);
-        })
-        .handleQuery(apiSessionContext.commonLanguage.queries.InsertNewUserContext, async ({ id }) => {
+        .handleQuery(apiSessionContext.commonLanguage.queries.InsertNewUserContext, async (id) => {
             await createWidgetContext(id);
 
             return {

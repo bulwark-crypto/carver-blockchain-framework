@@ -33,8 +33,7 @@ const withRequestApiSessionReserveSocket: Reducer = ({ state, event }) => {
 const withQueryInsertNewUserContext: Reducer = ({ state, event }) => {
     const { id } = event.payload;
 
-    return withState(state)
-        .query(commonLanguage.queries.EmitUserPublicState, { id });
+    return withState(state);
 }
 
 const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
@@ -42,7 +41,7 @@ const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
     console.log('(apiSession) client connected', id);
 
     return withState(state)
-        .query(commonLanguage.queries.InsertNewUserContext, { id });
+        .query(commonLanguage.queries.InsertNewUserContext, id);
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -62,7 +61,11 @@ const commonLanguage = {
     },
     queries: {
         InsertNewUserContext: 'INSERT_NEW_USER_CONTEXT',
-        EmitUserPublicState: 'EMIT_USER_PUBLIC_STATE',
+    },
+    storage: {
+    },
+    errors: {
+        IdNotFound: 'ID_NOT_FOUND'
     }
 }
 

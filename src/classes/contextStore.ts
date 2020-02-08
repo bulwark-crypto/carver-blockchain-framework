@@ -46,6 +46,7 @@ export interface RegisteredContext {
     handleStore: (type: string, callback: (payload: any) => Promise<any>) => void;
     query: (query: string, payload?: any) => Promise<any>;
 
+    //@todo Exposing state store to other contexts is dangerous. Think of a way to prevent other contexts from accessing state directly. (You should access context state via queries ONLY)
     stateStore: StateStore;
     eventStore: EventStore;
 }
