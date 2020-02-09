@@ -9,9 +9,10 @@ import carverUserContext from './context'
 
 const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     // Fetch user's widget context store
-    const userWidgetsContextStore = createContextStore({ id: 'USER', parent: contextStore });
+    const userWidgetsContextStore = createContextStore({ id: 'USERS', parent: contextStore });
 
     const carverUser = await contextStore.get(carverUserContext, id)
+
 
     const createWidgetContext = async (id: string, variant: string) => {
         const getContext = () => {
@@ -29,7 +30,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
         //@todo create widgets based on variant
         const newWidget = await userWidgetsContextStore.register({
             id,
-            storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
+            storeEvents: false, // Do not use event store for emitting (These events are projected out to publicState context and do not need to be stored)
             context
         })
         await bindings.bindContexts(userWidgetsContextStore, id);
@@ -53,7 +54,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     }
 
     withContext(carverUser)
-        .handleQuery(carverUserContext.commonLanguage.queries.EmitToWidget, async ({ id, type, payload }) => {
+        .handleQuery(carverUserContext.commonLanguage.queries.DispatchToWidget, async ({ id, type, payload }) => {
             const userWidget = await userWidgetsContextStore.getById(id);
             await userWidget.dispatch({ type, payload })
         })
@@ -74,7 +75,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             const state = carverUser.stateStore.state;
 
             return state;
-        });
+        })
 }
 
 export default {

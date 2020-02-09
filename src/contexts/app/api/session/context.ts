@@ -57,7 +57,7 @@ const commonLanguage = {
         Connect: 'CONNECT',
     },
     events: {
-        SessionReserved: 'SESSION_RESERVED'
+        SessionReserved: 'SESSION_RESERVED',
     },
     queries: {
         InsertNewUserContext: 'INSERT_NEW_USER_CONTEXT',

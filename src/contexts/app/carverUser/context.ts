@@ -3,7 +3,7 @@ import { withState, Reducer } from '../../../classes/logic/withState'
 
 import * as uuidv4 from 'uuid/v4'
 
-interface EmitToWidgetPayload {
+interface DispatchToWidgetPayload {
     id: string;
     payload: any;
 }
@@ -13,7 +13,7 @@ const withQueryInsertNewWidgetContext: Reducer = ({ state, event }) => {
 
     return withState(state)
         .emit({
-            type: commonLanguage.events.PublicState.Set,
+            type: commonLanguage.events.Widgets.Added,
             payload: publicState,
             id
         })
@@ -36,7 +36,7 @@ const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
 }
 const withCommandWidgetsCommand: Reducer = ({ state, event }) => {
     return withState(state)
-        .query(commonLanguage.queries.EmitToWidget, event.payload as EmitToWidgetPayload);
+        .query(commonLanguage.queries.DispatchToWidget, event.payload as DispatchToWidgetPayload);
 }
 
 const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
@@ -67,11 +67,6 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
         })
 }
 
-const withQueryGetNetworkStats: Reducer = ({ state, event }) => {
-    //@todo the event payload here will contain network status (ex: users online)
-    return withState(state)
-}
-
 const withCommandConnect: Reducer = ({ state, event }) => {
     if (state.isConnected) {
         throw commonLanguage.errors.isAlreadyConnected;
@@ -90,7 +85,11 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
 
     const { id } = event.payload;
 
-    return withState(state).set({ id, isInitialized: true });
+    return withState(state)
+        .set({
+            id,
+            isInitialized: true
+        });
 }
 const reducer: Reducer = ({ state, event }) => {
     //@todo add rate limit for incoming commands
@@ -111,6 +110,7 @@ const commonLanguage = {
     commands: {
         Initialize: 'INITIALIZE',
         Connect: 'CONNECT',
+        CompleteConnection: 'COMPLETE_CONNECTION',
 
         Widgets: {
             Add: 'WIDGETS:ADD',
@@ -120,18 +120,20 @@ const commonLanguage = {
         }
     },
     events: {
-        PublicState: {
+        /*PublicState: {
+            Initialized: 'INITIALIZED',
             Set: 'SET',
             Added: 'ADDED'
-        },
+        },*/
         Widgets: {
+            Added: 'WIDGETS:ADDED',
             Emitted: 'WIDGETS:EMITTED',
             Removed: 'WIDGETS:REMOVED',
         }
     },
     queries: {
         InsertNewWidgetContext: 'INSERT_NEW_WIDGET_CONTEXT',
-        EmitToWidget: 'EMIT_TO_WIDGET'
+        DispatchToWidget: 'DISPATCH_TO_WIDGET',
     },
     storage: {
         FindPublicState: 'FIND_PUBLIC_STATE'

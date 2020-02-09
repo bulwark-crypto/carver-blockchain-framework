@@ -37,8 +37,6 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
-import { withContext } from './classes/logic/withContext'
-
 const start = async () => {
 
   console.log('Starting Carver Blockchain Framework')
@@ -104,7 +102,7 @@ const start = async () => {
     id: 'ADDRESS_MOVEMENTS'
   });
 
-  // Bind all contexts 
+  // Bind all contexts (Order matters)
   const contextBindings = [
     appBindings,
     rpcGetInfoBindings,

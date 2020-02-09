@@ -31,9 +31,10 @@ const bindContexts = async (contextStore: ContextStore) => {
 
             // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
             console.log(`Request new session: ${id}!`);
-            await withContext(apiSession).dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSocket, payload })
+            await apiSession
+                .dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSocket, payload })
 
-            const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id);
+            const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id); //@todo move to a query, shouldn't access state of another context directly
             return newSession;
         }
 
@@ -62,7 +63,6 @@ const bindContexts = async (contextStore: ContextStore) => {
     }
     bindServer();
 }
-
 
 export default {
     bindContexts
