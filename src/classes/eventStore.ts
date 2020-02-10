@@ -58,7 +58,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
 
     const initialSequence = !!sequence ? sequence : 0;
 
-    console.log(`Event Store: ${id} (sequence: ${sequence})`)
+    console.log(`Event Store: ${id} (sequence: ${sequence}) (storeEvents: ${storeEvents})`)
 
     const store = async (events: Event[]) => {
 
@@ -83,7 +83,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
         });
 
 
-        if (!storeEvents) {
+        if (storeEvents) {
             await db.collection(eventsCollectionName).insertMany(storedEvents);
         }
 

@@ -10,7 +10,7 @@ export interface ReplayEventsParams {
     sequence?: number;
     callback: (event: Event) => Promise<void>;
     /**
-     * If set to true only stream events that occured after thee app was started
+     * If set to true only stream events that occured after the app was started
      */
     sessionOnly?: boolean;
     //@todo add lastPlayedId

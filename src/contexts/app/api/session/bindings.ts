@@ -61,9 +61,15 @@ const bindContexts = async (contextStore: ContextStore) => {
 
             console.log(`Websocket User Connected: ${id}`);
 
+            //@todo try catch around this in case we're trying to access context that isn't registered
             const carverUser = await carverUsersContextStore.get(carverUserContext, id);
+            const publicState = await publicStatesContextStore.get(publicStateContext, id);
+
+            await publicState.dispatch({ type: publicStateContext.commonLanguage.commands.Initialize, payload: { id } })
 
             socket.on('emit', async ({ type, payload }) => {
+                //@todo try catch around the dispatch and forward error to publicState
+
                 // Pass down this event to the context (with the socket identifier so we know which context triggered this event). 
                 // The single socket context management is done internally by "apiSession" context
                 carverUser.dispatch({ type, payload });
@@ -90,12 +96,14 @@ const bindContexts = async (contextStore: ContextStore) => {
             storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
             context: publicStateContext
         })
-        await publicStateBindings.bindContexts(publicStatesContextStore, id);
+        await publicStateBindings.bindContexts(carverUsersContextStore, publicStatesContextStore, id);
     }
 
     const bindStreamsAndInitialize = async (id: string) => {
         const carverUser = await carverUsersContextStore.get(carverUserContext, id);
         const publicState = await publicStatesContextStore.get(publicStateContext, id);
+
+        await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id } });
 
         await withContext(publicState)
             // Proxy all events from a publicState to frontend
@@ -103,25 +111,11 @@ const bindContexts = async (contextStore: ContextStore) => {
                 type: '*',
 
                 callback: async (event) => {
+                    console.log('forward from publicState:', id, event);
                     forwardEventToSocket(id, event);
                 }
             })
 
-
-        await withContext(carverUser)
-            .streamEvents({
-                type: '*', // Forward all events from carverUser to publicState
-                callback: async (event) => {
-
-                    await publicState.dispatch({
-                        type: event.type,
-                        payload: { id, ...event } // event will be emitted to frontend with id (id, type, payload)
-                    });
-                }
-            })
-
-        await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id } });
-        await publicState.dispatch({ type: publicStateContext.commonLanguage.commands.Initialize, payload: { id } })
     }
 
     withContext(apiSession)
