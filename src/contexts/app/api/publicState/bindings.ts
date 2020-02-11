@@ -26,13 +26,13 @@ const bindContexts = async (carverUsersContextStore: ContextStore, publicStatesC
                         });
                         break;
                     case carverUserContext.commonLanguage.events.Widgets.Emitted:
-                        const { id: widgetId, type: widgetType, payload: widgetPayload } = event;
+                        const { id: widgetId, type: widgetType, payload: widgetPayload } = event.payload;
 
                         switch (widgetType) {
                             case 'INITIALIZED':
                                 await publicState.dispatch({
                                     id: widgetId,
-                                    type: publicStateContext.commonLanguage.commands.Widgets.Add,
+                                    type: publicStateContext.commonLanguage.commands.Widgets.Initialize,
                                     payload: widgetPayload
                                 });
                                 break;
@@ -44,7 +44,7 @@ const bindContexts = async (carverUsersContextStore: ContextStore, publicStatesC
                                 });
                                 break;
                             default:
-                                console.log('Unhandled publicState widget event:', event);
+                                console.log(`Unhandled publicState widget event ${widgetType}:`, event);
                         }
 
                         console.log('***widgets event:', event);

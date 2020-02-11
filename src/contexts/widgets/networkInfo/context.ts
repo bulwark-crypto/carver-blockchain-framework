@@ -19,7 +19,7 @@ const withQueryGetInitialState: Reducer = ({ state, event }) => {
 
     return withState(state)
         .emit({
-            type: commonLanguage.events.Intialized,
+            type: commonLanguage.events.Initialized,
             payload: state // Initial state of the wiget
         });
 }
@@ -38,7 +38,7 @@ const commonLanguage = {
         GetInitialState: 'GET_INITIAL_STATE'
     },
     events: {
-        Intialized: 'INTIALIZED'
+        Initialized: 'INITIALIZED'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once'

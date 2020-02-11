@@ -13,8 +13,8 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             id
         })
         .emit({
-            type: commonLanguage.events.Intialized,
-            payload: { id } // Emits publicState id to frontend
+            type: commonLanguage.events.Initialized,
+            payload: { id, widgets: [] } // Emits publicState id to frontend
         });
 }
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
@@ -34,7 +34,7 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Appended, // Let frontend know that this id has a new state addition (think .push into array)
             payload: {
-                id,
+                id: state.id,
                 widgets: [{ id }]
             }
         });
@@ -53,14 +53,15 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
         });
 }
 const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
-    const { id } = event.payload
+    const { id } = event;
+    const newWidgetState = event.payload
 
     console.log('partially update widget:', event);
 
     return withState(state)
         .emit({
             type: commonLanguage.events.Updated,
-            payload: { id, initialState } // Let frontend know that this id has a new state
+            payload: { id, newWidgetState } // Let frontend know that this id has a new state
         });
 }
 
@@ -84,7 +85,7 @@ const commonLanguage = {
     queries: {
     },
     events: {
-        Intialized: 'INTIALIZED',
+        Initialized: 'INITIALIZED',
         Updated: 'UPDATED',
         Appended: 'APPENDED',
     },

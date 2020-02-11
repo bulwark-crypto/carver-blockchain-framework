@@ -40,7 +40,7 @@ const withQueryFindInitialState: Reducer = ({ state, event }) => {
             count
         })
         .emit({
-            type: commonLanguage.events.PublicState.Intialized, // Initial public state
+            type: commonLanguage.events.PublicState.Initialized, // Initial public state
             payload: {
                 rows,
                 pageQuery
@@ -88,7 +88,7 @@ const commonLanguage = {
     },
     events: {
         PublicState: {
-            Intialized: 'INTIALIZED',
+            Initialized: 'INITIALIZED',
             Updated: 'UPDATED',
         },
     },
