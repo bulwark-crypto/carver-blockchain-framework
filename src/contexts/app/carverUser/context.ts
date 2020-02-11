@@ -9,13 +9,12 @@ interface DispatchToWidgetPayload {
 }
 
 const withQueryInsertNewWidgetContext: Reducer = ({ state, event }) => {
-    const { id, publicState } = event.payload;
+    const { id } = event.payload;
 
     return withState(state)
         .emit({
             type: commonLanguage.events.Widgets.Added,
-            payload: publicState,
-            id
+            payload: { id }
         })
         .set({
             widgetContexts: [

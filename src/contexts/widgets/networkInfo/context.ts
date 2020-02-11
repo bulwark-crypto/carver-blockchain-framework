@@ -20,7 +20,7 @@ const withQueryGetInitialState: Reducer = ({ state, event }) => {
     return withState(state)
         .emit({
             type: commonLanguage.events.Intialized,
-            payload: state
+            payload: state // Initial state of the wiget
         });
 }
 

@@ -35,21 +35,16 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
                 pageQuery
             };
         })
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.FindRows, async (pageQuery) => {
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQuery);
             const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromBlocks(blocks);
 
             return {
                 rows,
-                count
+                count,
+                pageQuery
             }
-        })
-        .handleStore(blocksWidgetContext.commonLanguage.storage.FindPublicState, async () => {
-            // Right now entire state is public we can hide some fields from public view here
-            const state = rpcBlocks.stateStore.state;
-
-            return state;
         })
 }
 

@@ -58,7 +58,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
 
     const initialSequence = !!sequence ? sequence : 0;
 
-    console.log(`Event Store: ${id} (sequence: ${sequence}) (storeEvents: ${storeEvents})`)
+    console.log(`Event Store: ${id} (sequence: ${sequence}) (storeEvents: ${!!storeEvents})`)
 
     const store = async (events: Event[]) => {
 

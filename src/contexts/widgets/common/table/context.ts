@@ -23,7 +23,7 @@ const withQueryFindPage: Reducer = ({ state, event }) => {
     return withState(state)
         .set({ pageQuery })
         .emit({
-            type: commonLanguage.events.StateUpdated,
+            type: commonLanguage.events.PublicState.Updated, // Public state of the widget was partially updated
             payload: {
                 rows,
                 pageQuery
@@ -31,14 +31,21 @@ const withQueryFindPage: Reducer = ({ state, event }) => {
         });
 }
 
-const withQueryFindRows: Reducer = ({ state, event }) => {
-    const { rows, count } = event.payload
+const withQueryFindInitialState: Reducer = ({ state, event }) => {
+    const { rows, count, pageQuery } = event.payload
 
     return withState(state)
         .set({
             rows,
             count
         })
+        .emit({
+            type: commonLanguage.events.PublicState.Intialized, // Initial public state
+            payload: {
+                rows,
+                pageQuery
+            }
+        });
 }
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
@@ -57,7 +64,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
                 variant
             }
         })
-        .query(commonLanguage.queries.FindRows, state.pageQuery); // When context is initialized 
+        .query(commonLanguage.queries.FindInitialState, state.pageQuery); // When context is initialized 
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -66,7 +73,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.UpdatePage, event, callback: withCommandUpdatePage })
         .reduce({ type: commonLanguage.commands.UpdateLimit, event, callback: withCommandUpdateLimit })
         .reduce({ type: commonLanguage.queries.FindPage, event, callback: withQueryFindPage })
-        .reduce({ type: commonLanguage.queries.FindRows, event, callback: withQueryFindRows });
+        .reduce({ type: commonLanguage.queries.FindInitialState, event, callback: withQueryFindInitialState });
 }
 
 const commonLanguage = {
@@ -76,15 +83,14 @@ const commonLanguage = {
         UpdateLimit: 'UPDATE_LIMIT',
     },
     queries: {
-        FindRows: 'FIND_ROWS',
+        FindInitialState: 'FIND_INITIAL_STATE',
         FindPage: 'FIND_PAGE',
     },
     events: {
-        Intialized: 'INTIALIZED',
-        StateUpdated: 'STATE_UPDATED',
-    },
-    storage: {
-        FindPublicState: 'FIND_PUBLIC_STATE'
+        PublicState: {
+            Intialized: 'INTIALIZED',
+            Updated: 'UPDATED',
+        },
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once'

@@ -41,11 +41,14 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
                 type: '*',
 
                 callback: async (event) => {
-                    //@todo this would be a good place for event batching (add all events into a queue and send them in batches to frontend after interval.). This would throttle number of calls to frontend (we can also send them out in chunks at at ime)
+                    console.log('widget event:', event);
+
+                    //@todo move these into commonLanguage as they're common amongst widgets
                     await carverUser.dispatch({
                         type: carverUserContext.commonLanguage.commands.Widgets.Emit,
                         payload: { id, ...event } // event will be emitted to frontend with id (id, type, payload)
                     });
+
                 }
             })
             .dispatch({ type: 'INITIALIZE', payload: { id, variant } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
@@ -61,12 +64,8 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContext, async ({ id, variant }) => {
             const newWidget = await createWidgetContext(id, variant);
 
-            // Each widget has a public state stored somewhere, this will be emitted back to frontend (carverUser emitted events are not stored and instead are projected to frontend)
-            const publicState = await newWidget.query('FIND_PUBLIC_STATE')
-
             return {
-                id,
-                publicState,
+                id
             }
         })
         .handleStore(carverUserContext.commonLanguage.storage.FindPublicState, async () => {
