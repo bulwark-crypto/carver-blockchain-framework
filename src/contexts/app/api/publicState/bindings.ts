@@ -46,8 +46,6 @@ const bindContexts = async (carverUsersContextStore: ContextStore, publicStatesC
                             default:
                                 console.log(`Unhandled publicState widget event ${widgetType}:`, event);
                         }
-
-                        console.log('***widgets event:', event);
                         break;
                     default:
                         console.log('Unhandled publicState event:', event);

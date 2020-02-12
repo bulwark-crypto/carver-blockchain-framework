@@ -9,12 +9,12 @@ interface DispatchToWidgetPayload {
 }
 
 const withQueryInsertNewWidgetContext: Reducer = ({ state, event }) => {
-    const { id } = event.payload;
+    const { id, variant } = event.payload;
 
     return withState(state)
         .emit({
             type: commonLanguage.events.Widgets.Added,
-            payload: { id }
+            payload: { id, variant }
         })
         .set({
             widgetContexts: [
@@ -22,6 +22,7 @@ const withQueryInsertNewWidgetContext: Reducer = ({ state, event }) => {
                 id
             ]
         })
+        .query(commonLanguage.queries.InitializeWidget, id)
 
 }
 const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
@@ -133,9 +134,7 @@ const commonLanguage = {
     queries: {
         InsertNewWidgetContext: 'INSERT_NEW_WIDGET_CONTEXT',
         DispatchToWidget: 'DISPATCH_TO_WIDGET',
-    },
-    storage: {
-        FindPublicState: 'FIND_PUBLIC_STATE'
+        InitializeWidget: 'INITIALIZE_WIDGET'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',

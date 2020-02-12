@@ -41,8 +41,6 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
                 type: '*',
 
                 callback: async (event) => {
-                    console.log('widget event:', event);
-
                     //@todo move these into commonLanguage as they're common amongst widgets
                     await carverUser.dispatch({
                         type: carverUserContext.commonLanguage.commands.Widgets.Emit,
@@ -51,7 +49,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
 
                 }
             })
-            .dispatch({ type: 'INITIALIZE', payload: { id, variant } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+
 
         return newWidget;
     }
@@ -62,18 +60,16 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             await userWidget.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContext, async ({ id, variant }) => {
-            const newWidget = await createWidgetContext(id, variant);
+            await createWidgetContext(id, variant);
 
             return {
-                id
+                id,
+                variant
             }
         })
-        .handleStore(carverUserContext.commonLanguage.storage.FindPublicState, async () => {
-
-            // Right now entire state is public we can hide some fields from public view here
-            const state = carverUser.stateStore.state;
-
-            return state;
+        .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidget, async (id) => {
+            const userWidget = await userWidgetsContextStore.getById(id);
+            userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
         })
 }
 
