@@ -13,10 +13,12 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             id
         })
         .emit({
-            type: commonLanguage.events.Reset,
+            type: commonLanguage.events.Pushed,
             payload: {
                 id,
-                widgets: []
+                parent: null,
+
+                variant: 'widgetsContainer'
             } // Emits publicState id to frontend
         });
 }
@@ -34,10 +36,12 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
             widgets
         })
         .emit({
-            type: commonLanguage.events.Appended, // Let frontend know that this id has a new state addition (think .push into array)
+            type: commonLanguage.events.Pushed, // Let frontend know that this id has a new state addition (think .push into widgets array)
             payload: {
-                id: state.id,
-                widgets: [{ id, variant }]
+                id: id,
+                parent: state.id,
+
+                variant
             }
         });
 }
@@ -48,7 +52,7 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
 
     return withState(state)
         .emit({
-            type: commonLanguage.events.Appended,
+            type: commonLanguage.events.Reduced,
             payload: {
                 id: id,
                 ...initialState     // Let frontend know that this id has a new state
@@ -61,7 +65,7 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
 
     return withState(state)
         .emit({
-            type: commonLanguage.events.Updated,
+            type: commonLanguage.events.Reduced,
             payload: {
                 id,
                 newWidgetState
@@ -89,9 +93,8 @@ const commonLanguage = {
     queries: {
     },
     events: {
-        Reset: 'RESET',
-        Updated: 'UPDATED',
-        Appended: 'APPENDED',
+        Pushed: 'PUSHED',
+        Reduced: 'REDUCED'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once'
