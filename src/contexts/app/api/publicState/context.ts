@@ -68,7 +68,7 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
             type: commonLanguage.events.Reduced,
             payload: {
                 id,
-                newWidgetState
+                ...newWidgetState
             } // Let frontend know that this id has a new state
         });
 }
