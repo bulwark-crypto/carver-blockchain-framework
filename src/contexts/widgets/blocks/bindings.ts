@@ -5,8 +5,12 @@ import blocksWidgetContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
 import carverUserContext from '../../app/carverUser/context'
 
-const bindContexts = async (contextStore: ContextStore, id: string) => {
+const bindContexts = async (contextStore: ContextStore, carverUserId: string, id: string) => {
     const blocksWidget = await contextStore.get(blocksWidgetContext, id);
+
+    // Each widget has access to the user that is displaying this widget. Allowing us to easily navigate between pages and add additional widgets on a page.
+    const carverUserContextStore = await contextStore.getParent('SESSIONS');
+    const carverUser = await carverUserContextStore.get(carverUserContext, carverUserId);
 
     // Since widgets are created in 'USER' contextStore, we need to get access to 'CORE' contextStore to fetch projected data
     const coreContextStore = await contextStore.getParent('CORE');
@@ -36,9 +40,9 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
                 pageQuery
             };
         })
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.SelectRow, async ({ carverUserId, row }) => {
-            const carverUser = await coreContextStore.get(carverUserContext, carverUserId) // @todo this doesn't work, we need context map of all contexts
-            console.log('blocks:', row, carverUser, carverUserId);
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.SelectRow, async ({ row }) => {
+            carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Add, payload: { variant: 'blocks' } })
+            console.log('blocks:', row, 'carverUser:', carverUser, 'carverUserId:', carverUserId);
         })
         .handleQuery(blocksWidgetContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQuery);

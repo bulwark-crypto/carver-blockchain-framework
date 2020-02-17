@@ -12,6 +12,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     const userWidgetsContextStore = createContextStore({ id: 'USER_WIDGETS', parent: contextStore });
 
     const carverUser = await contextStore.get(carverUserContext, id)
+    const carverUserId = id;
 
 
     const createWidgetContext = async (id: string, variant: string) => {
@@ -33,7 +34,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             storeEvents: false, // Do not use event store for emitting (These events are projected out to publicState context and do not need to be stored)
             context
         })
-        await bindings.bindContexts(userWidgetsContextStore, id);
+        await bindings.bindContexts(userWidgetsContextStore, carverUserId, id);
 
         await withContext(newWidget)
             // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)

@@ -69,12 +69,10 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
 }
 
 const withCommandSelect: Reducer = ({ state, event }) => {
-    const { id } = event;
-
     const row = (state.rows as any[]).find((row) => row.id === event.payload.id)
 
     return withState(state)
-        .query(commonLanguage.queries.SelectRow, { carverUserId: id, row }); // When context is initialized 
+        .query(commonLanguage.queries.SelectRow, { row });
 }
 
 const reducer: Reducer = ({ state, event }) => {
