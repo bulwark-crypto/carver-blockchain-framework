@@ -68,17 +68,28 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         .query(commonLanguage.queries.FindInitialState, state.pageQuery); // When context is initialized 
 }
 
+const withCommandSelect: Reducer = ({ state, event }) => {
+    const { id } = event;
+
+    const row = (state.rows as any[]).find((row) => row.id === event.payload.id)
+
+    return withState(state)
+        .query(commonLanguage.queries.SelectRow, { carverUserId: id, row }); // When context is initialized 
+}
+
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.UpdatePage, event, callback: withCommandUpdatePage })
         .reduce({ type: commonLanguage.commands.UpdateLimit, event, callback: withCommandUpdateLimit })
+        .reduce({ type: commonLanguage.commands.Select, event, callback: withCommandSelect })
         .reduce({ type: commonLanguage.queries.FindPage, event, callback: withQueryFindPage })
         .reduce({ type: commonLanguage.queries.FindInitialState, event, callback: withQueryFindInitialState });
 }
 
 const commonLanguage = {
     commands: {
+        Select: 'SELECT',
         Initialize: 'INITIALIZE',
         UpdatePage: 'UPDATE_PAGE',
         UpdateLimit: 'UPDATE_LIMIT',
@@ -86,6 +97,7 @@ const commonLanguage = {
     queries: {
         FindInitialState: 'FIND_INITIAL_STATE',
         FindPage: 'FIND_PAGE',
+        SelectRow: 'SELECT_ROW'
     },
     events: {
         PublicState: {

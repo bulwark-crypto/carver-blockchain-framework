@@ -9,7 +9,7 @@ import carverUserContext from './context'
 
 const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     // Fetch user's widget context store
-    const userWidgetsContextStore = createContextStore({ id: 'USERS', parent: contextStore });
+    const userWidgetsContextStore = createContextStore({ id: 'USER_WIDGETS', parent: contextStore });
 
     const carverUser = await contextStore.get(carverUserContext, id)
 

@@ -19,7 +19,7 @@ const withRequestApiSessionReserveSocket: Reducer = ({ state, event }) => {
         newSession
     ]
 
-    console.log('socket requested', activeSessions);
+    console.log('socket requested', newSession);
     return withState(state)
         .set({
             activeSessions

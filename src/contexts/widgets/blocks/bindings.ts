@@ -3,6 +3,7 @@ import { ContextStore } from '../../../classes/contextStore';
 
 import blocksWidgetContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
+import carverUserContext from '../../app/carverUser/context'
 
 const bindContexts = async (contextStore: ContextStore, id: string) => {
     const blocksWidget = await contextStore.get(blocksWidgetContext, id);
@@ -34,6 +35,10 @@ const bindContexts = async (contextStore: ContextStore, id: string) => {
                 rows,
                 pageQuery
             };
+        })
+        .handleQuery(blocksWidgetContext.commonLanguage.queries.SelectRow, async ({ carverUserId, row }) => {
+            const carverUser = await coreContextStore.get(carverUserContext, carverUserId) // @todo this doesn't work, we need context map of all contexts
+            console.log('blocks:', row, carverUser, carverUserId);
         })
         .handleQuery(blocksWidgetContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQuery);
