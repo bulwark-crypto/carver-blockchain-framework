@@ -14,22 +14,32 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Pushed,
-            payload: {
+            payload: [{
                 id,
                 parent: null,
 
                 variant: 'widgetsContainer'
-            } // Emits publicState id to frontend
+            }] // Emits publicState id to frontend
         });
 }
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
-    const { id, variant } = event.payload
+    const widgetContexts = event.payload
     console.log('*** widgets add:', event)
 
     const widgets = [
         ...state.widgets,
-        { id, variant }
+        ...widgetContexts
     ];
+
+    const containerWidgets = widgetContexts.map((widgetContext: any) => {
+        const { id, variant } = widgetContext;
+        return {
+            id,
+            variant,
+
+            parent: state.id,
+        }
+    })
 
     return withState(state)
         .set({
@@ -37,12 +47,7 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Pushed, // Let frontend know that this id has a new state addition (think .push into widgets array)
-            payload: {
-                id: id,
-                parent: state.id,
-
-                variant
-            }
+            payload: containerWidgets
         });
 }
 
@@ -53,10 +58,10 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
     return withState(state)
         .emit({
             type: commonLanguage.events.Reduced,
-            payload: {
+            payload: [{
                 id: id,
                 ...initialState     // Let frontend know that this id has a new state
-            }
+            }]
         });
 }
 const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
@@ -66,10 +71,10 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
     return withState(state)
         .emit({
             type: commonLanguage.events.Reduced,
-            payload: {
+            payload: [{
                 id,
                 ...newWidgetState
-            } // Let frontend know that this id has a new state
+            }] // Let frontend know that this id has a new state
         });
 }
 

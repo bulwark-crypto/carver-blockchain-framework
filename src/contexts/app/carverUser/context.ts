@@ -7,22 +7,27 @@ interface DispatchToWidgetPayload {
     id: string;
     payload: any;
 }
+export interface WidgetContext {
+    id: string;
+    variant: any;
+}
 
-const withQueryInsertNewWidgetContext: Reducer = ({ state, event }) => {
-    const { id, variant } = event.payload;
+const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
+    const newWidgetContexts = event.payload;
+    const ids = newWidgetContexts.map((newWidgetContext: WidgetContext) => newWidgetContext.id);
 
     return withState(state)
         .emit({
             type: commonLanguage.events.Widgets.Added,
-            payload: { id, variant }
+            payload: newWidgetContexts
         })
         .set({
             widgetContexts: [
                 ...state.widgetContexts,
-                id
+                ...newWidgetContexts
             ]
         })
-        .query(commonLanguage.queries.InitializeWidget, id)
+        .query(commonLanguage.queries.InitializeWidgets, ids)
 
 }
 const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
@@ -61,10 +66,10 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
     const id = getNextWidgetId();
 
     return withState(state)
-        .query(commonLanguage.queries.InsertNewWidgetContext, {
+        .query(commonLanguage.queries.InsertNewWidgetContexts, [{
             id,
             variant
-        })
+        }])
 }
 
 const withCommandConnect: Reducer = ({ state, event }) => {
@@ -91,6 +96,10 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             isInitialized: true
         });
 }
+const withCommandPagesNavigate: Reducer = ({ state, event }) => {
+    console.log(event);
+    return state;
+}
 const reducer: Reducer = ({ state, event }) => {
     //@todo add rate limit for incoming commands
 
@@ -103,7 +112,9 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Widgets.Command, event, callback: withCommandWidgetsCommand })
         .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
 
-        .reduce({ type: commonLanguage.queries.InsertNewWidgetContext, event, callback: withQueryInsertNewWidgetContext });
+        .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
+
+        .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts });
 }
 
 const commonLanguage = {
@@ -117,24 +128,25 @@ const commonLanguage = {
             Remove: 'WIDGETS:REMOVE',
             Command: 'WIDGETS:COMMAND',
             Emit: 'WIDGETS:EMIT',
+        },
+        Pages: {
+            Navigate: 'NAVIGATE'
         }
     },
     events: {
-        /*PublicState: {
-            Initialized: 'INITIALIZED',
-            Set: 'SET',
-            Added: 'ADDED'
-        },*/
         Widgets: {
             Added: 'WIDGETS:ADDED',
             Emitted: 'WIDGETS:EMITTED',
             Removed: 'WIDGETS:REMOVED',
+        },
+        Pages: {
+            Navigated: 'NAVIGATED'
         }
     },
     queries: {
-        InsertNewWidgetContext: 'INSERT_NEW_WIDGET_CONTEXT',
+        InsertNewWidgetContexts: 'INSERT_NEW_WIDGET_CONTEXTS',
         DispatchToWidget: 'DISPATCH_TO_WIDGET',
-        InitializeWidget: 'INITIALIZE_WIDGET'
+        InitializeWidgets: 'INITIALIZE_WIDGETS'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',

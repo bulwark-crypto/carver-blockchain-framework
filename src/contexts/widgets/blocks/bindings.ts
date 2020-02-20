@@ -41,7 +41,7 @@ const bindContexts = async (contextStore: ContextStore, carverUserId: string, id
             };
         })
         .handleQuery(blocksWidgetContext.commonLanguage.queries.SelectRow, async ({ row }) => {
-            carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Add, payload: { variant: 'blocks' } })
+            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Add, payload: { variant: 'blocks' } })
             console.log('blocks:', row, 'carverUser:', carverUser, 'carverUserId:', carverUserId);
         })
         .handleQuery(blocksWidgetContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {

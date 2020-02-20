@@ -60,17 +60,19 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             const userWidget = await userWidgetsContextStore.getById(id);
             await userWidget.dispatch({ type, payload })
         })
-        .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContext, async ({ id, variant }) => {
-            await createWidgetContext(id, variant);
+        .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
 
-            return {
-                id,
-                variant
+            for await (const { id, variant } of newWidgets) {
+                await createWidgetContext(id, variant);
             }
+
+            return newWidgets
         })
-        .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidget, async (id) => {
-            const userWidget = await userWidgetsContextStore.getById(id);
-            userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+        .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
+            for await (const id of widgetIds) {
+                const userWidget = await userWidgetsContextStore.getById(id);
+                userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+            }
         })
 }
 
