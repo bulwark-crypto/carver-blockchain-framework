@@ -17,13 +17,26 @@ const bindContexts = async (carverUsersContextStore: ContextStore, publicStatesC
 
                 switch (event.type) {
                     case carverUserContext.commonLanguage.events.Widgets.Added:
-                        const initialWidgetState = event.payload;
+                        {
+                            const initialWidgetsState = event.payload;
 
-                        await publicState.dispatch({
-                            id,
-                            type: publicStateContext.commonLanguage.commands.Widgets.Add,
-                            payload: initialWidgetState
-                        });
+                            await publicState.dispatch({
+                                id,
+                                type: publicStateContext.commonLanguage.commands.Widgets.Add,
+                                payload: initialWidgetsState
+                            });
+                        }
+                        break;
+                    case carverUserContext.commonLanguage.events.Widgets.Set:
+                        {
+                            const initialWidgetsState = event.payload;
+
+                            await publicState.dispatch({
+                                id,
+                                type: publicStateContext.commonLanguage.commands.Widgets.Set,
+                                payload: initialWidgetsState
+                            });
+                        }
                         break;
                     case carverUserContext.commonLanguage.events.Widgets.Emitted:
                         const { id: widgetId, type: widgetType, payload: widgetPayload } = event.payload;

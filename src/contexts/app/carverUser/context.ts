@@ -1,7 +1,6 @@
 import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 
-import * as uuidv4 from 'uuid/v4'
 
 interface DispatchToWidgetPayload {
     id: string;
@@ -12,9 +11,10 @@ export interface WidgetContext {
     variant: any;
 }
 
+
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
-    const newWidgetContexts = event.payload;
-    const ids = newWidgetContexts.map((newWidgetContext: WidgetContext) => newWidgetContext.id);
+    const newWidgetContexts = event.payload as WidgetContext[];
+    const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);
 
     return withState(state)
         .emit({
@@ -30,6 +30,26 @@ const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
         .query(commonLanguage.queries.InitializeWidgets, ids)
 
 }
+
+const withQueryFindWidgetContextsOnPage: Reducer = ({ state, event }) => {
+    const newWidgetContexts = event.payload as WidgetContext[];
+    const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);
+
+    return withState(state)
+        .emit({
+            type: commonLanguage.events.Widgets.Set,
+            payload: newWidgetContexts
+        })
+        .set({
+            widgetContexts: [
+                ...newWidgetContexts
+            ]
+        })
+        .query(commonLanguage.queries.InitializeWidgets, ids)
+
+}
+
+
 const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
     //@todo add rate limit. We can also queue events and emit them as a batch
 
@@ -59,15 +79,8 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
     const { variant } = event.payload;
 
-    // At the moment each widget context id is simply it's length 
-    const getNextWidgetId = () => {
-        return uuidv4(); // Each new widget gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
-    }
-    const id = getNextWidgetId();
-
     return withState(state)
         .query(commonLanguage.queries.InsertNewWidgetContexts, [{
-            id,
             variant
         }])
 }
@@ -97,9 +110,12 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         });
 }
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
-    console.log(event);
-    return state;
+    const { page } = event.payload;
+
+    return withState(state)
+        .query(commonLanguage.queries.FindWidgetContextsOnPage, { page })
 }
+
 const reducer: Reducer = ({ state, event }) => {
     //@todo add rate limit for incoming commands
 
@@ -114,7 +130,10 @@ const reducer: Reducer = ({ state, event }) => {
 
         .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
 
-        .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts });
+        .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
+        .reduce({ type: commonLanguage.queries.FindWidgetContextsOnPage, event, callback: withQueryFindWidgetContextsOnPage })
+
+        ;
 }
 
 const commonLanguage = {
@@ -127,7 +146,7 @@ const commonLanguage = {
             Add: 'WIDGETS:ADD',
             Remove: 'WIDGETS:REMOVE',
             Command: 'WIDGETS:COMMAND',
-            Emit: 'WIDGETS:EMIT',
+            Emit: 'WIDGETS:EMIT'
         },
         Pages: {
             Navigate: 'NAVIGATE'
@@ -136,6 +155,7 @@ const commonLanguage = {
     events: {
         Widgets: {
             Added: 'WIDGETS:ADDED',
+            Set: 'WIDGETS:SET',
             Emitted: 'WIDGETS:EMITTED',
             Removed: 'WIDGETS:REMOVED',
         },
@@ -146,7 +166,8 @@ const commonLanguage = {
     queries: {
         InsertNewWidgetContexts: 'INSERT_NEW_WIDGET_CONTEXTS',
         DispatchToWidget: 'DISPATCH_TO_WIDGET',
-        InitializeWidgets: 'INITIALIZE_WIDGETS'
+        InitializeWidgets: 'INITIALIZE_WIDGETS',
+        FindWidgetContextsOnPage: 'FIND_WIDGET_CONTEXTS_ON_PAGE'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',
@@ -158,7 +179,7 @@ const initialState = {
     id: null as string,
     isInitialized: false,
     isConnected: false,
-    widgetContexts: [] as any[]
+    widgetContexts: [] as WidgetContext[]
 }
 
 export default {

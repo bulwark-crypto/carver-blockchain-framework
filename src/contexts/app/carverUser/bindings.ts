@@ -7,6 +7,12 @@ import txsWidgetBindings from '../../widgets/txs/bindings'
 
 import carverUserContext from './context'
 
+import * as uuidv4 from 'uuid/v4'
+
+const getNextWidgetId = () => {
+    return uuidv4(); // Each new widget gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
+}
+
 const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     // Fetch user's widget context store
     const userWidgetsContextStore = createContextStore({ id: 'USER_WIDGETS', parent: contextStore });
@@ -14,6 +20,14 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     const carverUser = await contextStore.get(carverUserContext, id)
     const carverUserId = id;
 
+    const getVariantsOnPage = (page: string, params: any[]) => {
+        switch (page) {
+            case 'blocks':
+                return [{ variant: 'blocks' }, { variant: 'blocks' }, { variant: 'blocks' }]
+            case 'transactions':
+                return [{ variant: 'blocks' }, { variant: 'blocks' }]
+        }
+    }
 
     const createWidgetContext = async (id: string, variant: string) => {
         const getContext = () => {
@@ -61,12 +75,28 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             await userWidget.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
-
-            for await (const { id, variant } of newWidgets) {
+            const newWidgetContexts = [];
+            for await (const { variant } of newWidgets) {
+                const id = getNextWidgetId()
                 await createWidgetContext(id, variant);
+
+                newWidgetContexts.push({ id, variant });
             }
 
-            return newWidgets
+            return newWidgetContexts
+        })
+        .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async ({ page, params }) => {
+            const variants = getVariantsOnPage(page, params);
+
+            const pageWidgetContexts = [];
+            for await (const { variant } of variants) {
+                const id = getNextWidgetId()
+                await createWidgetContext(id, variant);
+
+                pageWidgetContexts.push({ id, variant });
+            }
+
+            return pageWidgetContexts
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
             for await (const id of widgetIds) {

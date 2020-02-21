@@ -22,16 +22,9 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             }] // Emits publicState id to frontend
         });
 }
-const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
-    const widgetContexts = event.payload
-    console.log('*** widgets add:', event)
 
-    const widgets = [
-        ...state.widgets,
-        ...widgetContexts
-    ];
-
-    const containerWidgets = widgetContexts.map((widgetContext: any) => {
+const getWidgetContextsWithParent = (state: any, widgetContexts: any[]) => {
+    return widgetContexts.map((widgetContext: any) => {
         const { id, variant } = widgetContext;
         return {
             id,
@@ -40,14 +33,35 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
             parent: state.id,
         }
     })
+}
+const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
+    const widgetContexts = event.payload
 
     return withState(state)
         .set({
-            widgets
+            widgets: [
+                ...state.widgets,
+                ...widgetContexts
+            ]
         })
         .emit({
             type: commonLanguage.events.Pushed, // Let frontend know that this id has a new state addition (think .push into widgets array)
-            payload: containerWidgets
+            payload: getWidgetContextsWithParent(state, widgetContexts)
+        });
+}
+const withCommandWidgetsSet: Reducer = ({ state, event }) => {
+    const widgetContexts = event.payload
+
+    console.log('/// set');
+    return withState(state)
+        .set({
+            widgets: [
+                ...widgetContexts
+            ]
+        })
+        .emit({
+            type: commonLanguage.events.Set, // Let frontend know that this id has a new state addition (think .push into widgets array)
+            payload: getWidgetContextsWithParent(state, widgetContexts)
         });
 }
 
@@ -82,6 +96,7 @@ const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
+        .reduce({ type: commonLanguage.commands.Widgets.Set, event, callback: withCommandWidgetsSet })
         .reduce({ type: commonLanguage.commands.Widgets.Initialize, event, callback: withCommandWidgetsInitialize })
         .reduce({ type: commonLanguage.commands.Widgets.Update, event, callback: withCommandWidgetsUpdate });
 }
@@ -91,6 +106,7 @@ const commonLanguage = {
         Initialize: 'INITIALIZE',
         Widgets: {
             Add: 'WIDGETS:ADD',
+            Set: 'WIDGETS:SET',
             Initialize: 'WIDGETS:INITIALIZE',
             Update: 'WIDGETS:UPDATE',
         }
@@ -99,7 +115,8 @@ const commonLanguage = {
     },
     events: {
         Pushed: 'PUSHED',
-        Reduced: 'REDUCED'
+        Reduced: 'REDUCED',
+        Set: 'SET',
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once'
