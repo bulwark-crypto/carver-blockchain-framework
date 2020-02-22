@@ -75,6 +75,7 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
             await userWidget.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
+
             const newWidgetContexts = [];
             for await (const { variant } of newWidgets) {
                 const id = getNextWidgetId()
@@ -85,6 +86,15 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
 
             return newWidgetContexts
         })
+        .handleQuery(carverUserContext.commonLanguage.queries.RemoveWidgetContexts, async (widgetContextIds) => {
+            for await (const widgetContextId of widgetContextIds) {
+                console.log('remove widget:', widgetContextId);
+                await userWidgetsContextStore.unregister(widgetContextId)
+            }
+
+            return widgetContextIds;
+        })
+
         .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async ({ page, params }) => {
             const variants = getVariantsOnPage(page, params);
 

@@ -27,6 +27,7 @@ interface ContextStore {
     id: string;
     parent?: ContextStore;
     register: <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
+    unregister: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>;
     getById: (id: string) => Promise<RegisteredContext>;
     getParent: (id: string) => ContextStore;
@@ -52,7 +53,8 @@ export interface RegisteredContext {
 }
 
 const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
-    const registeredContexts: RegisteredContext[] = [];
+    const registeredContexts = new Set<RegisteredContext>();
+    const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
     const register = async <EventType, TypeOfEventType>({ id, storeEvents, context }: RegisterContextParams) => {
 
@@ -178,16 +180,40 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             handleStore,
             query
         } as RegisteredContext
-        registeredContexts.push(registeredContext);
+        registeredContexts.add(registeredContext);
+        registeredContextsById.set(id, registeredContext);
 
         return registeredContext;
     };
 
+    const unregister = (id: string) => {
+        const registeredContext = registeredContextsById.get(id);
+        if (!registeredContext) {
+            //@todo Should we throw an exception if a context was not found with this id or silently fail?
+            return;
+        }
+
+        console.log('** unregister:', id);
+
+        registeredContexts.delete(registeredContext);
+        registeredContextsById.delete(id);
+    }
+
     const get = async <EventType, TypeOfEventType>(context: Context, id: string = null) => {
-        return registeredContexts.find(registeredContext => registeredContext.context === context && (!!id ? registeredContext.id === id : true));
+        for (const registeredContext of registeredContexts) {
+            if (registeredContext.context === context) {
+                if (!id) {
+                    return registeredContext;
+                }
+
+                if (id === registeredContext.id) {
+                    return registeredContext;
+                }
+            }
+        }
     };
     const getById = async <EventType, TypeOfEventType>(id: string) => {
-        return registeredContexts.find(registeredContext => registeredContext.id === id);
+        return registeredContextsById.get(id);
     };
 
     const getParent = (id: string) => {
@@ -211,6 +237,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         id,
         parent,
         register,
+        unregister,
         get,
         getById,
         getParent
