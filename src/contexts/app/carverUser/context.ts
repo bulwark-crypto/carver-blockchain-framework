@@ -66,9 +66,14 @@ const withCommandWidgetsCommand: Reducer = ({ state, event }) => {
 
 const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
     const { id } = event.payload;
+    const widgetIds = [id];
 
     return withState(state)
-        .query(commonLanguage.queries.RemoveWidgetContexts, [id])
+        .emit({
+            type: commonLanguage.events.Widgets.Removed,
+            payload: widgetIds
+        })
+        .query(commonLanguage.queries.RemoveWidgetContexts, widgetIds)
 }
 
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {

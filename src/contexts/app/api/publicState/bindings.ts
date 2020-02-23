@@ -27,6 +27,17 @@ const bindContexts = async (carverUsersContextStore: ContextStore, publicStatesC
                             });
                         }
                         break;
+                    case carverUserContext.commonLanguage.events.Widgets.Removed:
+                        {
+                            const widgetIds = event.payload;
+
+                            await publicState.dispatch({
+                                id,
+                                type: publicStateContext.commonLanguage.commands.Widgets.Remove,
+                                payload: widgetIds
+                            });
+                        }
+                        break;
                     case carverUserContext.commonLanguage.events.Widgets.Set:
                         {
                             const initialWidgetsState = event.payload;

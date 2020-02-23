@@ -1,5 +1,6 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
+import { WidgetContext } from '../../carverUser/context';
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
@@ -55,6 +56,31 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
             payload: getWidgetContextsWithParent(state, widgetContexts)
         });
 }
+const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
+    const widgetIdsToRemove = event.payload as string[];
+
+    const widgets = (state.widgets as WidgetContext[]).reduce((widgets, widgetId) => {
+        if (widgetIdsToRemove.find(widgetIdToRemove => widgetIdToRemove === widgetId.id)) {
+            return widgets
+        }
+        return [...widgets, widgetId]
+    }, []);
+
+    return withState(state)
+        .set({
+            widgets
+        })
+        .emit({
+            type: commonLanguage.events.Updated,
+            payload: [{
+                type: commonLanguage.events.Clear, // Let frontend know that this id has a new state addition (think .push into widgets array)
+                id: state.id,
+
+                payload: widgetIdsToRemove
+            },
+            ]
+        });
+}
 const withCommandWidgetsSet: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
 
@@ -68,9 +94,7 @@ const withCommandWidgetsSet: Reducer = ({ state, event }) => {
             type: commonLanguage.events.Updated,
             payload: [{
                 type: commonLanguage.events.Clear, // Let frontend know that this id has a new state addition (think .push into widgets array)
-                id: state.id,
-
-                payload: []
+                id: state.id
             },
             ...getWidgetContextsWithParent(state, widgetContexts)
             ]
@@ -116,6 +140,7 @@ const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
+        .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
         .reduce({ type: commonLanguage.commands.Widgets.Set, event, callback: withCommandWidgetsSet })
         .reduce({ type: commonLanguage.commands.Widgets.Initialize, event, callback: withCommandWidgetsInitialize })
         .reduce({ type: commonLanguage.commands.Widgets.Update, event, callback: withCommandWidgetsUpdate });
@@ -126,6 +151,7 @@ const commonLanguage = {
         Initialize: 'INITIALIZE',
         Widgets: {
             Add: 'WIDGETS:ADD',
+            Remove: 'WIDGETS:REMOVE',
             Set: 'WIDGETS:SET',
             Initialize: 'WIDGETS:INITIALIZE',
             Update: 'WIDGETS:UPDATE',

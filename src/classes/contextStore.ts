@@ -140,6 +140,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
                 return response
             } catch (err) {
                 console.log(`${id} exception:`);
+                console.log(err);
                 throw err
             }
 
