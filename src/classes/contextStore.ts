@@ -186,14 +186,15 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         return registeredContext;
     };
 
-    const unregister = (id: string) => {
+    const unregister = async (id: string) => {
         const registeredContext = registeredContextsById.get(id);
         if (!registeredContext) {
             //@todo Should we throw an exception if a context was not found with this id or silently fail?
             return;
         }
 
-        console.log('** unregister:', id);
+        // Disconnect all event streams ( emitter.off() )
+        await registeredContext.eventStore.unbindAllListeners()
 
         registeredContexts.delete(registeredContext);
         registeredContextsById.delete(id);

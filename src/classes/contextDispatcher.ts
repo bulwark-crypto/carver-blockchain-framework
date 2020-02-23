@@ -74,8 +74,7 @@ const bindContextDispatcher = ({ emitter, storeHandlers, queryHandlers, eventSto
         saveToPermanentStore,
         saveToEventStore,
         emitEvents,
-        emitQueries,
-
+        emitQueries
     }
 }
 

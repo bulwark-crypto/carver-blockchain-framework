@@ -94,6 +94,8 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
     const memoryEvents: StoredEvent[] = [];
     let memorySequence = 0;
 
+    const streams = new Set<any>();
+
     const streamEvents = ({ type, sequence, callback, sessionOnly }: ReplayEventsParams): void => {
         const subscriber = {
             isReplaying: false,
@@ -160,7 +162,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
         }
 
         // Once new event of this type comes to our context, replay all events that occured since the last time it was played
-        emitter.on(type, (eventToReplay) => {
+        const stream = (eventToReplay: any) => {
             if (storeEvents) {
                 replayEvents();
             } else {
@@ -172,15 +174,26 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
 
                 replayEvents();
             }
-        });
+        }
+
+        emitter.on(type, stream);
+        streams.add({ type, stream });
 
         // Replay all events from event store on this context
         replayEvents();
     }
 
+    const unbindAllListeners = async () => {
+        for (const { type, stream } of streams) {
+            emitter.off(type, stream);
+        }
+        streams.clear();
+    }
+
     return {
         store,
-        streamEvents
+        streamEvents,
+        unbindAllListeners
     }
 
 }
