@@ -22,6 +22,8 @@ const bindContexts = async (contextStore: ContextStore) => {
             await db.collection('addressMovementBalances').createIndex({ label: 1 }, { unique: true });
             await db.collection('addressMovementBalances').createIndex({ sequence: 1 });
 
+            await db.collection('addressMovements').createIndex({ isReward: 1, sequence: 1 });
+
             await db.collection('versions').insertOne({ id: addressMovements.id, version: 1 });
         }
     }

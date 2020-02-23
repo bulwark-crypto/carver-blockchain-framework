@@ -1,12 +1,12 @@
 import { withContext } from '../../../classes/logic/withContext';
 import { ContextStore } from '../../../classes/contextStore';
 
-import blocksWidgetContext from '../common/table/context'
+import tableContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
 import carverUserContext from '../../app/carverUser/context'
 
 const bindContexts = async (contextStore: ContextStore, carverUserId: string, id: string) => {
-    const blocksWidget = await contextStore.get(blocksWidgetContext, id);
+    const tableWidget = await contextStore.get(tableContext, id);
 
     // Each widget has access to the user that is displaying this widget. Allowing us to easily navigate between pages and add additional widgets on a page.
     const carverUserContextStore = await contextStore.getParent('SESSIONS');
@@ -30,8 +30,8 @@ const bindContexts = async (contextStore: ContextStore, carverUserId: string, id
         });
     }
 
-    withContext(blocksWidget)
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.FindPage, async (pageQuery) => {
+    withContext(tableWidget)
+        .handleQuery(tableContext.commonLanguage.queries.FindPage, async (pageQuery) => {
             const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromBlocks(blocks);
 
@@ -40,13 +40,15 @@ const bindContexts = async (contextStore: ContextStore, carverUserId: string, id
                 pageQuery
             };
         })
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.SelectRow, async ({ row }) => {
+        .handleQuery(tableContext.commonLanguage.queries.SelectRow, async ({ row }) => {
             await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Add, payload: { variant: 'blocks' } })
             console.log('blocks:', row, 'carverUser:', carverUser, 'carverUserId:', carverUserId);
         })
-        .handleQuery(blocksWidgetContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
-            const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQuery);
-            const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
+        .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
+            const pageQueryNoRewards = { ...pageQuery, isReward: false };
+
+            const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQueryNoRewards);
+            const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQueryNoRewards);
             const rows = getRowsFromBlocks(blocks);
 
             return {

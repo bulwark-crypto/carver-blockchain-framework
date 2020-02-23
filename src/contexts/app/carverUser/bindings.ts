@@ -23,9 +23,9 @@ const bindContexts = async (contextStore: ContextStore, id: string = null) => {
     const getVariantsOnPage = (page: string, params: any[]) => {
         switch (page) {
             case 'blocks':
-                return [{ variant: 'blocks' }, { variant: 'blocks' }, { variant: 'blocks' }]
+                return [{ variant: 'blocks' }]
             case 'transactions':
-                return [{ variant: 'blocks' }, { variant: 'blocks' }]
+                return [{ variant: 'txs' }]
         }
     }
 

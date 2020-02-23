@@ -30,7 +30,7 @@ Session context listens to new incoming socket.io connections and initializes bo
 
 ## app/api/publicState - Server-Side Frontend State Rendering Management (In-Memory)
 
-All *OUTGOING* events from socket.io are generated in **app/api/publicState** context. This context is responsible for keeping displayed state in sync with the actual system state.  
+All *OUTGOING* events from socket.io are generated in this context. This context is responsible for keeping displayed state in sync with the actual system state.  
 
 Events are streamed from **app/carverUser** context. Any time user context is updated (ex widget is added or widget is changed) publicState will be notified via dispatch. These events will be interperted and frontend state changes will be emitted via socket.io.
 
@@ -38,7 +38,7 @@ This is an "In-Memory" context because the emitted events are not stored (since 
 
 ## app/carverUser - Frontend User Logic (In-Memory)
 
-All *INCOMING* events from socket.io are processed in **app/api/publicState** context. This context manages the state of the connected user and all user-related  **widgets/** contexts.
+All *INCOMING* events from socket.io are processed in this context. This context manages the state of the connected user and all user-related **widgets/** contexts.
 
 ## widgets/ - Frontend User Widgets (In-Memory)
 

@@ -109,7 +109,10 @@ const commonLanguage = {
     storage: {
         InsertManyAddressBalances: 'INSERT_MANY_ADDRESS_BALANCES',
         UpdateAddressBalances: 'UPDATE_ADDRESS_BALANCES',
-        InsertManyAddressMovements: 'INSERT_MANY_ADDRESS_MOVEMENTS'
+        InsertManyAddressMovements: 'INSERT_MANY_ADDRESS_MOVEMENTS',
+
+        FindManyByPage: 'FIND_MANY_BY_PAGE',
+        FindCount: 'FIND_COUNT'
     },
     errors: {
     }

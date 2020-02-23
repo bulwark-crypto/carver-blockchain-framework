@@ -42,7 +42,7 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
             txType: CarverTxType.Invalid,
             totalAmountIn: 0,
             totalAmountOut: 0,
-            consolidatedAddressAmounts: []
+            consolidatedAddressAmounts: [] as any[]
         }
     }
 
@@ -214,12 +214,22 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
         }
     }
 
+    const consolidatedAddresses = Array.from(consolidatedAddressAmounts.values());
+
+    const totalCountOut = consolidatedAddresses.filter(consolidatedAddressAmount => consolidatedAddressAmount.amountOut > 0).length;
+    const totalCountIn = consolidatedAddresses.filter(consolidatedAddressAmount => consolidatedAddressAmount.amountIn > 0).length;
 
     // If we haven't figured out what carver tx type this is yet then it's basic movements (we'll jsut need to figure out if it's one to one, one to many, many to one or many to many based on number of used from/to addresses)
     if (!txType) {
-
-        // For now hardcode all addresses as many to many
-        txType = CarverTxType.TransferManyToMany;
+        if (totalCountIn === 1 && totalCountOut === 1) {
+            txType = CarverTxType.TransferOneToOne;
+        } else if (totalCountIn === 1 && totalCountOut > 1) {
+            txType = CarverTxType.TransferOneToMany;
+        } else if (totalCountIn > 1 && totalCountOut === 1) {
+            txType = CarverTxType.TransferManyToOne;
+        } else if (totalCountIn > 1 && totalCountOut > 1) {
+            txType = CarverTxType.TransferManyToMany;
+        }
     }
 
     switch (txType) {
@@ -237,17 +247,21 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
             }
             addToAddress(CarverAddressType.ProofOfWork, `${powAddressLabel}:POW`, -powRewardAmount.amount);
             break;
-        case CarverTxType.TransferManyToMany:
-            break;
         case CarverTxType.Zerocoin:
             addToAddress(CarverAddressType.Zerocoin, `ZEROCOIN`, -zerocoinOutAmount);
+            break;
+        case CarverTxType.TransferManyToMany:
+        case CarverTxType.TransferManyToOne:
+        case CarverTxType.TransferOneToMany:
+        case CarverTxType.TransferOneToOne:
             break;
         default:
             console.log(txType);
             throw 'carverTxType not found'
     }
 
-    if (txType === CarverTxType.ProofOfStake || txType === CarverTxType.ProofOfWork) {
+    const isReward = txType === CarverTxType.ProofOfStake || txType === CarverTxType.ProofOfWork;
+    if (isReward) {
         if (mnAddressLabel) {
             const mnRewardAmount = consolidatedAddressAmounts.get(mnAddressLabel);
             if (!mnRewardAmount) {
@@ -258,18 +272,25 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
     }
 
 
-    const consolidatedAddresses = Array.from(consolidatedAddressAmounts.values());
-
     // Finally create our new movement
     const totalAmountIn = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountIn, 0);
     const totalAmountOut = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountOut, 0);
 
+
+    const { height, time } = tx;
+    const date = new Date(time * 1000);
+
     return {
         txid: tx.txid,
+        date,
         txType,
         totalAmountIn,
         totalAmountOut,
-        consolidatedAddressAmounts: Array.from(consolidatedAddressAmounts.values())
+        totalCountIn,
+        totalCountOut,
+        consolidatedAddressAmounts: Array.from(consolidatedAddressAmounts.values()),
+        isReward,
+        height
     }
 }
 
@@ -296,28 +317,49 @@ const withCommandParseTx: Reducer = ({ state, event }) => {
 const withQueryGetUtxosForTx: Reducer = ({ state, event }) => {
     const { rpcTx, utxos, sequence } = event.payload;
 
+    const { height } = rpcTx;
+
     const requiredMovements = getRequiredMovements(rpcTx, utxos);
+
+    const { isReward } = requiredMovements;
 
     return withState(state)
         .store(commonLanguage.storage.InsertOne, {
             ...requiredMovements,
             sequence
         })
+        .set({
+            height,
+            rewardsCount: isReward ? state.rewardsCount + 1 : state.rewardsCount,
+            nonRewardsCount: !isReward ? state.nonRewardsCount + 1 : state.nonRewardsCount,
+        })
         .emit({
             type: commonLanguage.events.TxParsed,
             payload: rpcTx.txid
         });
 }
+const withCommandInitialize: Reducer = ({ state, event }) => {
+    const { height, rewardsCount, nonRewardsCount } = event.payload;
+
+    return withState(state).set({
+        height,
+        rewardsCount,
+        nonRewardsCount
+    })
+}
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
+
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
         .reduce({ type: commonLanguage.queries.GetUtxosForTx, event, callback: withQueryGetUtxosForTx })
         .reduce({ type: commonLanguage.commands.ParseTx, event, callback: withCommandParseTx });
 }
 
 const commonLanguage = {
     commands: {
-        ParseTx: 'PARSE_TX'
+        ParseTx: 'PARSE_TX',
+        Initialize: 'INITIALIZE'
     },
     events: {
         TxParsed: 'TX_PARSED'
@@ -327,7 +369,10 @@ const commonLanguage = {
     },
     storage: {
         InsertOne: 'INSERT_ONE',
-        FindOneByTxId: 'FIND_ONE_BY_TXID'
+        FindOneByTxId: 'FIND_ONE_BY_TXID',
+
+        FindManyByPage: 'FIND_MANY_BY_PAGE',
+        FindCount: 'FIND_COUNT'
     },
     errors: {
         heightMustBeSequential: 'Blocks must be sent in sequential order',
@@ -338,7 +383,9 @@ const commonLanguage = {
 
 const initialState = {
     height: 0,
-    txsQueue: [] as any[]
+    txsQueue: [] as any[],
+    rewardsCount: 0,
+    nonRewardsCount: 0
 }
 
 export default {

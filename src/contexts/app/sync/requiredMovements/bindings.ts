@@ -19,6 +19,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         const contextVersion = await db.collection('versions').findOne({ id: requiredMovements.id });
         if (!contextVersion) {
             await db.collection('requiredMovements').createIndex({ txid: 1 }, { unique: true });
+            await db.collection('requiredMovements').createIndex({ isReward: 1, _id: 1 });
 
             await db.collection('versions').insertOne({ id: requiredMovements.id, version: 1 });
         }
@@ -34,6 +35,27 @@ const bindContexts = async (contextStore: ContextStore) => {
         return null;
     }
     const lastRequiredMovement = await getLastRequiredMovement();
+
+
+    const resumeState = async () => {
+        const rewardsCount = await db.collection('requiredMovements').find({ isReward: true }).count();
+        const nonRewardsCount = await db.collection('requiredMovements').find({ isReward: false }).count();
+
+        console.log('rewardsCount:', rewardsCount, 'nonRewardsCount:', nonRewardsCount)
+
+        if (lastRequiredMovement) {
+            const { height } = lastRequiredMovement;
+            await requiredMovements.dispatch({
+                type: requiredMovementsContext.commonLanguage.commands.Initialize,
+                payload: {
+                    height,
+                    rewardsCount,
+                    nonRewardsCount
+                }
+            });
+        }
+    }
+    await resumeState();
 
     withContext(requiredMovements)
         .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (requiredMovements) => {
@@ -51,6 +73,36 @@ const bindContexts = async (contextStore: ContextStore) => {
         })
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, async (txid) => {
             return await db.collection('requiredMovements').findOne({ txid });
+        })
+        .handleStore(requiredMovementsContext.commonLanguage.storage.FindCount, async ({ filter }) => {
+
+            // Current height will equal number of blocks. So we don't even need to query db to find number of blocks in db.
+            const { rewardsCount, nonRewardsCount } = requiredMovements.stateStore.state;
+
+            if (!filter) {
+                return rewardsCount + nonRewardsCount;
+            }
+
+            const { isReward } = filter;
+            if (!isReward) {
+                return nonRewardsCount;
+            }
+
+            return rewardsCount;
+        })
+        .handleStore(requiredMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter }) => {
+
+            const { isReward } = filter;
+
+            //@todo add caching
+            const requiredMovements = await db
+                .collection('requiredMovements')
+                .find({ isReward }, { projection: { consolidatedAddressAmounts: 0 } })
+                .sort({ _id: -1 })
+                .skip(page * limit)
+                .limit(limit);
+
+            return requiredMovements.toArray();
         });
 
     withContext(utxos)
