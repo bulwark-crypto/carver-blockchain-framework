@@ -47,7 +47,10 @@ export interface RegisteredContext {
     handleStore: (type: string, callback: (payload: any) => Promise<any>) => void;
     query: (query: string, payload?: any) => Promise<any>;
 
-    //@todo Exposing state store to other contexts is dangerous. Think of a way to prevent other contexts from accessing state directly. (You should access context state via queries ONLY)
+    /**
+     *@todo Exposing state store to other contexts is dangerous. Think of a way to prevent other contexts from accessing state directly. (You should access context state via queries ONLY) 
+     * Currently we're only exposing state store to get it in the same context in bindings.ts
+     */
     stateStore: StateStore;
     eventStore: EventStore;
 }
@@ -98,7 +101,10 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
 
         const dispatchQueue = [] as any[];
         let startedDispatching = false;
+
+        //@todo look into async.queue for this exact pattern
         const dispatchNext = async (event: Event) => {
+
             if (startedDispatching) {
                 dispatchQueue.push(event);
                 return;

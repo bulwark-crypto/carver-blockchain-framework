@@ -126,6 +126,11 @@ const bindContexts = async (contextStore: ContextStore) => {
             return {
                 id
             }
+        })
+        .handleStore(apiSessionContext.commonLanguage.storage.FindSessionById, async (id) => {
+            const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id); //@todo move to a query, shouldn't access state of another context directly
+
+            return newSession
         });
 }
 

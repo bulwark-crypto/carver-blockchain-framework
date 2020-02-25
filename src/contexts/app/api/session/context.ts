@@ -1,7 +1,7 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
-const withRequestApiSessionReserveSocket: Reducer = ({ state, event }) => {
+const withCommandReserveNewSession: Reducer = ({ state, event }) => {
     const { payload } = event;
     const { id, sourceIdentifier } = payload;
 
@@ -46,14 +46,14 @@ const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
 
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.commands.ReserveNewSocket, event, callback: withRequestApiSessionReserveSocket })
+        .reduce({ type: commonLanguage.commands.ReserveNewSession, event, callback: withCommandReserveNewSession })
         .reduce({ type: commonLanguage.queries.InsertNewUserContext, event, callback: withQueryInsertNewUserContext })
         .reduce({ type: commonLanguage.commands.Connect, event, callback: withRequestApiSessionConnect });
 }
 
 const commonLanguage = {
     commands: {
-        ReserveNewSocket: 'RESERVE_NEW_SOCKET',
+        ReserveNewSession: 'RESERVE_NEW_SESSION',
         Connect: 'CONNECT',
     },
     events: {
@@ -63,6 +63,7 @@ const commonLanguage = {
         InsertNewUserContext: 'INSERT_NEW_USER_CONTEXT',
     },
     storage: {
+        FindSessionById: 'FIND_USER_CONTEXT_BY_ID'
     },
     errors: {
         IdNotFound: 'ID_NOT_FOUND'

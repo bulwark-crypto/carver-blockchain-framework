@@ -37,7 +37,7 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
-const start = async () => {
+const startApp = async (type: string) => {
 
   console.log('Starting Carver Blockchain Framework')
 
@@ -45,6 +45,8 @@ const start = async () => {
   console.log('Connected to database!');
 
   const contextStore = createContextStore({ id: 'CORE' });
+
+
 
   // APP will initialize db structure
   const app = await contextStore.register({
@@ -123,4 +125,10 @@ const start = async () => {
   await app.dispatch({ type: appContext.commonLanguage.commands.Initialize })
 }
 
-start();
+
+if (process.argv.length < 3) {
+  throw Error('Must pass context type as arg (ex: APP)');
+}
+
+const type = process.argv[2];
+startApp(type);

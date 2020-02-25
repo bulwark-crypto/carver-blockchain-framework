@@ -277,11 +277,11 @@ const getRequiredMovements = (tx: any, utxos: any[]) => {
     const totalAmountOut = consolidatedAddresses.reduce((total, consolidatedAddressAmount) => total + consolidatedAddressAmount.amountOut, 0);
 
 
-    const { height, time } = tx;
+    const { height, time, txid } = tx;
     const date = new Date(time * 1000);
 
     return {
-        txid: tx.txid,
+        txid,
         date,
         txType,
         totalAmountIn,

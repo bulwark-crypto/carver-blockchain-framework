@@ -31,10 +31,11 @@ const bindContexts = async (contextStore: ContextStore) => {
 
             // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
             console.log(`Request new session: ${id}!`);
-            await apiSession
-                .dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSocket, payload })
 
-            const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id); //@todo move to a query, shouldn't access state of another context directly
+            // Create and return a new session with a specific id
+            await apiSession.dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSession, payload })
+            const newSession = await apiSession.query(apiSessionContext.commonLanguage.storage.FindSessionById, id)
+
             return newSession;
         }
 
