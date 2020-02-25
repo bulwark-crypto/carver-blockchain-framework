@@ -8,7 +8,7 @@ import { bindContextDispatcher } from './contextDispatcher'
 
 //@todo this should be a global permanent store (so store can be non-mongodb)
 import { StateStore } from './interfaces/stateStore';
-import { EventStore } from './interfaces/eventStore';
+import { EventStore, ReplayEventsParams } from './interfaces/eventStore';
 
 interface RegisterContextParams {
     context: any;
@@ -47,12 +47,15 @@ export interface RegisteredContext {
     handleStore: (type: string, callback: (payload: any) => Promise<any>) => void;
     query: (query: string, payload?: any) => Promise<any>;
 
+    disconnect: () => Promise<void>;
+    streamEvents: (params: ReplayEventsParams) => Promise<void>;
+
     /**
      *@todo Exposing state store to other contexts is dangerous. Think of a way to prevent other contexts from accessing state directly. (You should access context state via queries ONLY) 
      * Currently we're only exposing state store to get it in the same context in bindings.ts
      */
     stateStore: StateStore;
-    eventStore: EventStore;
+    //eventStore: EventStore; // Notice that you can't access event store directly. (use streamEvents instead)
 }
 
 const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
@@ -174,6 +177,13 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             return await subscription(payload);
         }
 
+        const streamEvents = async (params: ReplayEventsParams) => {
+            eventStore.streamEvents(params);
+        }
+        const disconnect = async () => {
+            eventStore.unbindAllListeners();
+        }
+
         const registeredContext = {
             id,
 
@@ -181,11 +191,14 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
             dispatch,
 
             stateStore,
-            eventStore,
+            //eventStore,
 
             handleQuery,
             handleStore,
-            query
+            query,
+            streamEvents,
+            disconnect
+
         } as RegisteredContext
         registeredContexts.add(registeredContext);
         registeredContextsById.set(id, registeredContext);
@@ -201,7 +214,7 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         }
 
         // Disconnect all event streams ( emitter.off() )
-        await registeredContext.eventStore.unbindAllListeners()
+        await registeredContext.disconnect()
 
         registeredContexts.delete(registeredContext);
         registeredContextsById.delete(id);
