@@ -37,7 +37,7 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
-const startApp = async (type: string) => {
+const startApp = async (namespace: string) => {
 
   console.log('Starting Carver Blockchain Framework')
 
@@ -46,89 +46,85 @@ const startApp = async (type: string) => {
 
   const contextStore = createContextStore({ id: 'CORE' });
 
+  const contexts = [
+    {
+      context: appContext,
+      bindings: appBindings,
+      id: 'APP',
+    },
+    {
+      context: rpcGetInfoContext,
+      bindings: rpcGetInfoBindings,
+      id: 'RPC_GETINFO'
+    },
+    {
+      context: rpcBlocksContext,
+      bindings: rpcBlocksBindings,
+      id: 'RPC_BLOCKS'
+    },
+    {
+      context: rpcTxsContext,
+      bindings: rpcTxsBindings,
+      id: 'RPC_TXS'
+    },
+    {
+      context: apiRestContext,
+      bindings: apiRestBindings,
+      id: 'API_REST'
+    },
+    {
+      context: apiSessionContext,
+      bindings: apiSessionBindings,
+      id: 'API_SESSION'
+    },
+    {
+      context: apiSocketContext,
+      bindings: apiSocketBindings,
+      id: 'API_SOCKET'
+    },
+    {
+      context: utxosContext,
+      bindings: utxosBindings,
+      id: 'UTXOS'
+    },
+    {
+      context: requiredMovementsContext,
+      bindings: requiredMovementsBindings,
+      id: 'REQUIRED_MOVEMENTS'
+    },
+    {
+      context: addressesContext,
+      bindings: addressesBindings,
+      id: 'ADDRESSES'
+    },
+    {
+      context: addressMovementsContext,
+      bindings: addressMovementBindings,
+      id: 'ADDRESS_MOVEMENTS'
+    }
+  ]
 
 
-  // APP will initialize db structure
-  const app = await contextStore.register({
-    context: appContext,
-    id: 'APP'
-  });
-
-  //@todo we can nest these inside the app context
-  await contextStore.register({
-    context: rpcGetInfoContext,
-    id: 'RPC_GETINFO'
-  });
-
-  await contextStore.register({
-    context: rpcBlocksContext,
-    id: 'RPC_BLOCKS'
-  });
-
-  await contextStore.register({
-    context: rpcTxsContext,
-    id: 'RPC_TXS'
-  });
-
-  await contextStore.register({
-    context: apiRestContext,
-    id: 'API_REST'
-  });
-
-  await contextStore.register({
-    context: apiSocketContext,
-    id: 'API_SOCKET'
-  });
-
-  await contextStore.register({
-    context: apiSessionContext,
-    id: 'API_SESSION'
-  });
-  await contextStore.register({
-    context: utxosContext,
-    id: 'UTXOS'
-  });
-
-  await contextStore.register({
-    context: requiredMovementsContext,
-    id: 'REQUIRED_MOVEMENTS'
-  });
-
-  await contextStore.register({
-    context: addressesContext,
-    id: 'ADDRESSES'
-  });
-
-  await contextStore.register({
-    context: addressMovementsContext,
-    id: 'ADDRESS_MOVEMENTS'
-  });
-
-  // Bind all contexts (Order matters)
-  const contextBindings = [
-    appBindings,
-    rpcGetInfoBindings,
-    rpcBlocksBindings,
-    rpcTxsBindings,
-    apiRestBindings,
-    apiSessionBindings,
-    apiSocketBindings,
-    utxosBindings,
-    requiredMovementsBindings,
-    addressesBindings,
-    addressMovementBindings
-  ];
-  for await (const contextBinding of contextBindings) {
-    await contextBinding.bindContexts(contextStore as any);
+  for await (const { context, id } of contexts) {
+    await contextStore.register({
+      context,
+      id
+    });
   }
 
+  for await (const { bindings } of contexts) {
+    await bindings.bindContexts(contextStore as any);
+  }
+
+
+  const app = await contextStore.get(appContext);
   await app.dispatch({ type: appContext.commonLanguage.commands.Initialize })
 }
 
 
 if (process.argv.length < 3) {
-  throw Error('Must pass context type as arg (ex: APP)');
+  throw Error('Please pass in a namespace (ex: app) to start');
 }
 
-const type = process.argv[2];
-startApp(type);
+const namespace = process.argv[2];
+startApp(namespace);

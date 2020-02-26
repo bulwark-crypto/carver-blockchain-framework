@@ -19,7 +19,7 @@ const bindContexts = async (contextStore: ContextStore) => {
     const socketMap = new Map<string, socketio.Socket>();
 
     const carverUsersContextStore = createContextStore({ id: 'SESSIONS', parent: contextStore });
-    const publicStatesContextStore = createContextStore({ id: 'PUBLIC_STATES', parent: contextStore });
+    const publicStatesContextStore = createContextStore({ id: 'PUBLIC_STATES', parent: carverUsersContextStore });
 
     const forwardEventToSocket = async (id: string, event: Event) => {
         // Forward any events a user emits back to socket (ex: widgets will emit on carver user)
