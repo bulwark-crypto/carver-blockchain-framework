@@ -290,11 +290,27 @@ const createContextStore = ({ id, parent, serveNet }: CreateContextStoreOptions)
     };
 }
 
-const connectToContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
+const connectToContextStore = ({ id }: CreateContextStoreOptions): ContextStore => {
+
+    const ipc = require("node-ipc");
+    ipc.config.id = id;
+    ipc.config.silent = config.ipc.silent;
+
+    ipc.connectToNet(id, () => {
+
+        ipc.of[id].on("connect", () => {
+            console.log("connected");
+        });
+        ipc.of[id].on("message", (data: any) => {
+            console.log('*data', data);
+        });
+        ipc.of[id].on("error", (err: any) => {
+            console.log('*err', err);
+        })
+    })
 
     return {
-        id,
-        parent
+        id
     } as any
 }
 
@@ -308,5 +324,6 @@ const commonLanguage = {
 
 export {
     createContextStore,
+    connectToContextStore,
     ContextStore
 }

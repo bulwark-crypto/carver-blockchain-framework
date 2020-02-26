@@ -1,4 +1,4 @@
-import { createContextStore } from './classes/contextStore'
+import { createContextStore, connectToContextStore } from './classes/contextStore'
 
 import { dbStore } from './classes/adapters/mongodb/mongoDbInstance'
 import { config } from '../config'
@@ -144,6 +144,9 @@ const startApp = async (namespace: string) => {
   switch (namespace) {
     case 'APP':
       await appBindings.bindContexts();
+      break;
+    case 'SYNC':
+      await connectToContextStore({ id: 'APP' })
       break;
 
   }
