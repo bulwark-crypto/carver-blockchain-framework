@@ -17,9 +17,17 @@ export const config = {
     api: {
         socket: {
             port: 5000,
-            maxConnections: 256,
-            maxReservations: 10000,
-            reservationTimeoutMs: 30 * 1000
+            maxConnections: 256, // @todo
+            maxReservations: 32, //@todo
+            reservationTimeoutMs: 30 * 1000 // @todo
         }
     },
+    /**
+     * Default node-ipc settings
+     */
+    ipc: {
+        networkHost: '127.0.0.1',
+        networkPort: 8000,
+        silent: false // set to false for debugging
+    }
 }

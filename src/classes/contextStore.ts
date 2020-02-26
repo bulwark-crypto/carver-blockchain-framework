@@ -10,6 +10,8 @@ import { bindContextDispatcher } from './contextDispatcher'
 import { StateStore } from './interfaces/stateStore';
 import { EventStore, ReplayEventsParams } from './interfaces/eventStore';
 
+import { config } from '../../config'
+
 interface RegisterContextParams {
     context: any;
     /**
@@ -22,11 +24,14 @@ interface CreateContextStoreOptions {
     id: string;
     version?: number;
     parent?: any;
+    /**
+     * If set to true start node-ipc server (for remote connections)
+     **/
+    serveNet?: boolean;
 }
 interface ContextStore {
     id: string;
     parent?: ContextStore;
-    namespace?: string;
     register: <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
     unregister: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>;
@@ -37,7 +42,7 @@ export interface RegisteredContext {
     context: Context;
     id: string;
     version: number;
-    reduce: (event: Event) => void;
+    //reduce: (event: Event) => void;
     /**
      * - Reduce an event
      * - Store objects in permanent store
@@ -59,7 +64,7 @@ export interface RegisteredContext {
     //eventStore: EventStore; // Notice that you can't access event store directly. (use streamEvents instead)
 }
 
-const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
+const createContextStore = ({ id, parent, serveNet }: CreateContextStoreOptions): ContextStore => {
     const registeredContexts = new Set<RegisteredContext>();
     const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
@@ -255,6 +260,25 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
     }
 
 
+    if (serveNet) {
+        const ipc = require("node-ipc");
+        ipc.config.id = id;
+        ipc.config.silent = config.ipc.silent;
+
+        ipc.serveNet(config.ipc.networkHost, config.ipc.networkPort, () => {
+            ipc.server.on("connect", () => {
+                console.log('ipc client connected');
+            });
+
+            ipc.server.on("message", (data: any, socket: any) => {
+                console.log('ipc message:', data, socket);
+            });
+        });
+
+        ipc.server.start();
+        console.log('ipc server started:', id);
+    }
+
     return {
         id,
         parent,
@@ -264,6 +288,14 @@ const createContextStore = ({ id, parent }: CreateContextStoreOptions): ContextS
         getById,
         getParent
     };
+}
+
+const connectToContextStore = ({ id, parent }: CreateContextStoreOptions): ContextStore => {
+
+    return {
+        id,
+        parent
+    } as any
 }
 
 const commonLanguage = {

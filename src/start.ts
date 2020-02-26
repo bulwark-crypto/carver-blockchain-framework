@@ -37,6 +37,8 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
+
+
 const startApp = async (namespace: string) => {
 
   console.log('Starting Carver Blockchain Framework')
@@ -44,67 +46,86 @@ const startApp = async (namespace: string) => {
   await dbStore.initialize(config.db.url, config.db.dbName);
   console.log('Connected to database!');
 
-  const contextStore = createContextStore({ id: 'CORE' });
-
-  const contexts = [
-    {
-      context: appContext,
-      bindings: appBindings,
-      id: 'APP',
-    },
-    {
-      context: rpcGetInfoContext,
-      bindings: rpcGetInfoBindings,
-      id: 'RPC_GETINFO'
-    },
-    {
-      context: rpcBlocksContext,
-      bindings: rpcBlocksBindings,
-      id: 'RPC_BLOCKS'
-    },
-    {
-      context: rpcTxsContext,
-      bindings: rpcTxsBindings,
-      id: 'RPC_TXS'
-    },
-    {
-      context: apiRestContext,
-      bindings: apiRestBindings,
-      id: 'API_REST'
-    },
-    {
-      context: apiSessionContext,
-      bindings: apiSessionBindings,
-      id: 'API_SESSION'
-    },
-    {
-      context: apiSocketContext,
-      bindings: apiSocketBindings,
-      id: 'API_SOCKET'
-    },
-    {
-      context: utxosContext,
-      bindings: utxosBindings,
-      id: 'UTXOS'
-    },
-    {
-      context: requiredMovementsContext,
-      bindings: requiredMovementsBindings,
-      id: 'REQUIRED_MOVEMENTS'
-    },
-    {
-      context: addressesContext,
-      bindings: addressesBindings,
-      id: 'ADDRESSES'
-    },
-    {
-      context: addressMovementsContext,
-      bindings: addressMovementBindings,
-      id: 'ADDRESS_MOVEMENTS'
+  /*
+  const getNamespaceContexts = () => {
+    switch (namespace) {
+      case 'APP':
+        return {
+          serveNet: true, // Serve via node-ipc
+          contexts: [
+            {
+              context: appContext,
+              bindings: appBindings,
+              id: 'APP'
+            }]
+        }
+      case 'CORE':
+        return {
+          serveNet: false, // Do not serve these via node-ipc (they will be created locally)
+          contexts: [
+            {
+              context: rpcGetInfoContext,
+              bindings: rpcGetInfoBindings,
+              id: 'RPC_GETINFO'
+            },
+            {
+              context: rpcBlocksContext,
+              bindings: rpcBlocksBindings,
+              id: 'RPC_BLOCKS'
+            },
+            {
+              context: rpcTxsContext,
+              bindings: rpcTxsBindings,
+              id: 'RPC_TXS'
+            },
+            {
+              context: apiRestContext,
+              bindings: apiRestBindings,
+              id: 'API_REST'
+            },
+            {
+              context: apiSessionContext,
+              bindings: apiSessionBindings,
+              id: 'API_SESSION'
+            },
+            {
+              context: apiSocketContext,
+              bindings: apiSocketBindings,
+              id: 'API_SOCKET'
+            },
+            {
+              context: utxosContext,
+              bindings: utxosBindings,
+              id: 'UTXOS'
+            },
+            {
+              context: requiredMovementsContext,
+              bindings: requiredMovementsBindings,
+              id: 'REQUIRED_MOVEMENTS'
+            },
+            {
+              context: addressesContext,
+              bindings: addressesBindings,
+              id: 'ADDRESSES'
+            },
+            {
+              context: addressMovementsContext,
+              bindings: addressMovementBindings,
+              id: 'ADDRESS_MOVEMENTS'
+            }
+          ]
+        }
     }
-  ]
+
+    throw 'Unknown namespace';
+  }
 
 
+  const contexts = getNamespaceContexts();
+  console.log('register context:', namespace);
+
+
+  const contextStore = createContextStore({ id: namespace });
   for await (const { context, id } of contexts) {
     await contextStore.register({
       context,
@@ -115,10 +136,18 @@ const startApp = async (namespace: string) => {
   for await (const { bindings } of contexts) {
     await bindings.bindContexts(contextStore as any);
   }
-
-
   const app = await contextStore.get(appContext);
   await app.dispatch({ type: appContext.commonLanguage.commands.Initialize })
+  
+*/
+
+  switch (namespace) {
+    case 'APP':
+      await appBindings.bindContexts();
+      break;
+
+  }
+
 }
 
 

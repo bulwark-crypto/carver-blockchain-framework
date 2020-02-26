@@ -1,5 +1,5 @@
 import { withContext } from '../../classes/logic/withContext';
-import { ContextStore } from '../../classes/contextStore';
+import { ContextStore, createContextStore } from '../../classes/contextStore';
 
 import { dbStore } from '../../classes/adapters/mongodb/mongoDbInstance'
 import appContext from './context'
@@ -7,8 +7,16 @@ import appContext from './context'
 /**
  * Initial APP context binding. Initialize Versions db table (this is used for context version upgrades)
  */
-const bindContexts = async (contextStore: ContextStore) => {
-    const app = await contextStore.get(appContext);
+const bindContexts = async () => {
+
+    const contextStore = createContextStore({
+        id: 'APP',
+        serveNet: true // Expose via node-ipc
+    });
+    const app = await contextStore.register({
+        context: appContext,
+        id: 'APP'
+    });
 
     const db = await dbStore.get();
 
@@ -34,6 +42,8 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     }
     await initCollections();
+
+    console.log('APP started');
 }
 
 export default {
