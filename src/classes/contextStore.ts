@@ -26,6 +26,7 @@ interface CreateContextStoreOptions {
 interface ContextStore {
     id: string;
     parent?: ContextStore;
+    namespace?: string;
     register: <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
     unregister: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>;
