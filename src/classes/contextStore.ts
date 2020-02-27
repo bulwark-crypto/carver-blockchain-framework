@@ -12,6 +12,9 @@ import { EventStore, ReplayEventsParams } from './interfaces/eventStore';
 
 import { config } from '../../config'
 
+const amqp = require('amqplib')
+
+
 interface RegisterContextParams {
     context: any;
     /**
@@ -34,15 +37,14 @@ interface ContextStore {
     parent?: ContextStore;
     register: <EventType, TypeOfEventType>({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
     unregister: (id: string) => Promise<void>;
-    get: (context: any, id?: string) => Promise<RegisteredContext>;
+    get: (context: any, id?: string) => Promise<RegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
     getById: (id: string) => Promise<RegisteredContext>;
     getParent: (id: string) => ContextStore;
 }
 export interface RegisteredContext {
     context: Context;
+
     id: string;
-    version: number;
-    //reduce: (event: Event) => void;
     /**
      * - Reduce an event
      * - Store objects in permanent store
@@ -64,7 +66,7 @@ export interface RegisteredContext {
     //eventStore: EventStore; // Notice that you can't access event store directly. (use streamEvents instead)
 }
 
-const createContextStore = ({ id, parent, serveNet }: CreateContextStoreOptions): ContextStore => {
+const createContextStore = async ({ id, parent, serveNet }: CreateContextStoreOptions): Promise<ContextStore> => {
     const registeredContexts = new Set<RegisteredContext>();
     const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
@@ -261,21 +263,50 @@ const createContextStore = ({ id, parent, serveNet }: CreateContextStoreOptions)
 
 
     if (serveNet) {
-        const ipc = require("node-ipc");
+        /*
+        dispatch = push/pull
+        query = request/respond
+        stream events = pub/sub
+        */
+
+
+
+
+        const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
+        const channel = await conn.createChannel();
+        await channel.assertQueue(id, { durable: false });
+
+        channel.consume(id, (msg: any) => {
+            channel.ack(msg);
+
+            const contents = msg.content.toString();
+            console.log('from queue:', contents)
+        })
+
+        console.log('consuming:', id);
+
+
+        /*
+        const ipc = require('node-ipc');
         ipc.config.id = id;
         ipc.config.silent = config.ipc.silent;
 
         ipc.serveNet(config.ipc.networkHost, config.ipc.networkPort, () => {
-            ipc.server.on("connect", () => {
+            ipc.server.on('connect', () => {
                 console.log('ipc client connected');
             });
 
-            ipc.server.on("message", (data: any, socket: any) => {
-                console.log('ipc message:', data, socket);
+            ipc.server.on('streamEvents', (params: ReplayEventsParams) => {
+                console.log('ipc message:', data);
+            });
+
+            ipc.server.on('message', (data: any, socket: any) => {
+                console.log('ipc message:', data);
             });
         });
 
-        ipc.server.start();
+        ipc.server.start();*/
+
         console.log('ipc server started:', id);
     }
 
@@ -290,35 +321,81 @@ const createContextStore = ({ id, parent, serveNet }: CreateContextStoreOptions)
     };
 }
 
-const connectToContextStore = ({ id }: CreateContextStoreOptions): ContextStore => {
+const connectToContextStore = async ({ id }: CreateContextStoreOptions): Promise<ContextStore> => {
 
-    const ipc = require("node-ipc");
-    ipc.config.id = id;
-    ipc.config.silent = config.ipc.silent;
+    const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
+    const channel = await conn.createChannel();
+    await channel.assertQueue(id, { durable: false })
+    await channel.sendToQueue(id, Buffer.from('test message', 'utf8'))
 
-    ipc.connectToNet(id, () => {
+    console.log('sent', id);
 
-        ipc.of[id].on("connect", () => {
-            console.log("connected");
-        });
-        ipc.of[id].on("message", (data: any) => {
-            console.log('*data', data);
-        });
-        ipc.of[id].on("error", (err: any) => {
-            console.log('*err', err);
-        })
+    return new Promise((resolve, reject) => {
+
+
+
+        /*
+        const ipc = require('node-ipc');
+        ipc.config.id = id;
+        ipc.config.silent = config.ipc.silent;
+
+        ipc.connectToNet(id, () => {
+            const ipOfId = ipc.of[id];
+
+            const createRemoteRegisteredContext = () => {
+                const get = (context: any, id?: string) => {
+                    throw commonLanguage.errors.GetNotSupportedByIpc;
+                }
+
+                const getById = (id: string) => {
+                    return {
+                        id,
+                        streamEvents: (params: ReplayEventsParams) => {
+
+                            ipOfId.emit('streamEvents', params); //@todo this will need to have guaranteed delivery
+
+
+
+                            console.log('should stream:', params);
+
+                        }
+                    }
+                }
+
+                return {
+                    id,
+                    get,
+                    getById
+                } as any
+            }
+
+            ipOfId.on('connect', () => {
+                console.log('connected');
+                ipOfId.emit('message', 'start')
+
+
+                const registeredContext = createRemoteRegisteredContext();
+                resolve(registeredContext);
+            });
+
+            ipOfId.on('message', (data: any) => {
+                console.log('*data', data);
+            });
+            ipOfId.on('error', (err: any) => {
+                console.log('*err', err);
+            })
+        })*/
+
     })
-
-    return {
-        id
-    } as any
 }
 
 const commonLanguage = {
     errors: {
         UnhandledQuery: 'UNHANDLED_QUERY',
         QueryAlreadyRegistered: 'QUERY_ALREADY_REGISTERED',
-        StoreAlreadyRegistered: 'STORE_ALREADY_REGISTERED'
+        StoreAlreadyRegistered: 'STORE_ALREADY_REGISTERED',
+
+        GetNotSupportedByIpc: 'ContextStore.getById() is not supported by ipc contexts. Please use contextStore.getById() instead.'
     }
 }
 

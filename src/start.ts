@@ -142,11 +142,21 @@ const startApp = async (namespace: string) => {
 */
 
   switch (namespace) {
-    case 'APP':
+    case 'APP': //@todo Perhaps this is not the best name (since APP contextStore contains APP context)
       await appBindings.bindContexts();
       break;
     case 'SYNC':
-      await connectToContextStore({ id: 'APP' })
+      const appContextStore = await connectToContextStore({ id: 'APP' })
+      const app = await appContextStore.getById('APP');
+      app
+        .streamEvents({
+          type: appContext.commonLanguage.events.Initialized,
+          sessionOnly: true,
+          callback: async (event) => {
+            console.log('** FROM APP:', event);
+          }
+        });
+
       break;
 
   }

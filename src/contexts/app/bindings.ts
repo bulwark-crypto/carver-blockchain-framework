@@ -9,7 +9,7 @@ import appContext from './context'
  */
 const bindContexts = async () => {
 
-    const contextStore = createContextStore({
+    const contextStore = await createContextStore({
         id: 'APP',
         serveNet: true // Expose via node-ipc
     });
