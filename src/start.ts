@@ -37,7 +37,7 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
-
+import { createContextMap } from './classes/contextStore'
 
 const startApp = async (namespace: string) => {
 
@@ -141,27 +141,43 @@ const startApp = async (namespace: string) => {
   
 */
 
+  const contextMap = await createContextMap(); // Initialized map with default RabbitMQ channel (from config)
+
   switch (namespace) {
     case 'APP': //@todo Perhaps this is not the best name (since APP contextStore contains APP context)
-      await appBindings.bindContexts();
+      {
+        const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+
+        await appBindings.bindContexts(contextMap);
+      }
       break;
     case 'SYNC':
-      const appContextStore = await connectToContextStore({ id: 'APP' })
-      const app = await appContextStore.getById('APP');
-      app
-        .streamEvents({
-          type: appContext.commonLanguage.events.Initialized,
-          sessionOnly: true,
-          callback: async (event) => {
-            console.log('** FROM APP:', event);
-          }
-        });
+      {
+        const syncContextStore = await contextMap.getContextStore({ id: 'SYNC' });
 
-      break;
+        const appContextStore = await contextMap.getContextStore({ id: 'APP' })
+        const app = await appContextStore.getById('APP');
 
+      }
+  }
+}
+
+/*
+        app
+          .streamEvents({
+            type: appContext.commonLanguage.events.Initialized,
+            sessionOnly: true,
+            callback: async (event) => {
+              console.log('** FROM APP:', event);
+            }
+          });8/
+
+        break;
+
+      }
   }
 
-}
+}*/
 
 
 if (process.argv.length < 3) {
