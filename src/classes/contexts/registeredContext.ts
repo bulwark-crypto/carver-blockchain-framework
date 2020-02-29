@@ -5,9 +5,8 @@ import { Event } from '../interfaces/events'
 import { createEventStore } from '../eventStore'
 import { bindContextDispatcher } from './contextDispatcher'
 
-//@todo this should be a global permanent store (so store can be non-mongodb)
-import { StateStore } from '../interfaces/stateStore';
 import { ReplayEventsParams } from '../interfaces/eventStore';
+import { dbStore } from '../adapters/mongodb/mongoDbInstance'
 
 export interface RegisterContextParams {
     context: any;
@@ -49,6 +48,9 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     const emitter = new EventEmitter();
 
     const eventStore = await createEventStore({ emitter, id, storeEvents });
+
+    var client = dbStore.getClient();
+    const session = client.startSession();
 
     //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
@@ -95,9 +97,10 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
             const { store, emit, query, ...stateWithoutSideEffects } = state;
 
             // Save to permanent store / event store
-            //@todo add db transaction for this storing to ensure they both have guranteed saving
+            session.startTransaction();
             await contextDispatcher.saveToPermanentStore(store);
             await contextDispatcher.saveToEventStore(emit);
+            session.commitTransaction();
 
             // After successful save of both permanent/event store update the state
             stateStore.state = stateWithoutSideEffects;

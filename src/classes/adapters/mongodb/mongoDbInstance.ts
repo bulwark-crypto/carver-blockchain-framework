@@ -3,9 +3,10 @@ import { config } from '../../../../config'
 
 const createDbInstance = () => {
     let db = null as Db
+    let client = null as MongoClient;
 
     const initialize = async (url: string, dbName: string) => {
-        const client = await MongoClient.connect(config.db.url, { useNewUrlParser: true, useUnifiedTopology: true });
+        client = await MongoClient.connect(config.db.url, { useNewUrlParser: true, useUnifiedTopology: true });
         db = client.db(dbName);
 
         return db;
@@ -19,9 +20,14 @@ const createDbInstance = () => {
         return db;
     }
 
+    const getClient = () => {
+        return client
+    }
+
     return {
         initialize,
-        get
+        get,
+        getClient
     }
 }
 

@@ -3,7 +3,6 @@ import { Event } from '../interfaces/events'
 
 import { ReplayEventsParams } from '../interfaces/eventStore';
 
-
 import * as amqp from "amqplib";
 import * as uuidv4 from 'uuid/v4'
 
@@ -26,7 +25,6 @@ dispatch (aka command) = basic push/pull
 query = request/respond
 stream events = request/reply
 */
-
 const createContextMap = async (): Promise<ContextMap> => {
     const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
     const defaultChannel = await conn.createChannel();
@@ -57,15 +55,11 @@ const createContextMap = async (): Promise<ContextMap> => {
             registeredContexts.add(registeredContext);
             registeredContextsById.set(id, registeredContext);
 
-            await channel.assertQueue(`${id}.queryRequests`, { durable: false });
-
             // Event stream requests queue (someone will ask for a set of events from a certain position)
             const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
             await channel.assertQueue(eventStreamRequestsQueue, { durable: false });
             channel.consume(eventStreamRequestsQueue, async (msg) => {
                 const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
-
-                console.log('++got eventStreamRequestsQueue', replayEventsParams);
 
                 await registeredContext.streamEvents({
                     ...replayEventsParams,
@@ -77,6 +71,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                 channel.ack(msg);
             }, { noAck: false })
 
+            // Commands
             const dispatchQueue = `${id}.dispatch`;
             await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
             channel.consume(dispatchQueue, async (msg) => {
@@ -87,9 +82,12 @@ const createContextMap = async (): Promise<ContextMap> => {
                     channel.ack(msg); // This command was processed without errors
                 } catch (err) {
                     //@todo add deadletter queue?
-                    channel.nack(msg, false, false); // Fail message and don't requeue it 
+                    channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
                 }
             }, { noAck: false })
+
+            // Queries
+            await channel.assertQueue(`${id}.queryRequests`, { durable: false });
 
             return {
                 registeredContext,
