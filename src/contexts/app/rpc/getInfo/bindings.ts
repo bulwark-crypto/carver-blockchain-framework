@@ -1,4 +1,3 @@
-import { RegisteredContext } from '../../../../classes/contextStore';
 import { Event } from '../../../../classes/interfaces/events'
 import { ContextStore } from '../../../../classes/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';

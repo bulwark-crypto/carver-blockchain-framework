@@ -15,19 +15,13 @@ import { config } from '../../config'
 import * as amqp from "amqplib";
 import * as uuidv4 from 'uuid/v4'
 
-import { ContextStore, RegisteredContext, createRegisteredContext } from './contextStore'
+import { ContextStore, createRegisteredContext } from './contextStore'
+import { RegisteredContext, RegisterContextParams } from './registeredContext'
 
 interface ContextMapParams {
     id: string;
 }
-interface RegisterContextParams {
-    context: any;
-    /**
-     * If set to true events eimtted in Reducer will not be stored in database.
-     */
-    storeEvents?: boolean;
-    id: string;
-}
+
 export interface ContextMap {
     getContextStore: (params: ContextMapParams) => Promise<ContextStore>;
 }
