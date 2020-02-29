@@ -1,8 +1,9 @@
 import { withContext } from '../../classes/logic/withContext';
-import { ContextStore, createContextStore, ContextMap } from '../../classes/contextStore';
+import { ContextStore, createContextStore } from '../../classes/contextStore';
 
 import { dbStore } from '../../classes/adapters/mongodb/mongoDbInstance'
 import appContext from './context'
+import { ContextMap } from '../../classes/contextMap';
 
 /**
  * Initial APP context binding. Initialize Versions db table (this is used for context version upgrades)
@@ -16,14 +17,13 @@ const bindContexts = async (contextMap: ContextMap) => {
         storeEvents: true
     }); // Maybe .register should return both registeredContext and stateStore?? That would hide stateStore direct access from RegisteredContext.
 
-    const db = await dbStore.get();
-
     const initCollections = async () => {
+        const db = await dbStore.get();
 
         // Create unique index on versions collection (We use versions across contexts and event stores. They're used heavily for migration scripts)
         const contextVersion = await db.collection('versions').findOne({ id: app.id });
         if (!contextVersion) {
-            console.log('Bulwark Framework started with clean db. Creating initial versions collection...');
+            console.log('Carver Framework started with clean db. Creating initial versions collection...');
 
             await db.collection('versions').createIndex({ id: 1 }, { unique: true }); // Create a unique index on versions
 

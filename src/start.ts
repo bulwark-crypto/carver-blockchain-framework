@@ -35,7 +35,7 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
-import { createContextMap } from './classes/contextStore'
+import { createContextMap } from './classes/contextMap'
 
 const startApp = async (namespace: string) => {
 
@@ -148,8 +148,10 @@ const startApp = async (namespace: string) => {
 
         await appBindings.bindContexts(contextMap);
 
-        const app = await appContextStore.getById('APP');
 
+
+
+        const app = await appContextStore.getById('APP');
         await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
       }
       break;
