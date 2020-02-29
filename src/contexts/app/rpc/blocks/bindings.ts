@@ -13,11 +13,12 @@ const rpc = createRpcInstance();
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const app = await appContextStore.get(appContext);
-    /*
-    const rpcBlocks = await contextStore.get(rpcBlocksContext);
-    const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
+    const rpcGetInfo = await appContextStore.get(rpcGetInfoContext);
 
+    const { registeredContext: rpcBlocks, stateStore: rpcBlocksStateStore } = await appContextStore.register({
+        context: rpcBlocksContext,
+        storeEvents: true
+    });
     const db = await dbStore.get();
 
     const initCollections = async () => {
@@ -59,6 +60,8 @@ const bindContexts = async (contextMap: ContextMap) => {
             const hash = await rpc.call('getblockhash', [height]);
             const block = await rpc.call('getblock', [hash]);
 
+            console.log('sync block:', height);
+
             return block;
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.InsertOne, async (rpcBlock) => {
@@ -69,7 +72,7 @@ const bindContexts = async (contextMap: ContextMap) => {
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindCount, async () => {
             // Current height will equal number of blocks. So we don't even need to query db to find number of blocks in db.
-            const { height } = rpcBlocks.stateStore.state;
+            const { height } = rpcBlocksStateStore.state;
 
             return height;
 
@@ -100,7 +103,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                 });
             }
         });
-*/
+
 }
 
 export default {
