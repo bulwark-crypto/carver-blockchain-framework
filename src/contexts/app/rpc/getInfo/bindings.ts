@@ -1,5 +1,5 @@
 import { Event } from '../../../../classes/interfaces/events'
-import { ContextStore } from '../../../../classes/contextStore';
+import { ContextStore } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { createRpcInstance } from '../../../../classes/libs/rpcInstance';
 

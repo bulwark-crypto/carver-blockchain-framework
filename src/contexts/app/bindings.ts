@@ -1,9 +1,9 @@
 import { withContext } from '../../classes/logic/withContext';
-import { ContextStore, createContextStore } from '../../classes/contextStore';
+import { ContextStore, createContextStore } from '../../classes/contexts/contextStore';
 
 import { dbStore } from '../../classes/adapters/mongodb/mongoDbInstance'
 import appContext from './context'
-import { ContextMap } from '../../classes/contextMap';
+import { ContextMap } from '../../classes/contexts/contextMap';
 
 /**
  * Initial APP context binding. Initialize Versions db table (this is used for context version upgrades)

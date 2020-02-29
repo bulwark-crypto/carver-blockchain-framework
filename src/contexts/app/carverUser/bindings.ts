@@ -1,5 +1,5 @@
 import { withContext } from '../../../classes/logic/withContext';
-import { createContextStore, ContextStore } from '../../../classes/contextStore';
+import { createContextStore, ContextStore } from '../../../classes/contexts/contextStore';
 
 import commonTableWidgetContext from '../../widgets/common/table/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'

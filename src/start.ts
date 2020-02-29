@@ -35,7 +35,7 @@ import addressMovementBindings from './contexts/app/sync/addressMovements/bindin
 
 import apiSessionContext from './contexts/app/api/session/context'
 
-import { createContextMap } from './classes/contextMap'
+import { createContextMap } from './classes/contexts/contextMap'
 
 const startApp = async (namespace: string) => {
 

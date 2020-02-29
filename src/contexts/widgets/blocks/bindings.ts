@@ -1,5 +1,5 @@
 import { withContext } from '../../../classes/logic/withContext';
-import { ContextStore } from '../../../classes/contextStore';
+import { ContextStore } from '../../../classes/contexts/contextStore';
 
 import tableContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'

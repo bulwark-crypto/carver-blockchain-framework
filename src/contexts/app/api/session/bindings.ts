@@ -1,9 +1,9 @@
 import { Event } from '../../../../classes/interfaces/events'
-import { RegisteredContext } from '../../../../classes/contextStore';
+import { RegisteredContext } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { config } from '../../../../../config';
 import * as socketio from "socket.io";
-import { createContextStore, ContextStore } from '../../../../classes/contextStore';
+import { createContextStore, ContextStore } from '../../../../classes/contexts/contextStore';
 import carverUserContext from '../../carverUser/context'
 import carverUserBindings from '../../carverUser/bindings'
 

@@ -1,4 +1,4 @@
-import { ContextStore } from '../../../../classes/contextStore'
+import { ContextStore } from '../../../../classes/contexts/contextStore'
 
 import apiSessionContext from '../session/context'
 
