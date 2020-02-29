@@ -149,6 +149,22 @@ const startApp = async (namespace: string) => {
         const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
         await appBindings.bindContexts(contextMap);
+
+
+        const app = await appContextStore.getById('APP');
+        app.streamEvents({
+          type: appContext.commonLanguage.events.Initialized,
+          sessionOnly: true,
+          callback: async (event) => {
+
+            //Comment to stop syncing and use existing data
+            console.log('inside app started callback');
+          }
+        });
+
+        await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
+
+        console.log('**app:', app);
       }
       break;
     case 'SYNC':

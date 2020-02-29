@@ -34,7 +34,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                 //Comment to stop syncing and use existing data
                 await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize, sequence: event.sequence }); // event will be emitted to frontend with id (id, type, payload)
             }
-        })
+        });
 
 }
 

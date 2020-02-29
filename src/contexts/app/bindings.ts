@@ -40,7 +40,7 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     await initCollections();
 
-    console.log('APP started');
+    console.log('APP context bound');
 }
 
 export default {

@@ -289,32 +289,124 @@ const createContextMap = async (): Promise<ContextMap> => {
     /*
     dispatch = push/pull
     query = request/respond
-    stream events = pub/sub
+    stream events = pub/sub ( + query for initial set of events)
     */
 
     const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
     const defaultChannel = await conn.createChannel();
 
     const getContextStore = async (): Promise<ContextStore> => {
+        const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
-        const register = (params: any) => {
-            console.log('***todo register:', params);
+        const registeredContexts = new Set<RegisteredContext>();
+        const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
+
+        const register = async <EventType, TypeOfEventType>({ id, storeEvents, context }: RegisterContextParams) => {
+            const registeredContext = await createRegisteredContext({ id, storeEvents, context });
+
+            registeredContexts.add(registeredContext);
+            registeredContextsById.set(id, registeredContext);
+
+
+            await channel.assertQueue(`${id}.queryRequests`, { durable: false });
+
+            // Event stream requests queue (someone will ask for a set of events from a certain position)
+            const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
+            await channel.assertQueue(eventStreamRequestsQueue, { durable: false });
+            channel.consume(eventStreamRequestsQueue, async (msg: any) => {
+                const replayEventsParams = JSON.parse(msg.content.toString()) as ReplayEventsParams;
+
+                console.log('++got eventStreamRequestsQueue', replayEventsParams);
+
+                await registeredContext.streamEvents({
+                    ...replayEventsParams, callback: async (event) => {
+
+                        console.log('>>>event:', event, ' to ', replayEventsParams);
+                    }
+                })
+
+                channel.ack(msg);
+            }, { noAck: false })
+
+            const dispatchQueue = `${id}.dispatch`;
+            await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
+            channel.consume(dispatchQueue, async (msg: any) => {
+                const event = JSON.parse(msg.content.toString()) as Event;
+
+                console.log('++got dispatchQueue', event);
+                await registeredContext.dispatch(event)
+
+                channel.ack(msg);
+            }, { noAck: false })
+
+            return {
+                ...registeredContext,
+                //streamEvents,
+                //dispatch
+            }
+
         }
+
+        const getById = async (id: string) => {
+            const dispatchQueue = `${id}.dispatch`;
+            const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
+
+            await channel.assertQueue(dispatchQueue, { durable: false });//@todo should dispatch queue be durable?
+
+            const streamEvents = async (params: ReplayEventsParams) => {
+                const tempId = uuidv4();
+                const eventStreamQueue = `${id}.eventStream.${tempId}`;
+
+                // Create a temporary queue to accept new events
+                await channel.assertQueue(eventStreamQueue, { exclusive: true }); // this queue will be deleted after socket ends
+
+                channel.consume(eventStreamQueue, (msg: any) => {
+                    const event = JSON.parse(msg.content.toString());
+
+                    channel.ack(msg);
+
+                    console.log('++++event:', event);
+                }, { noAck: false });
+
+                const { type, sequence, sessionOnly } = params;
+                const message = { type, sequence, sessionOnly };
+                channel.sendToQueue(eventStreamRequestsQueue, Buffer.from(JSON.stringify(message)), {
+                    replyTo: eventStreamQueue
+                    //@todo correlationId?
+                })
+            }
+
+            const dispatch = async (event: Event) => {
+
+                console.log('dipatch:', event, id);
+
+                channel.sendToQueue(dispatchQueue, Buffer.from(JSON.stringify(event)), {
+                    //@todo correlationId?
+                })
+            }
+
+            return {
+                streamEvents,
+                dispatch
+            }
+        }
+
         return {
-            register
+            register,
+            getById
         } as any
     }
 
     /*
     await channel.assertQueue(id, { durable: true });
-
+ 
     channel.consume(id, (msg: any) => {
         channel.ack(msg);
-
+ 
         const contents = msg.content.toString();
         console.log('from queue:', contents)
     })
-
+ 
     console.log('consuming:', id);
     */
 
@@ -323,21 +415,21 @@ const createContextMap = async (): Promise<ContextMap> => {
     const ipc = require('node-ipc');
     ipc.config.id = id;
     ipc.config.silent = config.ipc.silent;
-
+ 
     ipc.serveNet(config.ipc.networkHost, config.ipc.networkPort, () => {
         ipc.server.on('connect', () => {
             console.log('ipc client connected');
         });
-
+ 
         ipc.server.on('streamEvents', (params: ReplayEventsParams) => {
             console.log('ipc message:', data);
         });
-
+ 
         ipc.server.on('message', (data: any, socket: any) => {
             console.log('ipc message:', data);
         });
     });
-
+ 
     ipc.server.start();*/
 
 
@@ -398,46 +490,46 @@ const connectToContextStore = async ({ id }: CreateContextStoreOptions): Promise
     const ipc = require('node-ipc');
     ipc.config.id = id;
     ipc.config.silent = config.ipc.silent;
-
+ 
     ipc.connectToNet(id, () => {
         const ipOfId = ipc.of[id];
-
+ 
         const createRemoteRegisteredContext = () => {
             const get = (context: any, id?: string) => {
                 throw commonLanguage.errors.GetNotSupportedByIpc;
             }
-
+ 
             const getById = (id: string) => {
                 return {
                     id,
                     streamEvents: (params: ReplayEventsParams) => {
-
+ 
                         ipOfId.emit('streamEvents', params); //@todo this will need to have guaranteed delivery
-
-
-
+ 
+ 
+ 
                         console.log('should stream:', params);
-
+ 
                     }
                 }
             }
-
+ 
             return {
                 id,
                 get,
                 getById
             } as any
         }
-
+ 
         ipOfId.on('connect', () => {
             console.log('connected');
             ipOfId.emit('message', 'start')
-
-
+ 
+ 
             const registeredContext = createRemoteRegisteredContext();
             resolve(registeredContext);
         });
-
+ 
         ipOfId.on('message', (data: any) => {
             console.log('*data', data);
         });
