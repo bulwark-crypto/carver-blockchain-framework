@@ -1,10 +1,6 @@
 import { EventEmitter } from "events"
-import { Context, State } from "../interfaces/context";
 import { Event } from '../interfaces/events'
 import { EventStore } from '../interfaces/eventStore'
-import { StateStore } from '../interfaces/stateStore'
-import { withState } from "../logic/withState";
-import { PermanentStore } from "../interfaces/permanentStore";
 
 interface EventStoreParams {
     emitter: EventEmitter;

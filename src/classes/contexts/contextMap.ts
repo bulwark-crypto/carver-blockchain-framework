@@ -1,22 +1,14 @@
-const EventEmitter = require('events');
 
-import { Context, State } from '../interfaces/context'
 import { Event } from '../interfaces/events'
-import { PermanentStore } from '../interfaces/permanentStore';
-import { createEventStore } from '../eventStore'
-import { bindContextDispatcher } from '../contextDispatcher'
 
-//@todo this should be a global permanent store (so store can be non-mongodb)
-import { StateStore } from '../interfaces/stateStore';
-import { EventStore, ReplayEventsParams } from '../interfaces/eventStore';
+import { ReplayEventsParams } from '../interfaces/eventStore';
 
-import { config } from '../../../config'
 
 import * as amqp from "amqplib";
 import * as uuidv4 from 'uuid/v4'
 
-import { ContextStore, createRegisteredContext } from '../contextStore'
-import { RegisteredContext, RegisterContextParams } from '../registeredContext'
+import { ContextStore, createRegisteredContext } from './contextStore'
+import { RegisteredContext, RegisterContextParams } from './registeredContext'
 
 interface ContextMapParams {
     id: string;
@@ -50,7 +42,7 @@ const createContextMap = async (): Promise<ContextMap> => {
         const registeredContexts = new Set<RegisteredContext>();
         const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
-        const register = async <EventType, TypeOfEventType>({ id, storeEvents, context }: RegisterContextParams) => {
+        const register = async ({ id, storeEvents, context }: RegisterContextParams) => {
             const registeredContext = await createRegisteredContext({ id, storeEvents, context });
 
             registeredContexts.add(registeredContext);

@@ -1,19 +1,13 @@
 const EventEmitter = require('events');
 
-import { Context, State } from '../interfaces/context'
+import { Context } from '../interfaces/context'
 import { Event } from '../interfaces/events'
-import { PermanentStore } from '../interfaces/permanentStore';
 import { createEventStore } from '../eventStore'
-import { bindContextDispatcher } from '../contextDispatcher'
+import { bindContextDispatcher } from './contextDispatcher'
 
 //@todo this should be a global permanent store (so store can be non-mongodb)
 import { StateStore } from '../interfaces/stateStore';
-import { EventStore, ReplayEventsParams } from '../interfaces/eventStore';
-
-import { config } from '../../../config'
-
-import * as amqp from "amqplib";
-import * as uuidv4 from 'uuid/v4'
+import { ReplayEventsParams } from '../interfaces/eventStore';
 
 export interface RegisterContextParams {
     context: any;
@@ -48,7 +42,7 @@ export interface RegisteredContext {
     //eventStore: EventStore; // Notice that you can't access event store directly. (use streamEvents instead)
 }
 
-const createRegisteredContext = async <EventType, TypeOfEventType>({ id, storeEvents, context }: RegisterContextParams) => {
+const createRegisteredContext = async ({ id, storeEvents, context }: RegisterContextParams) => {
 
     //@todo during registration process ensure the commonLanguage of context does not contain any duplicate strings
 
