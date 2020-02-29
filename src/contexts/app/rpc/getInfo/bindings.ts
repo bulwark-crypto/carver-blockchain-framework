@@ -1,18 +1,21 @@
-import { Event } from '../../../../classes/interfaces/events'
-import { ContextStore } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { createRpcInstance } from '../../../../classes/libs/rpcInstance';
 
-import { config } from '../../../../../config'
-
 import appContext from '../../context'
 import rpcGetInfoContext from './context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 const rpc = createRpcInstance();
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
-    const app = await contextStore.get(appContext);
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const app = await appContextStore.getById('APP');
+
+    const { registeredContext: rpcGetInfo, stateStore: rpcGetInfoStateStore } = await appContextStore.register({
+        context: rpcGetInfoContext,
+        id: 'RPC_GETINFO',
+        storeEvents: true
+    });
 
     // Queries to handle
     withContext(rpcGetInfo)
@@ -21,7 +24,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             return info;
         })
         .handleStore(rpcGetInfoContext.commonLanguage.storage.FindLast, async () => {
-            return rpcGetInfo.stateStore.state.last;
+            return rpcGetInfoStateStore.state.last;
         });
 
     withContext(app)
@@ -29,7 +32,6 @@ const bindContexts = async (contextStore: ContextStore) => {
             type: appContext.commonLanguage.events.Initialized,
             sessionOnly: true,
             callback: async (event) => {
-
                 //Comment to stop syncing and use existing data
                 await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize, sequence: event.sequence }); // event will be emitted to frontend with id (id, type, payload)
             }

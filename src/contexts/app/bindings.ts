@@ -12,7 +12,7 @@ const bindContexts = async (contextMap: ContextMap) => {
         context: appContext,
         id: 'APP',
         storeEvents: true
-    }); // Maybe .register should return both registeredContext and stateStore?? That would hide stateStore direct access from RegisteredContext.
+    });
 
     const initCollections = async () => {
         const db = await dbStore.get();

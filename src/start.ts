@@ -147,9 +147,7 @@ const startApp = async (namespace: string) => {
         const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
         await appBindings.bindContexts(contextMap);
-
-
-
+        await rpcGetInfoBindings.bindContexts(contextMap);
 
         const app = await appContextStore.getById('APP');
         await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
