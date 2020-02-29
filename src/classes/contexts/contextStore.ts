@@ -15,12 +15,14 @@ interface RegisterContextResponse {
 }
 
 export interface ContextStore {
-    id: string;
+    /**
+     * If not specificed context.commonLanguage.type will be used as an id
+     */
+    id?: string;
     //parent?: ContextStore;
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
-    unregister: (id: string) => Promise<void>;
+    unregisterById: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
-    getById: (id: string) => Promise<RegisteredContext>;
     getParent: (id: string) => ContextStore;
 }
 
@@ -29,15 +31,18 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
     const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
     const register = async ({ id, storeEvents, context }: RegisterContextParams) => {
-        const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
+
+        const newContextId = !!id ? id : context.commonLanguage.type;
+
+        const { registeredContext, stateStore } = await createRegisteredContext({ id: newContextId, storeEvents, context });
 
         registeredContexts.add(registeredContext);
-        registeredContextsById.set(id, registeredContext);
+        registeredContextsById.set(newContextId, registeredContext);
 
         return { registeredContext, stateStore };
     }
 
-    const unregister = async (id: string) => {
+    const unregisterById = async (id: string) => {
         const registeredContext = registeredContextsById.get(id);
         if (!registeredContext) {
             //@todo Should we throw an exception if a context was not found with this id or silently fail?
@@ -64,9 +69,6 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
             }
         }
     };
-    const getById = async (id: string) => {
-        return registeredContextsById.get(id);
-    };
 
     const getParent = (id: string) => {
         let context = parent;
@@ -88,9 +90,8 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
         id,
         //parent,
         register,
-        unregister,
+        unregisterById,
         get,
-        getById,
         getParent
     };
 }

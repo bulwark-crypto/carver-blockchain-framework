@@ -15,7 +15,7 @@ export interface RegisterContextParams {
      * If set to true events eimtted in Reducer will not be stored in database.
      */
     storeEvents?: boolean;
-    id: string;
+    id?: string;
 }
 
 export interface RegisteredContext {
@@ -179,8 +179,6 @@ const commonLanguage = {
         UnhandledQuery: 'UNHANDLED_QUERY',
         QueryAlreadyRegistered: 'QUERY_ALREADY_REGISTERED',
         StoreAlreadyRegistered: 'STORE_ALREADY_REGISTERED',
-
-        GetNotSupportedByIpc: 'ContextStore.getById() is not supported by ipc contexts. Please use contextStore.getById() instead.'
     }
 }
 

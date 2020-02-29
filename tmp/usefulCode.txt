@@ -1,4 +1,30 @@
-// Some work for splitting out contexts into their own processes
+/* 
+ * This file contains useful code snippets that have been commented out.
+ */
+
+//////////////////////////////////////////////////////////////////
+/// Benchmarking
+//////////////////////////////////////////////////////////////////
+
+/*
+let timer = new Date().getTime();
+let elapsed = 0
+let iterations = 0
+
+const benchmark = (...log: any) => {
+    const currentTime = new Date().getTime();
+    iterations++;
+    elapsed += currentTime - timer;
+    timer = currentTime;
+
+    const benchmarkLog = `block: ${iterations}, elapsed (seconds): ${(elapsed / 1000).toFixed(2)}, ${((iterations / elapsed) * 1000).toFixed(2)}/second`;
+    //require('fs').appendFileSync('log.txt', benchmarkLog);
+    console.log(benchmarkLog);
+}*/
+
+//////////////////////////////////////////////////////////////////
+/// Some old code for splitting out contexts into their own processes (via node-ipc). We now use RabbitMQ but this is good reference
+//////////////////////////////////////////////////////////////////
 
 /*const { fork } = require('child_process');
 import appContext from '../contexts/app'

@@ -59,6 +59,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'RPC_BLOCKS',
     commands: {
         /**
          * Resume context with latest height

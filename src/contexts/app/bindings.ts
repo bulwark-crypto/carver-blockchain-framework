@@ -10,7 +10,6 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const { registeredContext: app } = await appContextStore.register({
         context: appContext,
-        id: 'APP',
         storeEvents: true
     });
 

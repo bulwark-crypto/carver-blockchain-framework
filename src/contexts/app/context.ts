@@ -18,6 +18,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'APP',
     commands: {
         Initialize: 'INITIALIZE'
     },

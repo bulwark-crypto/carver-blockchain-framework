@@ -9,11 +9,10 @@ const rpc = createRpcInstance();
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const app = await appContextStore.getById('APP');
+    const app = await appContextStore.get(appContext);
 
     const { registeredContext: rpcGetInfo, stateStore: rpcGetInfoStateStore } = await appContextStore.register({
         context: rpcGetInfoContext,
-        id: 'RPC_GETINFO',
         storeEvents: true
     });
 
@@ -32,6 +31,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             type: appContext.commonLanguage.events.Initialized,
             sessionOnly: true,
             callback: async (event) => {
+                console.log('RPC_GETINFO:INITIALIZE');
                 //Comment to stop syncing and use existing data
                 await rpcGetInfo.dispatch({ type: rpcGetInfoContext.commonLanguage.commands.Initialize, sequence: event.sequence }); // event will be emitted to frontend with id (id, type, payload)
             }

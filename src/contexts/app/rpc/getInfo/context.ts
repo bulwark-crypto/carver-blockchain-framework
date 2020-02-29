@@ -69,6 +69,7 @@ const initialState = {
 }
 
 const commonLanguage = {
+    type: 'RPC_GETINFO',
     commands: {
         Initialize: 'INITIALIZE'
     },

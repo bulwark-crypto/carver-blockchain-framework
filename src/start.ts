@@ -144,21 +144,22 @@ const startApp = async (namespace: string) => {
   switch (namespace) {
     case 'APP': //@todo Perhaps this is not the best name (since APP contextStore contains APP context)
       {
-        const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+        const appContextStore = await contextMap.getContextStore({ id: namespace });
 
         await appBindings.bindContexts(contextMap);
         await rpcGetInfoBindings.bindContexts(contextMap);
+        await rpcBlocksBindings.bindContexts(contextMap);
 
-        const app = await appContextStore.getById('APP');
+        const app = await appContextStore.get(appContext);
         await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
       }
       break;
     case 'SYNC':
       {
-        const syncContextStore = await contextMap.getContextStore({ id: 'SYNC' });
+        const syncContextStore = await contextMap.getContextStore({ id: namespace });
 
         const appContextStore = await contextMap.getContextStore({ id: 'APP' })
-        const app = await appContextStore.getById('APP');
+        const app = await appContextStore.get(appContext);
 
       }
   }

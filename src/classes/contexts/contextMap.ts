@@ -9,6 +9,7 @@ import * as uuidv4 from 'uuid/v4'
 
 import { ContextStore, createRegisteredContext } from './contextStore'
 import { RegisteredContext, RegisterContextParams } from './registeredContext'
+import { Context } from '../interfaces/context';
 
 interface ContextMapParams {
     id: string;
@@ -37,14 +38,21 @@ const createContextMap = async (): Promise<ContextMap> => {
         return JSON.parse(msg.content.toString())
     }
 
-    const getContextStore = async (): Promise<ContextStore> => {
+    const getContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<ContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
+
+        const getNetworkId = (context: Context, contextId: string) => {
+            return `[${contextStoreId}][${context.commonLanguage.type}]${!!contextId ? `${contextId}` : ''}`
+        }
 
         const registeredContexts = new Set<RegisteredContext>();
         const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
-        const register = async ({ id, storeEvents, context }: RegisterContextParams) => {
+        const register = async ({ id: contextId, storeEvents, context }: RegisterContextParams) => {
+            const id = getNetworkId(context, contextId);
+
             const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
+            console.log('register:', id);
 
             registeredContexts.add(registeredContext);
             registeredContextsById.set(id, registeredContext);
@@ -89,7 +97,9 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
-        const getById = async (id: string) => {
+        const get = async (context: Context, contextId: string = null) => {
+            const id = getNetworkId(context, contextId);
+
             const dispatchQueue = `${id}.dispatch`;
             const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
 
@@ -131,9 +141,10 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
+
         return {
             register,
-            getById
+            get
         } as any
     }
 

@@ -1,33 +1,20 @@
-import { RegisteredContext } from '../../../../classes/contexts/contextStore';
-
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import { createRpcInstance } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
-import { ContextStore } from '../../../../classes/contexts/contextStore';
 
 import rpcGetInfoContext from '../getInfo/context'
 import rpcBlocksContext from './context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
+
+import appContext from '../../../app/context'
 
 const rpc = createRpcInstance();
 
-let timer = new Date().getTime();
-let elapsed = 0
-let iterations = 0
-
-/*
-const benchmark = (...log: any) => {
-    const currentTime = new Date().getTime();
-    iterations++;
-    elapsed += currentTime - timer;
-    timer = currentTime;
-
-    const benchmarkLog = `block: ${iterations}, elapsed (seconds): ${(elapsed / 1000).toFixed(2)}, ${((iterations / elapsed) * 1000).toFixed(2)}/second`;
-    //require('fs').appendFileSync('log.txt', benchmarkLog);
-    console.log(benchmarkLog);
-}*/
-
-const bindContexts = async (contextStore: ContextStore) => {
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const app = await appContextStore.get(appContext);
+    /*
     const rpcBlocks = await contextStore.get(rpcBlocksContext);
     const rpcGetInfo = await contextStore.get(rpcGetInfoContext);
 
@@ -113,7 +100,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                 });
             }
         });
-
+*/
 }
 
 export default {

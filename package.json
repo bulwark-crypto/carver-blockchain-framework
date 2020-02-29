@@ -7,7 +7,7 @@
     "node-bitcoin-rpc": "^1.1.3",
     "node-ipc": "^9.1.1",
     "socket.io": "^2.3.0",
-    "typescript": "^3.8.2",
+    "typescript": "^3.8.3",
     "uuid": "^3.4.0"
   },
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/mongodb": "^3.3.16",
-    "@types/node": "^12.12.28",
+    "@types/node": "^12.12.29",
     "@types/socket.io": "^2.1.4"
   },
   "name": "carver-blockchain-framework-server",
