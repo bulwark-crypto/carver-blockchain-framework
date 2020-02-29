@@ -319,7 +319,8 @@ const createContextMap = async (): Promise<ContextMap> => {
                 console.log('++got eventStreamRequestsQueue', replayEventsParams);
 
                 await registeredContext.streamEvents({
-                    ...replayEventsParams, callback: async (event) => {
+                    ...replayEventsParams,
+                    callback: async (event) => {
 
                         console.log('>>>event:', event, ' to ', replayEventsParams);
                     }
@@ -334,15 +335,17 @@ const createContextMap = async (): Promise<ContextMap> => {
                 const event = JSON.parse(msg.content.toString()) as Event;
 
                 console.log('++got dispatchQueue', event);
-                await registeredContext.dispatch(event)
-
-                channel.ack(msg);
+                try {
+                    await registeredContext.dispatch(event)
+                    channel.ack(msg); // This command was processed without errors
+                } catch (err) {
+                    //@todo add deadletter queue?
+                    channel.nack(msg, false, false); // Fail message and don't requeue it 
+                }
             }, { noAck: false })
 
             return {
-                ...registeredContext,
-                //streamEvents,
-                //dispatch
+                ...registeredContext
             }
 
         }

@@ -12,7 +12,8 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const app = await appContextStore.register({
         context: appContext,
-        id: 'APP'
+        id: 'APP',
+        storeEvents: true
     });
 
     const db = await dbStore.get();

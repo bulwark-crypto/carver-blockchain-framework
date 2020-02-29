@@ -22,7 +22,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
     const eventsCollectionName = `eventStore_${id}`;
 
     const initializeEventStore = async () => {
-        if (storeEvents) {
+        if (!storeEvents) {
             return;
         }
 
@@ -38,7 +38,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
     await initializeEventStore();
 
     const getLastEvent = async () => {
-        if (storeEvents) {
+        if (!storeEvents) {
             return null;
         }
 
