@@ -1,6 +1,3 @@
-import { withContext } from '../../classes/logic/withContext';
-import { ContextStore, createContextStore } from '../../classes/contexts/contextStore';
-
 import { dbStore } from '../../classes/adapters/mongodb/mongoDbInstance'
 import appContext from './context'
 import { ContextMap } from '../../classes/contexts/contextMap';
@@ -11,7 +8,7 @@ import { ContextMap } from '../../classes/contexts/contextMap';
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
-    const app = await appContextStore.register({
+    const { registeredContext: app } = await appContextStore.register({
         context: appContext,
         id: 'APP',
         storeEvents: true

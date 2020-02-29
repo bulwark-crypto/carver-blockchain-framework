@@ -1,4 +1,4 @@
-const EventEmitter = require('events');
+import { EventEmitter } from 'events'
 
 import { Context } from '../interfaces/context'
 import { Event } from '../interfaces/events'
@@ -17,6 +17,7 @@ export interface RegisterContextParams {
     storeEvents?: boolean;
     id: string;
 }
+
 export interface RegisteredContext {
     context: Context;
 
@@ -33,17 +34,9 @@ export interface RegisteredContext {
 
     disconnect: () => Promise<void>;
     streamEvents: (params: ReplayEventsParams) => Promise<void>;
-
-    /**
-     *@todo Exposing state store to other contexts is dangerous. Think of a way to prevent other contexts from accessing state directly. (You should access context state via queries ONLY) 
-     * Currently we're only exposing state store to get it in the same context in bindings.ts
-     */
-    stateStore: StateStore;
-    //eventStore: EventStore; // Notice that you can't access event store directly. (use streamEvents instead)
 }
 
 const createRegisteredContext = async ({ id, storeEvents, context }: RegisterContextParams) => {
-
     //@todo during registration process ensure the commonLanguage of context does not contain any duplicate strings
 
     const initialState = {
@@ -58,7 +51,6 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     const eventStore = await createEventStore({ emitter, id, storeEvents });
 
     //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
-
 
     const storeHandlers = new Map<string, ((payload: any) => Promise<any>)>();
     const queryHandlers = new Map<string, ((payload: any) => Promise<any>)>();
@@ -87,14 +79,13 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
 
     //@todo look into async.queue for this exact pattern
     const dispatchNext = async (event: Event) => {
-
         if (startedDispatching) {
             dispatchQueue.push(event);
             return;
         }
         startedDispatching = true;
-        try {
 
+        try {
             // Note that his can throw (Notice that state chain is built into expected emit state return)
             const reducerResults = context.reducer({ state: stateStore.state, event }) as any;
 
@@ -135,8 +126,6 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
 
     }
 
-
-
     const dispatch = async (event: Event) => {
         // Keep dispatching until there is no futher response from the context
         while (true) {
@@ -160,6 +149,7 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     const streamEvents = async (params: ReplayEventsParams) => {
         eventStore.streamEvents(params);
     }
+
     const disconnect = async () => {
         eventStore.unbindAllListeners();
     }
@@ -170,9 +160,6 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
         context,
         dispatch,
 
-        stateStore,
-        //eventStore,
-
         handleQuery,
         handleStore,
         query,
@@ -181,7 +168,10 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
 
     } as RegisteredContext
 
-    return registeredContext;
+    return {
+        registeredContext,
+        stateStore
+    }
 };
 
 const commonLanguage = {

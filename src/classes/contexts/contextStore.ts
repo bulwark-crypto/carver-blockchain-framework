@@ -1,16 +1,23 @@
 
 import { Context } from '../interfaces/context'
 import { RegisterContextParams, RegisteredContext, createRegisteredContext } from './registeredContext';
+import { StateStore } from '../interfaces/stateStore';
 
 export interface CreateContextStoreOptions {
     id: string;
     version?: number;
     parent?: any;
 }
+
+interface RegisterContextResponse {
+    registeredContext: RegisteredContext;
+    stateStore: StateStore;
+}
+
 export interface ContextStore {
     id: string;
     //parent?: ContextStore;
-    register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisteredContext>;
+    register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
     unregister: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
     getById: (id: string) => Promise<RegisteredContext>;
@@ -21,13 +28,13 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
     const registeredContexts = new Set<RegisteredContext>();
     const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
-
     const register = async ({ id, storeEvents, context }: RegisterContextParams) => {
-        const registeredContext = await createRegisteredContext({ id, storeEvents, context });
+        const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
+
         registeredContexts.add(registeredContext);
         registeredContextsById.set(id, registeredContext);
 
-        return registeredContext;
+        return { registeredContext, stateStore };
     }
 
     const unregister = async (id: string) => {
@@ -77,7 +84,6 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
         }
     }
 
-
     return {
         id,
         //parent,
@@ -88,8 +94,6 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
         getParent
     };
 }
-
-
 
 export {
     createRegisteredContext,

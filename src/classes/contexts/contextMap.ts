@@ -18,14 +18,15 @@ export interface ContextMap {
     getContextStore: (params: ContextMapParams) => Promise<ContextStore>;
 }
 
+/*
+How we use RabbitMQ messages in a nutshell:
+
+dispatch (aka command) = basic push/pull
+query = request/respond
+stream events = request/reply
+*/
+
 const createContextMap = async (): Promise<ContextMap> => {
-
-    /*
-    dispatch = push/pull
-    query = request/respond
-    stream events = pub/sub ( + query for initial set of events)
-    */
-
     const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
     const defaultChannel = await conn.createChannel();
 
@@ -43,11 +44,10 @@ const createContextMap = async (): Promise<ContextMap> => {
         const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
         const register = async ({ id, storeEvents, context }: RegisterContextParams) => {
-            const registeredContext = await createRegisteredContext({ id, storeEvents, context });
+            const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
 
             registeredContexts.add(registeredContext);
             registeredContextsById.set(id, registeredContext);
-
 
             await channel.assertQueue(`${id}.queryRequests`, { durable: false });
 
@@ -84,9 +84,9 @@ const createContextMap = async (): Promise<ContextMap> => {
             }, { noAck: false })
 
             return {
-                ...registeredContext
+                registeredContext,
+                stateStore
             }
-
         }
 
         const getById = async (id: string) => {
