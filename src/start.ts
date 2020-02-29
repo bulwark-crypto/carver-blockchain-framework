@@ -1,5 +1,3 @@
-import { createContextStore, connectToContextStore } from './classes/contextStore'
-
 import { dbStore } from './classes/adapters/mongodb/mongoDbInstance'
 import { config } from '../config'
 
@@ -150,21 +148,9 @@ const startApp = async (namespace: string) => {
 
         await appBindings.bindContexts(contextMap);
 
-
         const app = await appContextStore.getById('APP');
-        app.streamEvents({
-          type: appContext.commonLanguage.events.Initialized,
-          sessionOnly: true,
-          callback: async (event) => {
-
-            //Comment to stop syncing and use existing data
-            console.log('inside app started callback');
-          }
-        });
 
         await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
-
-        console.log('**app:', app);
       }
       break;
     case 'SYNC':
@@ -176,25 +162,9 @@ const startApp = async (namespace: string) => {
 
       }
   }
+
+  console.log(`[${namespace}] namespace started`)
 }
-
-/*
-        app
-          .streamEvents({
-            type: appContext.commonLanguage.events.Initialized,
-            sessionOnly: true,
-            callback: async (event) => {
-              console.log('** FROM APP:', event);
-            }
-          });8/
-
-        break;
-
-      }
-  }
-
-}*/
-
 
 if (process.argv.length < 3) {
   throw Error('Please pass in a namespace (ex: app) to start');

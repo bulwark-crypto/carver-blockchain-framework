@@ -295,6 +295,13 @@ const createContextMap = async (): Promise<ContextMap> => {
     const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
     const defaultChannel = await conn.createChannel();
 
+    const bufferObject = (objectToBuffer: any) => {
+        return Buffer.from(JSON.stringify(objectToBuffer))
+    }
+    const unbufferObject = <T>(msg: amqp.Message): T => {
+        return JSON.parse(msg.content.toString())
+    }
+
     const getContextStore = async (): Promise<ContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
@@ -313,16 +320,15 @@ const createContextMap = async (): Promise<ContextMap> => {
             // Event stream requests queue (someone will ask for a set of events from a certain position)
             const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
             await channel.assertQueue(eventStreamRequestsQueue, { durable: false });
-            channel.consume(eventStreamRequestsQueue, async (msg: any) => {
-                const replayEventsParams = JSON.parse(msg.content.toString()) as ReplayEventsParams;
+            channel.consume(eventStreamRequestsQueue, async (msg) => {
+                const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
 
                 console.log('++got eventStreamRequestsQueue', replayEventsParams);
 
                 await registeredContext.streamEvents({
                     ...replayEventsParams,
                     callback: async (event) => {
-
-                        console.log('>>>event:', event, ' to ', replayEventsParams);
+                        channel.sendToQueue(msg.properties.replyTo, bufferObject(event))
                     }
                 })
 
@@ -331,10 +337,9 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             const dispatchQueue = `${id}.dispatch`;
             await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
-            channel.consume(dispatchQueue, async (msg: any) => {
-                const event = JSON.parse(msg.content.toString()) as Event;
+            channel.consume(dispatchQueue, async (msg) => {
+                const event = unbufferObject<Event>(msg);
 
-                console.log('++got dispatchQueue', event);
                 try {
                     await registeredContext.dispatch(event)
                     channel.ack(msg); // This command was processed without errors
@@ -363,17 +368,17 @@ const createContextMap = async (): Promise<ContextMap> => {
                 // Create a temporary queue to accept new events
                 await channel.assertQueue(eventStreamQueue, { exclusive: true }); // this queue will be deleted after socket ends
 
-                channel.consume(eventStreamQueue, (msg: any) => {
-                    const event = JSON.parse(msg.content.toString());
+                channel.consume(eventStreamQueue, async (msg) => {
+                    const event = unbufferObject<Event>(msg);
 
+                    //@todo what to do when the event we're streaming throws an exception?
+                    await params.callback(event);
                     channel.ack(msg);
-
-                    console.log('++++event:', event);
                 }, { noAck: false });
 
                 const { type, sequence, sessionOnly } = params;
                 const message = { type, sequence, sessionOnly };
-                channel.sendToQueue(eventStreamRequestsQueue, Buffer.from(JSON.stringify(message)), {
+                channel.sendToQueue(eventStreamRequestsQueue, bufferObject(message), {
                     replyTo: eventStreamQueue
                     //@todo correlationId?
                 })
@@ -381,10 +386,8 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             const dispatch = async (event: Event) => {
 
-                console.log('dipatch:', event, id);
-
-                channel.sendToQueue(dispatchQueue, Buffer.from(JSON.stringify(event)), {
-                    //@todo correlationId?
+                channel.sendToQueue(dispatchQueue, bufferObject(event), {
+                    //@todo correlationId? Would be useful for deadletter queue
                 })
             }
 
@@ -400,149 +403,11 @@ const createContextMap = async (): Promise<ContextMap> => {
         } as any
     }
 
-    /*
-    await channel.assertQueue(id, { durable: true });
- 
-    channel.consume(id, (msg: any) => {
-        channel.ack(msg);
- 
-        const contents = msg.content.toString();
-        console.log('from queue:', contents)
-    })
- 
-    console.log('consuming:', id);
-    */
-
-
-    /*
-    const ipc = require('node-ipc');
-    ipc.config.id = id;
-    ipc.config.silent = config.ipc.silent;
- 
-    ipc.serveNet(config.ipc.networkHost, config.ipc.networkPort, () => {
-        ipc.server.on('connect', () => {
-            console.log('ipc client connected');
-        });
- 
-        ipc.server.on('streamEvents', (params: ReplayEventsParams) => {
-            console.log('ipc message:', data);
-        });
- 
-        ipc.server.on('message', (data: any, socket: any) => {
-            console.log('ipc message:', data);
-        });
-    });
- 
-    ipc.server.start();*/
-
-
-
     return {
         getContextStore
     }
 }
 
-const connectToContextStore = async ({ id }: CreateContextStoreOptions): Promise<ContextStore> => {
-
-    const contextStoreId = id;
-
-    const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
-    const channel = await conn.createChannel();
-
-    const getById = (id: string) => {
-        /*
-                const
-        
-        
-                // Events from this context id will be stored in this queue with random name
-                const eventsQueueName = `events.from.${contextStoreId}:${id}.to.`;
-                const eventsQueueId = `${id}.`;
-        
-                //@todo look into adding x-dead-letter-exchange
-        
-                await channel.assertQueue(eventsQueueName, { durable: true })
-        
-                //await channel.sendToQueue(eventsQueueName, Buffer.from('test message'), { persistent: true })
-        
-                channel.consume(eventsQueueName, (msg) => {
-                    const event = JSON.parse(msg.content.toString());
-        
-                    channel.ack(msg);
-                });
-        
-                console.log('sent', eventsQueueName);
-        */
-        return {
-            id,
-            streamEvents: (params: ReplayEventsParams) => {
-
-            }
-        }
-    }
-
-    return {
-        id,
-        getById
-    } as any
-
-    //return new Promise((resolve, reject) => {
-
-
-
-    /*
-    const ipc = require('node-ipc');
-    ipc.config.id = id;
-    ipc.config.silent = config.ipc.silent;
- 
-    ipc.connectToNet(id, () => {
-        const ipOfId = ipc.of[id];
- 
-        const createRemoteRegisteredContext = () => {
-            const get = (context: any, id?: string) => {
-                throw commonLanguage.errors.GetNotSupportedByIpc;
-            }
- 
-            const getById = (id: string) => {
-                return {
-                    id,
-                    streamEvents: (params: ReplayEventsParams) => {
- 
-                        ipOfId.emit('streamEvents', params); //@todo this will need to have guaranteed delivery
- 
- 
- 
-                        console.log('should stream:', params);
- 
-                    }
-                }
-            }
- 
-            return {
-                id,
-                get,
-                getById
-            } as any
-        }
- 
-        ipOfId.on('connect', () => {
-            console.log('connected');
-            ipOfId.emit('message', 'start')
- 
- 
-            const registeredContext = createRemoteRegisteredContext();
-            resolve(registeredContext);
-        });
- 
-        ipOfId.on('message', (data: any) => {
-            console.log('*data', data);
-        });
-        ipOfId.on('error', (err: any) => {
-            console.log('*err', err);
-        })
-    })*/
-
-    // })
-}
 
 const commonLanguage = {
     errors: {
@@ -557,6 +422,5 @@ const commonLanguage = {
 export {
     createContextMap,
     createContextStore,
-    connectToContextStore,
     ContextStore
 }

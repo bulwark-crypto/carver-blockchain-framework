@@ -14,7 +14,7 @@ const bindContexts = async (contextMap: ContextMap) => {
         context: appContext,
         id: 'APP',
         storeEvents: true
-    });
+    }); // Maybe .register should return both registeredContext and stateStore?? That would hide stateStore direct access from RegisteredContext.
 
     const db = await dbStore.get();
 
@@ -23,6 +23,8 @@ const bindContexts = async (contextMap: ContextMap) => {
         // Create unique index on versions collection (We use versions across contexts and event stores. They're used heavily for migration scripts)
         const contextVersion = await db.collection('versions').findOne({ id: app.id });
         if (!contextVersion) {
+            console.log('Bulwark Framework started with clean db. Creating initial versions collection...');
+
             await db.collection('versions').createIndex({ id: 1 }, { unique: true }); // Create a unique index on versions
 
             await db.collection('versions').insertOne({ id: app.id, version: 1 }); // with version we can do easy update migrations
@@ -40,8 +42,6 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     }
     await initCollections();
-
-    console.log('APP context bound');
 }
 
 export default {
