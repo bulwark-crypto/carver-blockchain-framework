@@ -1,25 +1,31 @@
 import { Event } from '../../../../classes/interfaces/events'
-import { RegisteredContext } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { config } from '../../../../../config';
 import * as socketio from "socket.io";
-import { createContextStore, ContextStore } from '../../../../classes/contexts/contextStore';
 import carverUserContext from '../../carverUser/context'
-import carverUserBindings from '../../carverUser/bindings'
 
 import apiSessionContext from './context'
 
-import publicStateBindings from '../publicState/bindings'
 import publicStateContext from '../publicState/context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const apiSession = await contextStore.get(apiSessionContext);
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+
+    const { registeredContext: apiSession, stateStore: apiSessionStateStore } = await appContextStore.register({
+        context: apiSessionContext,
+        storeEvents: true
+    });
+
 
     const io = socketio.listen(config.api.socket.port);
     const socketMap = new Map<string, socketio.Socket>();
 
-    const carverUsersContextStore = createContextStore({ id: 'SESSIONS', parent: contextStore });
-    const publicStatesContextStore = createContextStore({ id: 'PUBLIC_STATES', parent: carverUsersContextStore });
+    const carverUsersContextStore = appContextStore;
+    const publicStatesContextStore = appContextStore;
+
+    //const carverUsersContextStore = createContextStore({ id: 'SESSIONS', parent: contextStore });
+    // const publicStatesContextStore = createContextStore({ id: 'PUBLIC_STATES', parent: carverUsersContextStore });
 
     const forwardEventToSocket = async (id: string, event: Event) => {
         // Forward any events a user emits back to socket (ex: widgets will emit on carver user)
@@ -84,6 +90,11 @@ const bindContexts = async (contextStore: ContextStore) => {
     initSocketServer();
 
     const createContexts = async (id: string) => {
+
+        //@todo
+        console.log('@todo create carver user & public state context')
+
+        /*
         await carverUsersContextStore.register({
             id,
             storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
@@ -97,6 +108,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             context: publicStateContext
         })
         await publicStateBindings.bindContexts(carverUsersContextStore, publicStatesContextStore, id);
+        */
     }
 
     const bindStreamsAndInitialize = async (id: string) => {
@@ -120,15 +132,17 @@ const bindContexts = async (contextStore: ContextStore) => {
 
     withContext(apiSession)
         .handleQuery(apiSessionContext.commonLanguage.queries.InsertNewUserContext, async (id) => {
+            console.log('inserted +');
             await createContexts(id); // Create carverUser and publicState contexts
             await bindStreamsAndInitialize(id); // Then bind them
+            console.log('inserted -');
 
             return {
                 id
             }
         })
         .handleStore(apiSessionContext.commonLanguage.storage.FindSessionById, async (id) => {
-            const newSession = apiSession.stateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id); //@todo move to a query, shouldn't access state of another context directly
+            const newSession = apiSessionStateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id); //@todo move to a query, shouldn't access state of another context directly
 
             return newSession
         });

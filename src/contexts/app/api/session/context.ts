@@ -52,6 +52,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'API_SESSIONS',
     commands: {
         ReserveNewSession: 'RESERVE_NEW_SESSION',
         Connect: 'CONNECT',

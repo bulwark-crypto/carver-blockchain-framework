@@ -146,7 +146,9 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
         }
 
         const subscription = storeHandlers.get(query);
-        return await subscription(payload);
+        const response = await subscription(payload);
+
+        return response !== undefined ? response : null;// Do not return undefined query, always return null or object
     }
 
     const streamEvents = async (params: ReplayEventsParams) => {

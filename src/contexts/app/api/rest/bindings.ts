@@ -3,13 +3,16 @@ import { ContextStore } from '../../../../classes/contexts/contextStore'
 import apiSessionContext from '../session/context'
 
 import * as uuidv4 from 'uuid/v4'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 
 interface GetNewSessionParams {
     sourceIdentifier: string;
 }
-const bindContexts = async (contextStore: ContextStore) => {
-    const apiSession = await contextStore.get(apiSessionContext);
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+
+    const apiSession = await appContextStore.get(apiSessionContext);
 
     const bindServer = () => {
         const http = require('http')
@@ -32,7 +35,8 @@ const bindContexts = async (contextStore: ContextStore) => {
 
             // Create and return a new session with a specific id
             await apiSession.dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSession, payload })
-            const newSession = await apiSession.query(apiSessionContext.commonLanguage.storage.FindSessionById, id)
+
+            const newSession = await apiSession.queryStorage(apiSessionContext.commonLanguage.storage.FindSessionById, id)
 
             return newSession;
         }
@@ -57,7 +61,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                 return console.log('something bad happened', err)
             }
 
-            console.log(`server is listening on ${port}`)
+            console.log(`Reservation server is listening on ${port}`)
         })
     }
     bindServer();

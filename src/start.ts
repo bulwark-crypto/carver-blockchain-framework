@@ -51,12 +51,6 @@ const startApp = async (namespace: string) => {
           serveNet: false, // Do not serve these via node-ipc (they will be created locally)
           contexts: [
             {
-              context: addressMovementsContext,
-              bindings: addressMovementBindings,
-              id: 'ADDRESS_MOVEMENTS'
-            },
-            
-            {
               context: apiRestContext,
               bindings: apiRestBindings,
               id: 'API_REST'
@@ -103,6 +97,13 @@ const startApp = async (namespace: string) => {
         await addressesBindings.bindContexts(contextMap);
         await addressMovementBindings.bindContexts(contextMap);
       }
+      break;
+    case 'API':
+      {
+        await apiSessionBindings.bindContexts(contextMap);
+        await apiRestBindings.bindContexts(contextMap);
+      }
+      break;
   }
 
   console.log(`[${namespace}] namespace started`)

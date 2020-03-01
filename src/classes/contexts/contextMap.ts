@@ -88,6 +88,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             await channel.consume(eventStreamRequestsQueue, async (msg) => {
                 const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
 
+                //@todo would be great if we don't stream all events and do them in batches (ex: request 50 at a time). Otheriwse if consumer exits unexpectedly there will be a lot of wasted events.
                 await registeredContext.streamEvents({
                     ...replayEventsParams,
                     callback: async (event) => {
@@ -123,7 +124,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                 try {
                     const response = await registeredContext.query(type, payload);
 
-                    await channel.sendToQueue(replyTo, bufferObject(response), {
+                    await channel.sendToQueue(replyTo, bufferObject(response), { // Do not return undefined query, always return null or object
                         correlationId
                     });
 
@@ -207,7 +208,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             const queryStorage = async (query: string, payload: any) => {
                 const correlationId = uuidv4();
 
-                const promise = new Promise((resolve, reject) => {
+                const queryPromise = new Promise((resolve, reject) => {
                     activeQueries.push({
                         correlationId,
                         resolve,
@@ -221,7 +222,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                     replyTo: queryStorageRepliesQueue
                 });
 
-                const reply = await promise;
+                const reply = await queryPromise;
 
                 return reply;
             }

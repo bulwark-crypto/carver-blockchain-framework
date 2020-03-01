@@ -5,6 +5,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'API_REST',
 }
 
 const initialState = {}
