@@ -1,4 +1,3 @@
-import { RegisteredContext } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contexts/contextStore';
 
@@ -7,11 +6,18 @@ import utxosContext from '../utxos/context'
 import rpcTxsContext from '../../rpc/txs/context'
 
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const requiredMovements = await contextStore.get(requiredMovementsContext);
-    const rpcTxs = await contextStore.get(rpcTxsContext);
-    const utxos = await contextStore.get(utxosContext);
+const bindContexts = async (contextMap: ContextMap) => {
+
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const rpcTxs = await appContextStore.get(rpcTxsContext);
+    const utxos = await appContextStore.get(utxosContext);
+
+    const { registeredContext: requiredMovements, stateStore: requiredMovementsStateStore } = await appContextStore.register({
+        context: requiredMovementsContext,
+        storeEvents: true
+    });
 
     const db = await dbStore.get();
 
@@ -62,7 +68,7 @@ const bindContexts = async (contextStore: ContextStore) => {
             await db.collection('requiredMovements').insertOne(requiredMovements);
         })
         .handleQuery(requiredMovementsContext.commonLanguage.queries.GetUtxosForTx, async ({ rpcTx, utxoLabels, sequence }) => {
-            const txUtxos = await utxos.query(utxosContext.commonLanguage.storage.GetByLabels, utxoLabels);
+            const txUtxos = await utxos.queryStorage(utxosContext.commonLanguage.storage.GetByLabels, utxoLabels);
 
             //@todo only return rpcTx, .set the other arguments
             return {
@@ -77,7 +83,7 @@ const bindContexts = async (contextStore: ContextStore) => {
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindCount, async ({ filter }) => {
 
             // Current height will equal number of blocks. So we don't even need to query db to find number of blocks in db.
-            const { rewardsCount, nonRewardsCount } = requiredMovements.stateStore.state;
+            const { rewardsCount, nonRewardsCount } = requiredMovementsStateStore.state;
 
             if (!filter) {
                 return rewardsCount + nonRewardsCount;
@@ -113,7 +119,7 @@ const bindContexts = async (contextStore: ContextStore) => {
                 const txid = event.payload;
 
                 // Get rpc tx
-                const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
+                const rpcTx = await rpcTxs.queryStorage(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
 
                 console.log('requiredMovements:', rpcTx.height)
 

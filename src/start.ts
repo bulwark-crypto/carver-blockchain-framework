@@ -160,6 +160,7 @@ const startApp = async (namespace: string) => {
         await rpcBlocksBindings.bindContexts(contextMap);
         await rpcTxsBindings.bindContexts(contextMap);
         await utxosBindings.bindContexts(contextMap);
+        await requiredMovementsBindings.bindContexts(contextMap);
       }
   }
 
