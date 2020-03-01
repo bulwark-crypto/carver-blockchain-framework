@@ -1,14 +1,18 @@
-import { RegisteredContext } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
-import { ContextStore } from '../../../../classes/contexts/contextStore';
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import utxosContext from './context'
 import rpcTxsContext from '../../rpc/txs/context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const rpcTxs = await contextStore.get(rpcTxsContext);
-    const utxos = await contextStore.get(utxosContext);
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const rpcTxs = await appContextStore.get(rpcTxsContext);
+
+    const { registeredContext: utxos } = await appContextStore.register({
+        context: utxosContext,
+        storeEvents: true
+    });
 
     const db = await dbStore.get();
 
@@ -58,13 +62,14 @@ const bindContexts = async (contextStore: ContextStore) => {
                 const txid = event.payload;
 
                 // Get rpc block from permanent store by height
-                const rpcTx = await rpcTxs.query(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
+                const rpcTx = await rpcTxs.queryStorage(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
 
                 await utxos.dispatch({
                     type: utxosContext.commonLanguage.commands.ParseTx,
                     payload: rpcTx,
                     sequence: event.sequence
                 });
+
             }
         });
 }

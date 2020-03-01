@@ -68,6 +68,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'UTXOS',
     commands: {
         ParseTx: 'PARSE_TX'
     },

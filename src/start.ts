@@ -76,21 +76,7 @@ const startApp = async (namespace: string) => {
               bindings: rpcTxsBindings,
               id: 'RPC_TXS'
             },
-            {
-              context: apiRestContext,
-              bindings: apiRestBindings,
-              id: 'API_REST'
-            },
-            {
-              context: apiSessionContext,
-              bindings: apiSessionBindings,
-              id: 'API_SESSION'
-            },
-            {
-              context: apiSocketContext,
-              bindings: apiSocketBindings,
-              id: 'API_SOCKET'
-            },
+
             {
               context: utxosContext,
               bindings: utxosBindings,
@@ -110,7 +96,24 @@ const startApp = async (namespace: string) => {
               context: addressMovementsContext,
               bindings: addressMovementBindings,
               id: 'ADDRESS_MOVEMENTS'
-            }
+            },
+            
+            {
+              context: apiRestContext,
+              bindings: apiRestBindings,
+              id: 'API_REST'
+            },
+            {
+              context: apiSessionContext,
+              bindings: apiSessionBindings,
+              id: 'API_SESSION'
+            },
+            {
+              context: apiSocketContext,
+              bindings: apiSocketBindings,
+              id: 'API_SOCKET'
+            },
+            
           ]
         }
     }
@@ -150,6 +153,7 @@ const startApp = async (namespace: string) => {
         await rpcGetInfoBindings.bindContexts(contextMap);
         await rpcBlocksBindings.bindContexts(contextMap);
         await rpcTxsBindings.bindContexts(contextMap);
+        await utxosBindings.bindContexts(contextMap);
 
         const app = await appContextStore.get(appContext);
         await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });

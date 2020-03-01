@@ -106,18 +106,14 @@ const bindContexts = async (contextMap: ContextMap) => {
             callback: async (event) => {
                 const height = event.payload;
 
-
                 // Get rpc block from permanent store by height
                 const block = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
 
-                console.log('got block:', block.hash);
-
-                /*
                 await rpcTxs.dispatch({
                     type: rpcTxsContext.commonLanguage.commands.ParseBlock,
                     payload: block,
                     sequence: event.sequence // We'll store block sequence with the tx so we can resume from this state later on
-                });*/
+                });
             }
         });
 
