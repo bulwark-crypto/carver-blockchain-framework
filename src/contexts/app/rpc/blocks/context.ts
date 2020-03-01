@@ -4,7 +4,7 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 const withGetNextBlock: Reducer = ({ state, event }) => {
 
     // Limit the blocks to sync to first X (expand when event store is completed)
-    if (state.height > 1000 || state.height >= state.blocks) {
+    if (state.height > 10000 || state.height >= state.blocks) {
         return state;
     }
 

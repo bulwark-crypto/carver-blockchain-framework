@@ -5,12 +5,19 @@ import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import rpcTxsContext from './context'
 import rpcBlocksContext from '../blocks/context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 const rpc = createRpcInstance();
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const rpcTxs = await contextStore.get(rpcTxsContext);
-    const rpcBlocks = await contextStore.get(rpcBlocksContext);
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const rpcBlocks = await appContextStore.get(rpcBlocksContext);
+
+    const { registeredContext: rpcTxs } = await appContextStore.register({
+        context: rpcTxsContext,
+        storeEvents: true
+    });
+
 
     const db = await dbStore.get();
 
@@ -99,14 +106,18 @@ const bindContexts = async (contextStore: ContextStore) => {
             callback: async (event) => {
                 const height = event.payload;
 
-                // Get rpc block from permanent store by height
-                const block = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
 
+                // Get rpc block from permanent store by height
+                const block = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
+
+                console.log('got block:', block.hash);
+
+                /*
                 await rpcTxs.dispatch({
                     type: rpcTxsContext.commonLanguage.commands.ParseBlock,
                     payload: block,
                     sequence: event.sequence // We'll store block sequence with the tx so we can resume from this state later on
-                });
+                });*/
             }
         });
 

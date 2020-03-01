@@ -6,17 +6,30 @@ import { ReplayEventsParams } from '../interfaces/eventStore';
 import * as amqp from "amqplib";
 import * as uuidv4 from 'uuid/v4'
 
-import { ContextStore, createRegisteredContext } from './contextStore'
+import { ContextStore, createRegisteredContext, RegisterContextResponse } from './contextStore'
 import { RegisteredContext, RegisterContextParams } from './registeredContext'
 import { Context } from '../interfaces/context';
 
 interface ContextMapParams {
     id: string;
 }
+interface RemoteRegisteredContext {
+    queryStorage: (query: string, payload?: any) => Promise<any>;
+
+    dispatch: (event: Event) => Promise<void>;
+    streamEvents: (params: ReplayEventsParams) => Promise<void>;
+
+    //disconnect: () => Promise<void>; //@todo
+}
+export interface RemoteContextStore {
+    register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
+    get: (context: any, id?: string) => Promise<RemoteRegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
+}
 
 export interface ContextMap {
-    getContextStore: (params: ContextMapParams) => Promise<ContextStore>;
+    getContextStore: (params: ContextMapParams) => Promise<RemoteContextStore>;
 }
+
 
 /*
 How we use RabbitMQ messages in a nutshell:
@@ -36,7 +49,7 @@ const createContextMap = async (): Promise<ContextMap> => {
         return JSON.parse(msg.content.toString())
     }
 
-    const getContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<ContextStore> => {
+    const getContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
         const getNetworkId = (context: Context, contextId: string) => {
@@ -64,7 +77,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                 await registeredContext.streamEvents({
                     ...replayEventsParams,
                     callback: async (event) => {
-                        channel.sendToQueue(msg.properties.replyTo, bufferObject(event))
+                        await channel.sendToQueue(msg.properties.replyTo, bufferObject(event))
                     }
                 })
 
@@ -87,7 +100,27 @@ const createContextMap = async (): Promise<ContextMap> => {
             }, { noAck: false })
 
             // Queries
-            await channel.assertQueue(`${id}.queryRequests`, { durable: false });
+            const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
+            await channel.assertQueue(queryStorageRequestsQueue, { durable: false });
+            channel.consume(queryStorageRequestsQueue, async (msg) => {
+                const { type, payload } = unbufferObject<Event>(msg);
+                const { correlationId, replyTo } = msg.properties;
+
+                try {
+                    const response = await registeredContext.query(type, payload);
+
+                    await channel.sendToQueue(replyTo, bufferObject(response), {
+                        correlationId
+                    });
+
+                    channel.ack(msg); // This command was processed without errors
+                } catch (err) {
+                    //@todo add deadletter queue?
+                    //@todo how to handle failed queries?
+                    channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                }
+
+            });
 
             return {
                 registeredContext,
@@ -98,18 +131,13 @@ const createContextMap = async (): Promise<ContextMap> => {
         const get = async (context: Context, contextId: string = null) => {
             const id = getNetworkId(context, contextId);
 
-            const dispatchQueue = `${id}.dispatch`;
-            const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
-
-            await channel.assertQueue(dispatchQueue, { durable: false });//@todo should dispatch queue be durable?
-
             const streamEvents = async (params: ReplayEventsParams) => {
-                const tempId = uuidv4();
-                const eventStreamQueue = `${id}.eventStream.${tempId}`;
+                const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
+
+                const eventStreamQueue = `${id}.eventStream.${uuidv4()}`;
 
                 // Create a temporary queue to accept new events
                 await channel.assertQueue(eventStreamQueue, { exclusive: true }); // this queue will be deleted after socket ends
-
                 channel.consume(eventStreamQueue, async (msg) => {
                     const event = unbufferObject<Event>(msg);
 
@@ -120,22 +148,71 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                 const { type, sequence, sessionOnly } = params;
                 const message = { type, sequence, sessionOnly };
-                channel.sendToQueue(eventStreamRequestsQueue, bufferObject(message), {
+                await channel.sendToQueue(eventStreamRequestsQueue, bufferObject(message), {
                     replyTo: eventStreamQueue
                     //@todo correlationId?
                 })
             }
 
-            const dispatch = async (event: Event) => {
+            const dispatchQueue = `${id}.dispatch`;
+            await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
 
-                channel.sendToQueue(dispatchQueue, bufferObject(event), {
+            const dispatch = async (event: Event) => {
+                await channel.sendToQueue(dispatchQueue, bufferObject(event), {
                     //@todo correlationId? Would be useful for deadletter queue
                 })
             }
 
+            const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
+            const queryStorageRepliesQueue = `${id}.queryStorageReplies.${uuidv4()}`;
+            let activeQueries: any[] = [];
+
+            const bindQueryStream = async () => {
+                await channel.assertQueue(queryStorageRepliesQueue, { exclusive: true }); // this queue will be deleted after socket ends
+                channel.consume(queryStorageRepliesQueue, async (msg) => {
+                    const reply = unbufferObject<any>(msg);
+                    const { correlationId } = msg.properties;
+
+                    activeQueries = activeQueries.reduce((activeQueries, activeQuery) => {
+                        if (activeQuery.correlationId === correlationId) {
+                            activeQuery.resolve(reply);
+                            return activeQueries;
+                        }
+
+                        return [...activeQueries, activeQuery];
+                    }, [])
+
+                    channel.ack(msg);
+                });
+            }
+            await bindQueryStream();
+
+            const queryStorage = async (query: string, payload: any) => {
+                const correlationId = uuidv4();
+
+                const promise = new Promise((resolve, reject) => {
+                    activeQueries.push({
+                        correlationId,
+                        resolve,
+                        reject
+                    });
+                });
+
+                // Convert to Event and send to queue
+                await channel.sendToQueue(queryStorageRequestsQueue, bufferObject({ type: query, payload }), {
+                    correlationId, // When response comes back into the response queue we can identify for which callback
+                    replyTo: queryStorageRepliesQueue
+                });
+
+                const reply = await promise;
+
+                return reply;
+            }
+
             return {
                 streamEvents,
-                dispatch
+                dispatch,
+                queryStorage
             }
         }
 

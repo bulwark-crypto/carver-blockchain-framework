@@ -2,6 +2,7 @@
 import { Context } from '../interfaces/context'
 import { RegisterContextParams, RegisteredContext, createRegisteredContext } from './registeredContext';
 import { StateStore } from '../interfaces/stateStore';
+import { ReplayEventsParams } from '../interfaces/eventStore';
 
 export interface CreateContextStoreOptions {
     id: string;
@@ -9,21 +10,21 @@ export interface CreateContextStoreOptions {
     parent?: any;
 }
 
-interface RegisterContextResponse {
+export interface RegisterContextResponse {
     registeredContext: RegisteredContext;
     stateStore: StateStore;
 }
+
+//@todo is this whole file going to be removed now that we have context map?
 
 export interface ContextStore {
     /**
      * If not specificed context.commonLanguage.type will be used as an id
      */
     id?: string;
-    //parent?: ContextStore;
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
     unregisterById: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
-    getParent: (id: string) => ContextStore;
 }
 
 const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Promise<ContextStore> => {
@@ -70,6 +71,7 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
         }
     };
 
+    /*
     const getParent = (id: string) => {
         let context = parent;
 
@@ -84,7 +86,7 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
 
             context = context.parent;
         }
-    }
+    }*/
 
     return {
         id,
@@ -92,7 +94,7 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
         register,
         unregisterById,
         get,
-        getParent
+        //getParent
     };
 }
 

@@ -74,6 +74,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'RPC_TXS',
     commands: {
         Initialize: 'INITIALIZE',
         ParseBlock: 'PARSE_BLOCK'
