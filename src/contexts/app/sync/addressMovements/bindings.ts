@@ -1,18 +1,23 @@
-import { RegisteredContext } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
-import { ContextStore } from '../../../../classes/contexts/contextStore';
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import addressMovementsContext from './context'
 import requiredMovementsContext from '../requiredMovements/context'
 import txsContext from '../../rpc/txs/context'
 import blocksContext from '../../rpc/blocks/context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const requiredMovements = await contextStore.get(requiredMovementsContext);
-    const addressMovements = await contextStore.get(addressMovementsContext);
-    const txs = await contextStore.get(txsContext);
-    const blocks = await contextStore.get(blocksContext);
+const bindContexts = async (contextMap: ContextMap) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+
+    const requiredMovements = await appContextStore.get(requiredMovementsContext);
+    const txs = await appContextStore.get(txsContext);
+    const blocks = await appContextStore.get(blocksContext);
+
+    const { registeredContext: addressMovements } = await appContextStore.register({
+        context: addressMovementsContext,
+        storeEvents: true
+    });
 
     const db = await dbStore.get();
 
@@ -83,11 +88,9 @@ const bindContexts = async (contextStore: ContextStore) => {
             callback: async (event) => {
                 const txid = event.payload
 
-                const requiredMovement = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
-
-                const tx = await txs.query(txsContext.commonLanguage.storage.FindOneByTxId, txid)
-
-                const block = await blocks.query(blocksContext.commonLanguage.storage.FindOneByHeight, tx.height)
+                const requiredMovement = await requiredMovements.queryStorage(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
+                const tx = await txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
+                const block = await blocks.queryStorage(blocksContext.commonLanguage.storage.FindOneByHeight, tx.height)
 
                 console.log('addressMovements:', tx.height)
 

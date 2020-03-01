@@ -83,8 +83,6 @@ const bindContexts = async (contextMap: ContextMap) => {
 
                 const tx = await txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
 
-                console.log('address:', tx.height)
-
                 await addresses.dispatch({
                     type: addressesContext.commonLanguage.commands.ParseRequiredMovement,
                     payload: {

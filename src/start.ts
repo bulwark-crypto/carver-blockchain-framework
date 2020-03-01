@@ -101,6 +101,7 @@ const startApp = async (namespace: string) => {
         await utxosBindings.bindContexts(contextMap);
         await requiredMovementsBindings.bindContexts(contextMap);
         await addressesBindings.bindContexts(contextMap);
+        await addressMovementBindings.bindContexts(contextMap);
       }
   }
 
