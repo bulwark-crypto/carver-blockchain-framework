@@ -116,6 +116,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'ADDRESSES',
     commands: {
         ParseRequiredMovement: 'PARSE_REQUIRED_MOVEMENT'
     },

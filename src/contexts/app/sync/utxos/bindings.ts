@@ -69,7 +69,6 @@ const bindContexts = async (contextMap: ContextMap) => {
                     payload: rpcTx,
                     sequence: event.sequence
                 });
-
             }
         });
 }

@@ -1,4 +1,3 @@
-import { RegisteredContext } from '../../../../classes/contexts/contextStore';
 import { withContext } from '../../../../classes/logic/withContext';
 import { ContextStore } from '../../../../classes/contexts/contextStore';
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
@@ -6,11 +5,19 @@ import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 import addressesContext from './context'
 import requiredMovementsContext from '../requiredMovements/context'
 import txsContext from '../../rpc/txs/context'
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
-const bindContexts = async (contextStore: ContextStore) => {
-    const requiredMovements = await contextStore.get(requiredMovementsContext);
-    const addresses = await contextStore.get(addressesContext);
-    const txs = await contextStore.get(txsContext);
+const bindContexts = async (contextMap: ContextMap) => {
+
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const requiredMovements = await appContextStore.get(requiredMovementsContext);
+    const txs = await appContextStore.get(txsContext);
+
+
+    const { registeredContext: addresses } = await appContextStore.register({
+        context: addressesContext,
+        storeEvents: true
+    });
 
     const db = await dbStore.get();
 
@@ -72,9 +79,9 @@ const bindContexts = async (contextStore: ContextStore) => {
                 //@todo
                 const txid = event.payload
 
-                const requiredMovement = await requiredMovements.query(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
+                const requiredMovement = await requiredMovements.queryStorage(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
 
-                const tx = await txs.query(txsContext.commonLanguage.storage.FindOneByTxId, txid)
+                const tx = await txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
 
                 console.log('address:', tx.height)
 

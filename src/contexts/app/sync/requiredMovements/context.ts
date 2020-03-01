@@ -357,6 +357,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'REQUIRED_MOVEMENTS',
     commands: {
         ParseTx: 'PARSE_TX',
         Initialize: 'INITIALIZE'

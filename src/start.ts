@@ -47,51 +47,9 @@ const startApp = async (namespace: string) => {
   /*
   const getNamespaceContexts = () => {
     switch (namespace) {
-      case 'APP':
-        return {
-          serveNet: true, // Serve via node-ipc
-          contexts: [
-            {
-              context: appContext,
-              bindings: appBindings,
-              id: 'APP'
-            }]
-        }
-      case 'CORE':
         return {
           serveNet: false, // Do not serve these via node-ipc (they will be created locally)
           contexts: [
-            {
-              context: rpcGetInfoContext,
-              bindings: rpcGetInfoBindings,
-              id: 'RPC_GETINFO'
-            },
-            {
-              context: rpcBlocksContext,
-              bindings: rpcBlocksBindings,
-              id: 'RPC_BLOCKS'
-            },
-            {
-              context: rpcTxsContext,
-              bindings: rpcTxsBindings,
-              id: 'RPC_TXS'
-            },
-
-            {
-              context: utxosContext,
-              bindings: utxosBindings,
-              id: 'UTXOS'
-            },
-            {
-              context: requiredMovementsContext,
-              bindings: requiredMovementsBindings,
-              id: 'REQUIRED_MOVEMENTS'
-            },
-            {
-              context: addressesContext,
-              bindings: addressesBindings,
-              id: 'ADDRESSES'
-            },
             {
               context: addressMovementsContext,
               bindings: addressMovementBindings,
@@ -121,25 +79,6 @@ const startApp = async (namespace: string) => {
     throw 'Unknown namespace';
   }
 
-
-  const contexts = getNamespaceContexts();
-  console.log('register context:', namespace);
-
-
-  const contextStore = createContextStore({ id: namespace });
-  for await (const { context, id } of contexts) {
-    await contextStore.register({
-      context,
-      id
-    });
-  }
-
-  for await (const { bindings } of contexts) {
-    await bindings.bindContexts(contextStore as any);
-  }
-  const app = await contextStore.get(appContext);
-  await app.dispatch({ type: appContext.commonLanguage.commands.Initialize })
-  
 */
 
   const contextMap = await createContextMap(); // Initialized map with default RabbitMQ channel (from config)
@@ -161,6 +100,7 @@ const startApp = async (namespace: string) => {
         await rpcTxsBindings.bindContexts(contextMap);
         await utxosBindings.bindContexts(contextMap);
         await requiredMovementsBindings.bindContexts(contextMap);
+        await addressesBindings.bindContexts(contextMap);
       }
   }
 
