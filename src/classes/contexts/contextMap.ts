@@ -50,7 +50,21 @@ const createContextMap = async (): Promise<ContextMap> => {
         return JSON.parse(msg.content.toString())
     }
 
+    const contextStores = new Map<string, RemoteContextStore>();
+
     const getContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
+
+        // Use the context store from cache to avoid having to re-create a new one each time
+        if (contextStores.has(contextStoreId)) {
+            return contextStores.get(contextStoreId);
+        }
+
+        const newRemoteContextStore = await createContextStore({ id: contextStoreId });
+        contextStores.set(contextStoreId, newRemoteContextStore);
+
+        return newRemoteContextStore;
+    }
+    const createContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
         const getNetworkId = (context: Context, contextId: string) => {
@@ -225,6 +239,8 @@ const createContextMap = async (): Promise<ContextMap> => {
             get
         } as any
     }
+
+
 
     return {
         getContextStore
