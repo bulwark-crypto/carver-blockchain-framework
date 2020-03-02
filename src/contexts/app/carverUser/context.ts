@@ -137,6 +137,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'CARVER_USER',
     commands: {
         Initialize: 'INITIALIZE',
         Connect: 'CONNECT',

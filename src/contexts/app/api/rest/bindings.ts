@@ -12,7 +12,7 @@ interface GetNewSessionParams {
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
-    const apiSession = await appContextStore.get(apiSessionContext);
+    const apiSession = await appContextStore.get({ context: apiSessionContext });
 
     const bindServer = () => {
         const http = require('http')
@@ -33,12 +33,14 @@ const bindContexts = async (contextMap: ContextMap) => {
             // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
             console.log(`Request new session: ${id}!`);
 
+            //@todo add rate limiting
             // Create and return a new session with a specific id
             await apiSession.dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSession, payload })
 
-            const newSession = await apiSession.queryStorage(apiSessionContext.commonLanguage.storage.FindSessionById, id)
+            //const newSession = await apiSession.queryStorage(apiSessionContext.commonLanguage.storage.FindSessionById, id)
+            // console.log('session by id:', newSession, id);
 
-            return newSession;
+            return id;
         }
 
         const requestHandler = async (request: any, response: any) => {
@@ -47,11 +49,11 @@ const bindContexts = async (contextMap: ContextMap) => {
             response.setHeader('Access-Control-Allow-Headers', 'X-Carver-Framework-Version');
 
             // For now all api endpoints will simply generate a new session
-            const newSession = await getNewSession({ sourceIdentifier: request.connection.remoteAddress })
+            const id = await getNewSession({ sourceIdentifier: request.connection.remoteAddress })
 
             // Return session without source data for privacy (no need to return ip)
-            const { source, ...newSessionWithoutSource } = newSession
-            response.end(JSON.stringify(newSessionWithoutSource))
+            //const { source, ...newSessionWithoutSource } = newSession
+            response.end(JSON.stringify({ id }))
         }
 
         const server = http.createServer(requestHandler)

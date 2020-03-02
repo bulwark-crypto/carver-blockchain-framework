@@ -21,9 +21,14 @@ interface RemoteRegisteredContext {
 
     //disconnect: () => Promise<void>; //@todo
 }
+interface RemoteContextStoreParams {
+    context?: any;
+    id?: string;
+}
 export interface RemoteContextStore {
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
-    get: (context: any, id?: string) => Promise<RemoteRegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
+    get: (params: RemoteContextStoreParams) => Promise<RemoteRegisteredContext>;
+    unregister: (params: RemoteContextStoreParams) => Promise<void>;
 }
 
 export interface ContextMap {
@@ -68,7 +73,11 @@ const createContextMap = async (): Promise<ContextMap> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
         const getNetworkId = (context: Context, contextId: string) => {
-            return `[${contextStoreId}][${context.commonLanguage.type}]${!!contextId ? `${contextId}` : ''}`
+            if (!context) {
+                return `[${contextStoreId}][${contextId}]`;
+            }
+
+            return `[${contextStoreId}][${context.commonLanguage.type}]${!!contextId ? `[${contextId}]` : ''}`
         }
 
         const registeredContexts = new Set<RegisteredContext>();
@@ -143,7 +152,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
-        const get = async (context: Context, contextId: string = null) => {
+        const get = async ({ context, id: contextId }: RemoteContextStoreParams) => {
             const id = getNetworkId(context, contextId);
 
             const streamEvents = async (params: ReplayEventsParams) => {
@@ -234,6 +243,11 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
+        const unregister = async ({ context, id: contextId }: RemoteContextStoreParams) => {
+            const id = getNetworkId(context, contextId);
+
+            console.log('@todo unregister:', id)
+        }
 
         return {
             register,

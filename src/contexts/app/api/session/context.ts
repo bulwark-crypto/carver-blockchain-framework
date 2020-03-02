@@ -19,7 +19,7 @@ const withCommandReserveNewSession: Reducer = ({ state, event }) => {
         newSession
     ]
 
-    console.log('socket requested', newSession);
+    console.log('socket requested', activeSessions);
     return withState(state)
         .set({
             activeSessions
@@ -36,7 +36,7 @@ const withQueryInsertNewUserContext: Reducer = ({ state, event }) => {
     return withState(state);
 }
 
-const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
+const withCommandConnect: Reducer = ({ state, event }) => {
     const { id } = event.payload
     console.log('(apiSession) client connected', id);
 
@@ -47,8 +47,8 @@ const withRequestApiSessionConnect: Reducer = ({ state, event }) => {
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.ReserveNewSession, event, callback: withCommandReserveNewSession })
+        .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
         .reduce({ type: commonLanguage.queries.InsertNewUserContext, event, callback: withQueryInsertNewUserContext })
-        .reduce({ type: commonLanguage.commands.Connect, event, callback: withRequestApiSessionConnect });
 }
 
 const commonLanguage = {

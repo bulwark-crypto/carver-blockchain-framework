@@ -3,6 +3,7 @@ import { withContext } from '../../../../classes/logic/withContext';
 import { config } from '../../../../../config';
 import * as socketio from "socket.io";
 import carverUserContext from '../../carverUser/context'
+import carverUserBindings from '../../carverUser/bindings'
 
 import apiSessionContext from './context'
 
@@ -68,8 +69,8 @@ const bindContexts = async (contextMap: ContextMap) => {
             console.log(`Websocket User Connected: ${id}`);
 
             //@todo try catch around this in case we're trying to access context that isn't registered
-            const carverUser = await carverUsersContextStore.get(carverUserContext, id);
-            const publicState = await publicStatesContextStore.get(publicStateContext, id);
+            const carverUser = await carverUsersContextStore.get({ context: carverUserContext, id });
+            const publicState = await publicStatesContextStore.get({ context: publicStateContext, id });
 
             await publicState.dispatch({ type: publicStateContext.commonLanguage.commands.Initialize, payload: { id } })
 
@@ -94,14 +95,11 @@ const bindContexts = async (contextMap: ContextMap) => {
         //@todo
         console.log('@todo create carver user & public state context')
 
-        /*
-        await carverUsersContextStore.register({
-            id,
-            storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
-            context: carverUserContext
-        })
-        await carverUserBindings.bindContexts(carverUsersContextStore, id);
+        await carverUserBindings.bindContexts(contextMap, id);
 
+
+
+        /*
         await publicStatesContextStore.register({
             id,
             storeEvents: false, // Do not use event store for emitting (These events are projected out to frontend and do not need to be stored)
@@ -112,8 +110,8 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
 
     const bindStreamsAndInitialize = async (id: string) => {
-        const carverUser = await carverUsersContextStore.get(carverUserContext, id);
-        const publicState = await publicStatesContextStore.get(publicStateContext, id);
+        const carverUser = await carverUsersContextStore.get({ context: carverUserContext, id });
+        const publicState = await publicStatesContextStore.get({ context: publicStateContext, id });
 
         await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id } });
 
@@ -142,6 +140,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             }
         })
         .handleStore(apiSessionContext.commonLanguage.storage.FindSessionById, async (id) => {
+            console.log('*** active sessions:', apiSessionStateStore.state);
             const newSession = apiSessionStateStore.state.activeSessions.find((activeSession: any) => activeSession.id === id); //@todo move to a query, shouldn't access state of another context directly
 
             return newSession

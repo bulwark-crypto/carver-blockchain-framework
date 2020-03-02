@@ -11,8 +11,8 @@ import { ContextMap } from '../../../../classes/contexts/contextMap';
 const bindContexts = async (contextMap: ContextMap) => {
 
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const rpcTxs = await appContextStore.get(rpcTxsContext);
-    const utxos = await appContextStore.get(utxosContext);
+    const rpcTxs = await appContextStore.get({ context: rpcTxsContext });
+    const utxos = await appContextStore.get({ context: utxosContext });
 
     const { registeredContext: requiredMovements, stateStore: requiredMovementsStateStore } = await appContextStore.register({
         context: requiredMovementsContext,
