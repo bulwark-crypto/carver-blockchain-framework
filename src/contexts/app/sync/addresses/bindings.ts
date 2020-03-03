@@ -79,9 +79,13 @@ const bindContexts = async (contextMap: ContextMap) => {
                 //@todo
                 const txid = event.payload
 
-                //@todo parallel both
-                const requiredMovement = await requiredMovements.queryStorage(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
-                const tx = await txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
+                const [
+                    requiredMovement,
+                    tx
+                ] = await Promise.all([
+                    requiredMovements.queryStorage(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid),
+                    txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
+                ]);
 
                 await addresses.dispatch({
                     type: addressesContext.commonLanguage.commands.ParseRequiredMovement,
@@ -91,6 +95,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                     },
                     sequence: event.sequence
                 });
+
             }
         });
 }
