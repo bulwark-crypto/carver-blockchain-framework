@@ -14,7 +14,7 @@
     "start": "tsc | node start.js"
   },
   "devDependencies": {
-    "@types/mongodb": "^3.3.16",
+    "@types/mongodb": "^3.5.0",
     "@types/node": "^12.12.29",
     "@types/socket.io": "^2.1.4"
   },

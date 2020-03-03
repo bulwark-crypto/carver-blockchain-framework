@@ -6,6 +6,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'API_SKCET'
 }
 
 const initialState = {}

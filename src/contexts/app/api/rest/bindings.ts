@@ -1,12 +1,15 @@
 import { ContextStore } from '../../../../classes/contexts/contextStore'
 
 import apiSessionContext from '../session/context'
+import apiRestContext from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 
+
 interface GetNewSessionParams {
+    id: string;
     sourceIdentifier: string;
 }
 const bindContexts = async (contextMap: ContextMap) => {
@@ -14,16 +17,18 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const apiSession = await appContextStore.get({ context: apiSessionContext });
 
+    const { registeredContext: apiRest } = await appContextStore.register({
+        context: apiRestContext,
+        storeEvents: true
+    });
+
+
     const bindServer = () => {
         const http = require('http')
         const port = 3001 //@todo move to config
 
-        const getNewSession = async ({ sourceIdentifier }: GetNewSessionParams) => {
+        const reserveNewSession = async ({ id, sourceIdentifier }: GetNewSessionParams) => {
 
-            const getNewSessionId = () => {
-                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
-            }
-            const id = getNewSessionId();
 
             const payload = {
                 id,
@@ -44,26 +49,73 @@ const bindContexts = async (contextMap: ContextMap) => {
         }
 
         const requestHandler = async (request: any, response: any) => {
+            const carverFrameworkVersionHeader = 'x-carver-framework-version';
+
+            const getCarverFrameworkVersion = () => {
+                return request.headers[carverFrameworkVersionHeader];
+            }
+            const getNewSessionId = () => {
+                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
+            }
+
+
             response.setHeader('Content-Type', 'application/json');
             response.setHeader('Access-Control-Allow-Origin', '*'); // CORS all hosts
-            response.setHeader('Access-Control-Allow-Headers', 'X-Carver-Framework-Version');
+            response.setHeader('Access-Control-Allow-Headers', 'authorization,x-carver-framework-version');
 
-            // For now all api endpoints will simply generate a new session
-            const id = await getNewSession({ sourceIdentifier: request.connection.remoteAddress })
+            if (!request.headers['x-carver-framework-version']) {
+                console.log('**empty'); //@todo why is this being called???
+                return response.end(JSON.stringify(true))
+            }
 
-            // Return session without source data for privacy (no need to return ip)
-            //const { source, ...newSessionWithoutSource } = newSession
-            response.end(JSON.stringify({ id }))
+            const getPrivateKey = () => {
+                const token = request.headers['authorization'].split(/\s+/).pop();
+
+                return Buffer.from(token, 'base64').toString()
+            }
+
+            const getReply = async () => {
+
+                // For now all api endpoints will simply generate a new session
+                const id = getNewSessionId();
+                const frameworkVersion = getCarverFrameworkVersion();
+                const { remoteAddress } = request.connection;
+                const privateKey = getPrivateKey();
+
+                await apiRest.dispatch({
+                    type: apiRestContext.commonLanguage.commands.ReserveSocket,
+                    payload: {
+                        id,
+                        remoteAddress,
+                        frameworkVersion,
+                        privateKey
+                    }
+                })
+
+                return {
+                    id
+                }
+            }
+
+            const reply = await getReply();
+
+            response.end(JSON.stringify(reply))
         }
 
         const server = http.createServer(requestHandler)
 
-        server.listen(port, (err: any) => {
+        server.listen(port, async (err: any) => {
             if (err) {
-                return console.log('something bad happened', err)
+                //@todo handle error
+                return console.log('Could not start reservation port', err)
             }
 
             console.log(`Reservation server is listening on ${port}`)
+
+
+
+            console.log('started');
+
         })
     }
     bindServer();

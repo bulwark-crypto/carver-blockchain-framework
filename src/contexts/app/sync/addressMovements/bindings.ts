@@ -88,6 +88,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             callback: async (event) => {
                 const txid = event.payload
 
+                //@todo parallel all three
                 const requiredMovement = await requiredMovements.queryStorage(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
                 const tx = await txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
                 const block = await blocks.queryStorage(blocksContext.commonLanguage.storage.FindOneByHeight, tx.height)

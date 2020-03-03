@@ -79,8 +79,8 @@ const bindContexts = async (contextMap: ContextMap) => {
                 //@todo
                 const txid = event.payload
 
+                //@todo parallel both
                 const requiredMovement = await requiredMovements.queryStorage(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, txid);
-
                 const tx = await txs.queryStorage(txsContext.commonLanguage.storage.FindOneByTxId, txid)
 
                 await addresses.dispatch({

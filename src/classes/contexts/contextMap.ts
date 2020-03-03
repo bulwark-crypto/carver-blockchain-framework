@@ -158,7 +158,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             const streamEvents = async (params: ReplayEventsParams) => {
                 const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
 
-                const eventStreamQueue = `${id}.eventStream.${uuidv4()}`;
+                const eventStreamQueue = `${id}.eventStream.${!!params.type ? params.type : '*'}.${uuidv4()}`;
 
                 // Create a temporary queue to accept new events
                 await channel.assertQueue(eventStreamQueue, { exclusive: true }); // this queue will be deleted after socket ends
