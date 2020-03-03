@@ -58,14 +58,13 @@ const bindContexts = async (contextMap: ContextMap) => {
                 return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
             }
 
-
-            response.setHeader('Content-Type', 'application/json');
-            response.setHeader('Access-Control-Allow-Origin', '*'); // CORS all hosts
+            // CORS handling
+            response.setHeader('Access-Control-Allow-Origin', '*');
             response.setHeader('Access-Control-Allow-Headers', 'authorization,x-carver-framework-version');
-
-            if (!request.headers['x-carver-framework-version']) {
-                console.log('**empty'); //@todo why is this being called???
-                return response.end(JSON.stringify(true))
+            if (request.method === 'OPTIONS') {
+                response.writeHead(200);
+                response.end();
+                return;
             }
 
             const getPrivateKey = () => {
@@ -99,6 +98,7 @@ const bindContexts = async (contextMap: ContextMap) => {
 
             const reply = await getReply();
 
+            response.setHeader('Content-Type', 'application/json');
             response.end(JSON.stringify(reply))
         }
 
