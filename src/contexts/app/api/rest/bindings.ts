@@ -1,17 +1,14 @@
 import { ContextStore } from '../../../../classes/contexts/contextStore'
 
 import apiSessionContext from '../session/context'
-import apiRestContext from './context'
+import apiRestContext, { Reservation } from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
+import { withContext } from '../../../../classes/logic/withContext';
 
 
 
-interface GetNewSessionParams {
-    id: string;
-    sourceIdentifier: string;
-}
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
@@ -22,38 +19,51 @@ const bindContexts = async (contextMap: ContextMap) => {
         storeEvents: true
     });
 
+    const reserveNewSession = async ({ id, remoteAddress }: Reservation) => {
+
+
+        const payload = {
+            id,
+            sourceIdentifier: remoteAddress // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
+        }
+
+        // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
+        console.log(`Request new session: ${id}!`);
+
+        //@todo add rate limiting
+        // Create and return a new session with a specific id
+        await apiSession.dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSession, payload })
+
+        //const newSession = await apiSession.queryStorage(apiSessionContext.commonLanguage.storage.FindSessionById, id)
+        // console.log('session by id:', newSession, id);
+
+        return id;
+    }
+
+    withContext(apiRest)
+        .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async (payload: Reservation) => {
+            console.log('requested reservation:', payload);
+
+            const id = await reserveNewSession(payload);
+
+            return
+        });
+
+    withContext(apiSession)
+        .streamEvents({
+            type: apiSessionContext.commonLanguage.events.SessionReserved,
+            sessionOnly: true,
+            callback: async (event) => {
+                console.log('**session actually reserved:', event);
+            }
+        });
 
     const bindServer = () => {
         const http = require('http')
         const port = 3001 //@todo move to config
 
-        const reserveNewSession = async ({ id, sourceIdentifier }: GetNewSessionParams) => {
-
-
-            const payload = {
-                id,
-                sourceIdentifier // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
-            }
-
-            // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
-            console.log(`Request new session: ${id}!`);
-
-            //@todo add rate limiting
-            // Create and return a new session with a specific id
-            await apiSession.dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSession, payload })
-
-            //const newSession = await apiSession.queryStorage(apiSessionContext.commonLanguage.storage.FindSessionById, id)
-            // console.log('session by id:', newSession, id);
-
-            return id;
-        }
 
         const requestHandler = async (request: any, response: any) => {
-            const carverFrameworkVersionHeader = 'x-carver-framework-version';
-
-            const getCarverFrameworkVersion = () => {
-                return request.headers[carverFrameworkVersionHeader];
-            }
             const getNewSessionId = () => {
                 return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
             }
@@ -71,6 +81,10 @@ const bindContexts = async (contextMap: ContextMap) => {
                 const token = request.headers['authorization'].split(/\s+/).pop();
 
                 return Buffer.from(token, 'base64').toString()
+            }
+
+            const getCarverFrameworkVersion = () => {
+                return Number(request.headers['x-carver-framework-version']);
             }
 
             const getReply = async () => {

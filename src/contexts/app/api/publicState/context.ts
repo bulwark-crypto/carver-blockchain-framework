@@ -73,10 +73,9 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Clear, // Let frontend know that this id has a new state addition (think .push into widgets array)
-                id: state.id,
-
-                payload: widgetIdsToRemove
+                type: commonLanguage.events.Clear, // Delete objects from display ...
+                payload: widgetIdsToRemove, // ... from these specific object ....
+                id: state.id // ... in the root object
             },
             ]
         });
@@ -93,8 +92,8 @@ const withCommandWidgetsSet: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Clear, // Let frontend know that this id has a new state addition (think .push into widgets array)
-                id: state.id
+                type: commonLanguage.events.Clear,  // Delete objects from display ...
+                id: state.id // ... in the root object
             },
             ...getWidgetContextsWithParent(state, widgetContexts)
             ]
@@ -109,8 +108,8 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Reduced, // Let frontend know that this id has a new state
-                id,
+                type: commonLanguage.events.Reduced, // Update these fields ....
+                id, // ... in a specific object
 
                 payload: {
                     ...initialState
@@ -126,8 +125,8 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Reduced,  // Let frontend know that this id has a new state
-                id,
+                type: commonLanguage.events.Reduced,  // Update these fields ....
+                id,// ... in a specific object
 
                 payload: {
                     ...newWidgetState
@@ -162,8 +161,8 @@ const commonLanguage = {
     events: {
         Updated: 'UPDATED',
 
-        Pushed: 'PUSHED',
-        Reduced: 'REDUCED',
+        Pushed: 'PUSHED', // Add to object id. Object { children:[{object},{object},{object}] }
+        Reduced: 'REDUCED', // Update object by id
         Clear: 'CLEAR',
     },
     errors: {
