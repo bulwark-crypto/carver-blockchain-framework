@@ -1,0 +1,20 @@
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location ~ /sub/(\w+)$ {
+		nchan_subscriber;
+		nchan_channel_id $1; #first capture of the location match
+	}
+
+	location ~ /pub/(\w+)$ {
+		nchan_channel_id $1;
+		nchan_publisher;
+	}
+}
