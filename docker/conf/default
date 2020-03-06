@@ -8,13 +8,27 @@ server {
 
 	server_name _;
 
+	location = /authSubscriber {
+		proxy_pass http://host.docker.internal:3001/authSubscriber;
+		proxy_pass_request_body off;
+		proxy_set_header Content-Length "";
+		proxy_set_header X-Subscriber-Type $nchan_subscriber_type;
+		proxy_set_header X-Publisher-Type $nchan_publisher_type;
+		proxy_set_header X-Prev-Message-Id $nchan_prev_message_id;
+		proxy_set_header X-Channel-Id $nchan_channel_id;
+		proxy_set_header X-Original-URI $request_uri;
+		proxy_set_header X-Forwarded-For $remote_addr;
+	}
+
 	location ~ /sub/(\w+)$ {
-		nchan_subscriber;
 		nchan_channel_id $1; #first capture of the location match
+    	nchan_authorize_request /authSubscriber;
+		nchan_subscriber;
 	}
 
 	location ~ /pub/(\w+)$ {
 		nchan_channel_id $1;
+    	nchan_authorize_request /authServer;
 		nchan_publisher;
 	}
 }

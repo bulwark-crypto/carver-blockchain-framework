@@ -68,6 +68,14 @@ const bindContexts = async (contextMap: ContextMap) => {
                 return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
             }
 
+            console.log(request.method);
+            console.log(request.url);
+            console.log(request.headers);
+
+            response.writeHead(200);
+            response.end('ok');
+            return;
+
             // CORS handling
             response.setHeader('Access-Control-Allow-Origin', '*');
             response.setHeader('Access-Control-Allow-Headers', 'authorization,x-carver-framework-version');
