@@ -44,7 +44,7 @@ query = request/respond
 stream events = request/reply
 */
 const createContextMap = async (): Promise<ContextMap> => {
-    const conn = await amqp.connect('amqp://localhost?heartbeat=5s');//@todo move to config
+    const conn = await amqp.connect('amqp://host.docker.internal?heartbeat=5s');//@todo move to config (and this will be a docker container)
     const defaultChannel = await conn.createChannel();
     await defaultChannel.prefetch(1); // Limit each consumer to max processing of 1 message
 

@@ -60,6 +60,18 @@ withContext(apiSession)
         }
     });*/
 
+
+    /**
+     * Start the "reservation server".
+     * 
+     * Ideally this server runs in it's own process and in it's own cntainer.
+     * 
+     * The initialization of an event stream for client is as follows:
+     * 
+     * 1. Client sends a POST to /reserveChannnel with "secret" param (a random guiid)
+     * 2. Server replies with id (If there is space on reservation server).
+     * 3. 
+     */
     const bindServer = () => {
         const http = require('http')
         const port = 3001 //@todo move to config
@@ -106,14 +118,21 @@ withContext(apiSession)
                     }
                 })
             }
+            /**
+             * To initialize
+             */
             const authPublisher = async () => {
                 // These are userful for looking at auth headers
-                //console.log(request.method);
-                //console.log(request.url);
-                //console.log(request.headers);
+                console.log(request.method);
+                console.log(request.url);
+                console.log(request.headers);
 
-                const id = request.headers['x-channel-id'];
-                const ip = request.headers['x-forwarded-for']; // remote ip
+                const [id, secret] = request.headers['x-channel-id'].split('_');
+
+                //@todo ensure only specific ip can be a publisher (via config)
+                const ip = request.headers['x-forwarded-for']; // remote ip 
+
+                const publisherType = request.headers['x-publisher-type']; //@todo ensure https only (configurable)
 
 
                 await apiRest.dispatch({

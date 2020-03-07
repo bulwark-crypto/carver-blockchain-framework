@@ -8,20 +8,10 @@ server {
 
 	server_name nchan;
 
-	location = /authSubscriber {
+		location = /authSubscriber {
 		proxy_pass http://host.docker.internal:3001/authSubscriber;
-		proxy_pass_request_body off;
-		proxy_set_header Content-Length "";
-		proxy_set_header X-Subscriber-Type $nchan_subscriber_type;
-		proxy_set_header X-Publisher-Type $nchan_publisher_type;
-		proxy_set_header X-Prev-Message-Id $nchan_prev_message_id;
-		proxy_set_header X-Channel-Id $nchan_channel_id;
-		proxy_set_header X-Original-URI $request_uri;
-		proxy_set_header X-Forwarded-For $remote_addr;
-	}
 	
-	location = /authPublisher {
-		proxy_pass http://host.docker.internal:3001/authPublisher;
+		
 		proxy_pass_request_body off;
 		proxy_set_header Content-Length "";
 		proxy_set_header X-Subscriber-Type $nchan_subscriber_type;
@@ -31,8 +21,6 @@ server {
 		proxy_set_header X-Original-URI $request_uri;
 		proxy_set_header X-Forwarded-For $remote_addr;
 	}
-
-
 	location ~ /sub/(\w+)$ {
 		nchan_channel_id $1;
     	nchan_authorize_request /authSubscriber;
@@ -40,8 +28,11 @@ server {
 	}
 
 	location ~ /pub/(\w+)$ {
+		allow 127.0.0.1; # For development
+		allow 172.25.0.0/24; # Allow any ip from our custom network (on production this is limited to only reservation ip)
+		deny all;
+		
 		nchan_channel_id $1;
-    	nchan_authorize_request /authPublisher;
 		nchan_publisher;
 	}
 }
