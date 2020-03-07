@@ -19,12 +19,13 @@ const bindContexts = async (contextMap: ContextMap) => {
         storeEvents: true
     });
 
-    const reserveNewSession = async ({ id, remoteAddress }: Reservation) => {
+
+    const reserveNewSession = async ({ id, ip }: Reservation) => {
 
 
         const payload = {
             id,
-            sourceIdentifier: remoteAddress // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
+            ip // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
         }
 
         // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
@@ -49,14 +50,15 @@ const bindContexts = async (contextMap: ContextMap) => {
             return
         });
 
-    withContext(apiSession)
-        .streamEvents({
-            type: apiSessionContext.commonLanguage.events.SessionReserved,
-            sessionOnly: true,
-            callback: async (event) => {
-                console.log('**session actually reserved:', event);
-            }
-        });
+    /*
+withContext(apiSession)
+    .streamEvents({
+        type: apiSessionContext.commonLanguage.events.SessionReserved,
+        sessionOnly: true,
+        callback: async (event) => {
+            console.log('**session actually reserved:', event);
+        }
+    });*/
 
     const bindServer = () => {
         const http = require('http')
@@ -64,13 +66,85 @@ const bindContexts = async (contextMap: ContextMap) => {
 
 
         const requestHandler = async (request: any, response: any) => {
-            const getNewSessionId = () => {
-                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
-            }
 
             console.log(request.method);
             console.log(request.url);
-            console.log(request.headers);
+
+            /*
+                        const reserveChannel = async () => {
+                            const id = request.headers['x-channel-id']
+            
+                            await apiRest.dispatch({
+                                type: apiRestContext.commonLanguage.commands.ReserveChannel,
+                                payload: {
+                                    id,
+                                    remoteAddress,
+                                    frameworkVersion,
+                                    privateKey
+                                }
+                            })
+                        }*/
+
+            const reserveChannnel = async () => {
+                console.log('@todo');
+            }
+            const authSubscriber = async () => {
+                // These are userful for looking at auth headers
+                //console.log(request.method);
+                //console.log(request.url);
+                //console.log(request.headers);
+
+                const id = request.headers['x-channel-id'];
+                const ip = request.headers['x-forwarded-for']; // remote ip
+
+
+                await apiRest.dispatch({
+                    type: apiRestContext.commonLanguage.commands.AuthorizeSubscriber,
+                    payload: {
+                        id,
+                        ip
+                    }
+                })
+            }
+            const authPublisher = async () => {
+                // These are userful for looking at auth headers
+                //console.log(request.method);
+                //console.log(request.url);
+                //console.log(request.headers);
+
+                const id = request.headers['x-channel-id'];
+                const ip = request.headers['x-forwarded-for']; // remote ip
+
+
+                await apiRest.dispatch({
+                    type: apiRestContext.commonLanguage.commands.AuthorizePublisher,
+                    payload: {
+                        id,
+                        ip
+                    }
+                })
+            }
+
+
+
+            const getNewSessionId = () => {
+                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
+            }
+            switch (request.method) {
+                case 'GET':
+                    switch (request.url) {
+                        case '/reserveChannnel':
+                            await reserveChannnel();
+                            break;
+                        case '/authSubscriber':
+                            await authSubscriber();
+                            break;
+                        case '/authPublisher':
+                            await authPublisher();
+                            break;
+                    }
+            }
+
 
             response.writeHead(200);
             response.end('ok');

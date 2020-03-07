@@ -81,10 +81,6 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
 
     //@todo look into async.queue for this exact pattern
     const dispatchNext = async (event: Event) => {
-        if (startedDispatching) {
-            dispatchQueue.push(event);
-            return;
-        }
         startedDispatching = true;
 
         try {
@@ -130,6 +126,11 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     }
 
     const dispatch = async (event: Event) => {
+        if (startedDispatching) {
+            dispatchQueue.push(event);
+            return;
+        }
+
         // Keep dispatching until there is no futher response from the context
         while (true) {
             event = await dispatchNext(event)
