@@ -21,7 +21,7 @@ services:
 
   # reservation server
   reservation:
-    build: reservation
+    build: node
     container_name: reservation
     volumes:
       - ..:/usr/src/service
@@ -30,6 +30,7 @@ services:
     depends_on:
       - mongo
       - nchan
+      - rabbitmq
     working_dir: /usr/src/service
     command: node src/start.js API
     #command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
@@ -47,6 +48,27 @@ services:
     networks:
       agent:
         ipv4_address: 172.25.0.102
+
+  # rabbitmq
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      agent:
+        ipv4_address: 172.25.0.103
+
+  # coin - bwk - Bulwark
+  bwk:
+    container_name: bwk
+    build: coins/bwk
+    ports:
+      - "52543:52543"
+    networks:
+      agent:
+        ipv4_address: 172.25.0.110
 
 networks:
   agent:

@@ -1,6 +1,6 @@
 FROM node:11
 
-LABEL description="reservation"
+LABEL description="node"
 
 RUN npm init -y
 RUN npx tsc
