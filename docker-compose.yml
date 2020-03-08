@@ -1,17 +1,17 @@
-version: "3"
+version: "3.1"
 
 services:
 
   # You can "tail /var/log/nginx/error.log -f"  for streaming logs
   # nchan server
   nchan:
-    build: nchan 
+    build: docker/nchan 
     container_name: nchan
     restart: unless-stopped
     volumes:
-      - ./nchan/conf/nginx.conf:/etc/nginx/nginx.conf
-      - ./nchan/conf/default:/etc/nginx/sites-available/default
-      - ./nchan/logs/:/var/log/nginx/
+      - ./docker/nchan/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nchan/conf/default:/etc/nginx/sites-available/default
+      - ./docker/nchan/logs/:/var/log/nginx/
     ports:
       - "8013:80" # nchan public ip
     networks:
@@ -21,19 +21,22 @@ services:
 
   # reservation server
   reservation:
-    build: node
+    build: docker/node
     container_name: reservation
     volumes:
-      - ..:/usr/src/service
+      - .:/usr/src/service
     environment:
       - NODE_ENV=development
+      - RPC_USER=${RPC_USER}
+      - RPC_PASSWORD=${RPC_PASSWORD}
     depends_on:
       - mongo
       - nchan
       - rabbitmq
+      - bwk
     working_dir: /usr/src/service
-    command: node src/start.js API
-    #command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
+    #command: node src/start.js API
+    command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
     networks:
       agent:
         ipv4_address: 172.25.0.100
@@ -52,7 +55,7 @@ services:
   # rabbitmq
   rabbitmq:
     container_name: rabbitmq
-    image: rabbitmq:3-management
+    build: docker/rabbitmq
     ports:
       - "15672:15672"
       - "5672:5672"
@@ -63,9 +66,12 @@ services:
   # coin - bwk - Bulwark
   bwk:
     container_name: bwk
-    build: coins/bwk
+    build: docker/coins/bwk
     ports:
       - "52543:52543"
+    environment:
+      - RPC_USER=${RPC_USER}
+      - RPC_PASSWORD=${RPC_PASSWORD}
     networks:
       agent:
         ipv4_address: 172.25.0.110
@@ -76,3 +82,5 @@ networks:
     ipam:
       config:
       - subnet: 172.25.0.0/24
+
+#printenv

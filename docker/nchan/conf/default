@@ -9,7 +9,7 @@ server {
 	server_name nchan;
 
 		location = /authSubscriber {
-		proxy_pass http://host.docker.internal:3001/authSubscriber;
+		proxy_pass http://172.25.0.100:3001/authSubscriber; # ip/port comes from docker-compose
 	
 		
 		proxy_pass_request_body off;

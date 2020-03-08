@@ -8,7 +8,6 @@
     "downlevelIteration": true // For [...Array(n)] syntax
   },
   "files": [
-    "src/start.ts",
-    "src/context.ts",
+    "src/start.ts"
   ]
 }

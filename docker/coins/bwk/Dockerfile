@@ -6,7 +6,7 @@ ENV BULWARK_VERSION 2.2.0.0
 SHELL [ "/bin/bash", "-o", "pipefail", "-c" ]
 
 ADD https://github.com/bulwark-crypto/Bulwark/releases/download/2.2.0/bulwark-node-2.2.0.0-linux64.tar.gz /
-ADD https://raw.githubusercontent.com/bulwark-crypto/Bulwark-Docker/master/bulwark/scripts/entrypoint.sh /usr/local/bin/
+COPY ./entrypoint.sh /usr/local/bin/
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y nano=2.5.3-2ubuntu2 \

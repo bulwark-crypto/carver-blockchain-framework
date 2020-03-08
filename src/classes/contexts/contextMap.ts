@@ -9,6 +9,7 @@ import * as uuidv4 from 'uuid/v4'
 import { ContextStore, createRegisteredContext, RegisterContextResponse } from './contextStore'
 import { RegisteredContext, RegisterContextParams } from './registeredContext'
 import { Context } from '../interfaces/context';
+import { config } from '../../../config';
 
 interface ContextMapParams {
     id: string;
@@ -44,7 +45,7 @@ query = request/respond
 stream events = request/reply
 */
 const createContextMap = async (): Promise<ContextMap> => {
-    const conn = await amqp.connect('amqp://host.docker.internal?heartbeat=5s');//@todo move to config (and this will be a docker container)
+    const conn = await amqp.connect(config.rabbitmq.url);//@todo move to config (and this will be a docker container)
     const defaultChannel = await conn.createChannel();
     await defaultChannel.prefetch(1); // Limit each consumer to max processing of 1 message
 
