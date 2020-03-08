@@ -5,12 +5,13 @@ services:
   # You can "tail /var/log/nginx/error.log -f"  for streaming logs
   # nchan server
   nchan:
-    build: nginx 
+    build: nchan 
+    container_name: nchan
     restart: unless-stopped
     volumes:
-      - ./conf/nginx.conf:/etc/nginx/nginx.conf
-      - ./conf/default:/etc/nginx/sites-available/default
-      - ./logs/:/var/log/nginx/
+      - ./nchan/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./nchan/conf/default:/etc/nginx/sites-available/default
+      - ./nchan/logs/:/var/log/nginx/
     ports:
       - "8013:80" # nchan public ip
     networks:
@@ -19,8 +20,9 @@ services:
       default:
 
   # reservation server
-  dev:
-    image: node:11
+  reservation:
+    build: reservation
+    container_name: reservation
     volumes:
       - ..:/usr/src/service
     environment:
@@ -29,8 +31,6 @@ services:
       - mongo
       - nchan
     working_dir: /usr/src/service
-    command: npm init -y
-    command: npx tsc
     command: node src/start.js API
     #command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
     networks:
@@ -40,6 +40,7 @@ services:
 
   # mongodb
   mongo:
+    container_name: mongo
     image: mongo
     expose:
       - 27017
