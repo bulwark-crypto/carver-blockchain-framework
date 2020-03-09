@@ -80,7 +80,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                 }));
         });
 
-    withContext(requiredMovements)
+    requiredMovements
         .streamEvents({
             type: requiredMovementsContext.commonLanguage.events.TxParsed,
             sequence: !!lastAddressMovementBalance ? lastAddressMovementBalance.sequence : 0,

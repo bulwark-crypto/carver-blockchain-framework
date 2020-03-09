@@ -2,7 +2,7 @@ FROM node:11
 
 LABEL description="node"
 
-RUN npm init -y
+RUN npm install
 RUN npx tsc
 
 EXPOSE 3001

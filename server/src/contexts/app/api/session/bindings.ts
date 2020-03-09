@@ -115,7 +115,7 @@ const bindContexts = async (contextMap: ContextMap) => {
 
         await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Initialize, payload: { id } });
 
-        await withContext(publicState)
+        await publicState
             // Proxy all events from a publicState to frontend
             .streamEvents({
                 type: '*',

@@ -1,6 +1,6 @@
-import { RegisteredContext } from "../contexts/contextStore";
 import { Event } from "../interfaces/events";
 import { ReplayEventsParams } from "../interfaces/eventStore";
+import { RegisteredContext } from "../contexts/registeredContext";
 
 interface WithContextChain {
     /**

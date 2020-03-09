@@ -71,7 +71,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                 }));
         });
 
-    withContext(requiredMovements)
+    requiredMovements
         .streamEvents({
             type: requiredMovementsContext.commonLanguage.events.TxParsed,
             sequence: !!lastAddress ? lastAddress.sequence : 0,

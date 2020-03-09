@@ -54,7 +54,7 @@ const bindContexts = async (contextMap: ContextMap) => {
         });
 
 
-    withContext(rpcTxs)
+    rpcTxs
         .streamEvents({
             type: rpcTxsContext.commonLanguage.events.NewTxFound,
             sequence: !!lastUtxo ? lastUtxo.sequence : 0, // Resume from last sequence

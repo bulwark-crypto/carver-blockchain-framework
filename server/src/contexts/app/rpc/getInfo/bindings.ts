@@ -26,7 +26,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             return rpcGetInfoStateStore.state.last;
         });
 
-    withContext(app)
+    app
         .streamEvents({
             type: appContext.commonLanguage.events.Initialized,
             sessionOnly: true,

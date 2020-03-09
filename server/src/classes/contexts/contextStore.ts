@@ -25,6 +25,7 @@ export interface ContextStore {
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
     unregisterById: (id: string) => Promise<void>;
     get: (context: any, id?: string) => Promise<RegisteredContext>; //@todo this should also be possible via node-ipc (just hash the context). OR we can just remove it to reduce complexity.
+    getParent: (parent: string) => Promise<ContextStore>;
 }
 
 const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Promise<ContextStore> => {
@@ -71,30 +72,31 @@ const createContextStore = async ({ id, parent }: CreateContextStoreOptions): Pr
         }
     };
 
-    /*
-    const getParent = (id: string) => {
-        let context = parent;
-
-        while (true) {
-            if (!context) {
-                return null;
+    const getParent = async (id: string) => {
+        /*
+            let context = parent;
+    
+            while (true) {
+                if (!context) {
+                    return null;
+                }
+    
+                if (context.id === id) {
+                    return context;
+                }
+    
+                context = context.parent;
             }
-
-            if (context.id === id) {
-                return context;
-            }
-
-            context = context.parent;
-        }
-    }*/
-
+       */
+        throw 'getParent() is no longer supported';
+    }
     return {
         id,
         //parent,
         register,
         unregisterById,
         get,
-        //getParent
+        getParent
     };
 }
 

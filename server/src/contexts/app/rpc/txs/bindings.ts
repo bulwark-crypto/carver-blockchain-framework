@@ -99,7 +99,7 @@ const bindContexts = async (contextMap: ContextMap) => {
         });
 
 
-    withContext(rpcBlocks)
+    rpcBlocks
         .streamEvents({
             type: rpcBlocksContext.commonLanguage.events.NewBlockReached,
             sequence: !!lastTx ? lastTx.sequence : 0, // Resume from last sequence

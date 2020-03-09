@@ -90,7 +90,7 @@ const bindContexts = async (contextMap: ContextMap) => {
 
 
 
-    withContext(rpcGetInfo)
+    rpcGetInfo
         .streamEvents({
             type: rpcGetInfoContext.commonLanguage.events.Updated,
             sessionOnly: true,

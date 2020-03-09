@@ -111,7 +111,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             return requiredMovements.toArray();
         });
 
-    withContext(utxos)
+    utxos
         .streamEvents({
             type: utxosContext.commonLanguage.events.TxParsed,
             sequence: !!lastRequiredMovement ? lastRequiredMovement.sequence : 0, // Resume from last sequence

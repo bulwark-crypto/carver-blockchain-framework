@@ -7,7 +7,6 @@ services:
   nchan:
     build: docker/nchan 
     container_name: nchan
-    restart: unless-stopped
     volumes:
       - ./docker/nchan/conf/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/nchan/conf/default:/etc/nginx/sites-available/default
@@ -24,7 +23,7 @@ services:
     build: docker/node
     container_name: reservation
     volumes:
-      - .:/usr/src/service
+      - ./server:/usr/src/service
     environment:
       - NODE_ENV=development
       - RPC_USER=${RPC_USER}
@@ -46,6 +45,8 @@ services:
   mongo:
     container_name: mongo
     image: mongo
+    volumes:
+      - ./docker/mongo/data:/data
     expose:
       - 27017
     networks:
@@ -67,6 +68,8 @@ services:
   bwk:
     container_name: bwk
     build: docker/coins/bwk
+    volumes:
+      - ./docker/coins/bwk/data:/home/bulwark/.bulwark
     ports:
       - "52543:52543"
     environment:
