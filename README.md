@@ -4,19 +4,25 @@ Carver Framework is a next generation blockchain explorer and data aggregation n
 
 The framework currently features the world's most advanced Masternode / Proof Of Stake blockchain analytics via our Carver2D algorithm.
 
-This server repository is used to serve realtime data for consumption via [Carver Framework Client](https://github.com/bulwark-crypto/carver-blockchain-framework-client) repository which allows to project server-side managed state without any frontend state logic or rest apis.
+This server repository is used to serve realtime data for consumption via [Carver Framework Client](https://github.com/bulwark-crypto/carver-blockchain-framework-client) repository which allows to project server-side managed state without any frontend state logic or rest apis. (This will be moved to this repository soon).
 
 # Installation
 
-1. Install: `npm install`
-2. Configure: `config.ts`
-3. Run: `tsc | node src/start.js` (@todo make it work via npm start)
+Modify `.env` file and replace all "CHANGEME" lines with a random password. (This will be automated via a script in the future)
 
-This will spawn a socket reservation REST server on port 3001 (this will soon be moved into config). This server will provide an endpoint to connect socket.io connection to with credentials.
+Install docker and run: `docker compose up` (you can use `-d` option to run it in background)
 
-You will also need to run [carver-blockchain-framework-client](https://github.com/bulwark-crypto/carver-blockchain-framework-client) repository for frontend.
+This will start up all of the required Carver Framework services.
+
+You can now run the following commands on "reservation" container (These will be ran automatically in the future)
+
+- `node src/start.js APP`
+- `node src/start.js API`
+- `node src/start.js SYNC` (This will require Bulwark chain to fully sync)
 
 # Frontend Contexts
+
+You will find all of the core logic for Carver Framework in the `server/src/contexts` folder.
 
 ## app/api/rest - Reservation Server
 
