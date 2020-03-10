@@ -18,10 +18,10 @@ services:
         ipv4_address: 172.25.0.101
       default:
 
-  # reservation server
-  reservation:
+  # api server (Carver Framework API namespace)
+  api:
     build: docker/node
-    container_name: reservation
+    container_name: api
     volumes:
       - ./server:/usr/src/service
     environment:
@@ -32,14 +32,34 @@ services:
       - mongo
       - nchan
       - rabbitmq
-      - bwk
     working_dir: /usr/src/service
-    #command: node src/start.js API
     command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
     networks:
       agent:
         ipv4_address: 172.25.0.100
       default:
+
+  # blockchain sync (Carver Framework SYNC namespace)
+  sync:
+    build: docker/node
+    container_name: sync
+    volumes:
+      - ./server:/usr/src/service
+    environment:
+      - NODE_ENV=development
+      - RPC_USER=${RPC_USER}
+      - RPC_PASSWORD=${RPC_PASSWORD}
+    depends_on:
+      - mongo
+      - rabbitmq
+      - bwk
+    working_dir: /usr/src/service
+    command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
+    networks:
+      agent:
+        ipv4_address: 172.25.0.104
+      default:
+
 
   # mongodb
   mongo:

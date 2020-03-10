@@ -10,15 +10,26 @@ This server repository is used to serve realtime data for consumption via [Carve
 
 Modify `.env` file and replace all "CHANGEME" lines with a random password. (This will be automated via a script in the future)
 
-Install docker and run: `docker compose up` (you can use `-d` option to run it in background)
+Install docker and run: `docker compose up -d` (you can remove `-d` option to run in the same terminal and Ctrl+C to stop the framework)
 
-This will start up all of the required Carver Framework services.
+# Development
 
-You can now run the following commands on "reservation" container (These will be ran automatically in the future)
+If you have `DEVELOPMENT=1` in .env file uncommented all services will run except Carver Framework contexts. This makes it easy to test spawn, restart and add new contexts as needed.
 
-- `node src/start.js APP`
-- `node src/start.js API`
-- `node src/start.js SYNC` (This will require Bulwark chain to fully sync)
+You can use the following commands to pawn the basic namespaces. (These are all ran automatically without development flag)
+
+- `docker-compose exec api bash -c "npx tsc && node src/start.js API"` - Start Reservation API server (On port 3001)
+- `docker-compose exec sync bash -c "npx tsc && node src/start.js SYNC"` - Start blockchain & data syncing. (This will require your chain to fully sync (See Logging and Monitoring section below.)
+
+# Logging and Monitoring
+
+## Debugging coin syncing
+
+- You can use `docker-compose exec bwk bulwark-cli getinfo` to check sync status 
+- Look at logs with `docker logs -f bwk --tail 10`. (Replace bwk with your coin container name)
+- `docker-compose exec bwk bash -c "bulwark-cli stop && bulwarkd -reindex"` to reindex bwk in case of an error (On your next restart the chain will start from beginning)
+
+---
 
 # Frontend Contexts
 

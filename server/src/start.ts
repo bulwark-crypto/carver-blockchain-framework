@@ -37,7 +37,7 @@ import apiSessionContext from './contexts/app/api/session/context'
 
 import { createContextMap } from './classes/contexts/contextMap'
 
-const startApp = async (namespace: string) => {
+const startNamespace = async (namespace: string) => {
 
   console.log('Starting Carver Blockchain Framework')
 
@@ -80,12 +80,6 @@ const startApp = async (namespace: string) => {
   switch (namespace) {
     case 'APP': //@todo Perhaps this is not the best name (since APP contextStore contains APP context)
       {
-        await appBindings.bindContexts(contextMap);
-
-        const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-        const app = await appContextStore.get({ context: appContext });
-
-        await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
       }
       break;
     case 'SYNC':
@@ -101,6 +95,13 @@ const startApp = async (namespace: string) => {
       break;
     case 'API':
       {
+        await appBindings.bindContexts(contextMap);
+
+        const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+        const app = await appContextStore.get({ context: appContext });
+
+        await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
+
         await apiSessionBindings.bindContexts(contextMap);
         await apiRestBindings.bindContexts(contextMap);
       }
@@ -115,4 +116,4 @@ if (process.argv.length < 3) {
 }
 
 const namespace = process.argv[2];
-startApp(namespace);
+startNamespace(namespace);
