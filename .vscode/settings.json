@@ -2,7 +2,11 @@
     "files.exclude": {
         "**/*.js": true,
         "**/*.js.map": true,
-        "server/node_modules": true
+        "server/node_modules": true,
+        "client/node_modules": true,
+        "docker/coins/**/data": true,
+        "docker/mongo/data": true,
+        "docker/nchan/logs": true,
     },
     "editor.formatOnSave": true
 }
