@@ -1,10 +1,8 @@
-# Bulwark Carver Framework (Server) - WORK IN PROGRESS
+# Bulwark Carver Framework - WORK IN PROGRESS
 
 Carver Framework is a next generation blockchain explorer and data aggregation network. It uses our new concept of distributed server-side reducers to create realtime data access layer. Each reducer context in this network can be accessed via separate event store and data can be permanently stored in database via event projections.
 
 The framework currently features the world's most advanced Masternode / Proof Of Stake blockchain analytics via our Carver2D algorithm.
-
-This server repository is used to serve realtime data for consumption via [Carver Framework Client](https://github.com/bulwark-crypto/carver-blockchain-framework-client) repository which allows to project server-side managed state without any frontend state logic or rest apis. (This will be moved to this repository soon).
 
 # Installation
 
