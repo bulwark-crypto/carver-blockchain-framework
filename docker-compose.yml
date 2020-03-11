@@ -2,8 +2,24 @@ version: "3.1"
 
 services:
 
-  # You can "tail /var/log/nginx/error.log -f"  for streaming logs
-  # nchan server
+  # frontend (react project on port 3000)
+  client:
+    build: docker/client
+    container_name: client
+    volumes:
+      - ./client:/usr/src/service
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    #command: tail -f /dev/null
+    command: npm start # For debugging if you comment the line above (to run "npm start" manually)
+    networks:
+      agent:
+        ipv4_address: 172.25.0.105
+      default:
+
+  # nchan server (nginx pub/sub server pon port 80)
   nchan:
     build: docker/nchan 
     container_name: nchan
@@ -18,7 +34,7 @@ services:
         ipv4_address: 172.25.0.101
       default:
 
-  # api server (Carver Framework API namespace)
+  # api server (Carver Framework APP & API namespace)
   api:
     build: docker/node
     container_name: api
@@ -53,15 +69,13 @@ services:
       - mongo
       - rabbitmq
       - bwk
-    working_dir: /usr/src/service
     command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
     networks:
       agent:
         ipv4_address: 172.25.0.104
       default:
 
-
-  # mongodb
+  # mongodb (database)
   mongo:
     container_name: mongo
     image: mongo
@@ -73,7 +87,7 @@ services:
       agent:
         ipv4_address: 172.25.0.102
 
-  # rabbitmq
+  # rabbitmq (messaging broker for Carver Framework)
   rabbitmq:
     container_name: rabbitmq
     build: docker/rabbitmq
@@ -106,5 +120,3 @@ networks:
     ipam:
       config:
       - subnet: 172.25.0.0/24
-
-#printenv

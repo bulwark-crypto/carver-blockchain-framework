@@ -12,6 +12,8 @@ Modify `.env` file and replace all "CHANGEME" lines with a random password. (Thi
 
 Install docker and run: `docker compose up -d` (you can remove `-d` option to run in the same terminal and Ctrl+C to stop the framework)
 
+You can access frontend on http://localhost:3000/ (this is automatically ran in "client" Docker contaienr)
+
 # Development
 
 If you have `DEVELOPMENT=1` in .env file uncommented all services will run except Carver Framework contexts. This makes it easy to test spawn, restart and add new contexts as needed.
@@ -29,6 +31,10 @@ You can use the following commands to pawn the basic namespaces. (These are all 
 - `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 getinfo"` to check sync status 
 - `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 stop"` to gracefully shut down the wallet
 - `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 stop && bulwarkd -reindex"` to reindex bwk in case of an error (On your next restart the chain will start from beginning)
+
+## Debugging frontend
+
+- Look at logs with `docker logs -f client --tail 10`
 
 ---
 
