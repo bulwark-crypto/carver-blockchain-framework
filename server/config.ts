@@ -1,7 +1,8 @@
+
 export const config = {
     rpc: {
         host: '172.25.0.110',
-        port: '52543',
+        port: '52547',
         username: process.env.RPC_USER, // Comes from .env file
         password: process.env.RPC_PASSWORD, // Comes from .env file
         timeoutMs: 8 * 1000, // 8 seconds

@@ -98,6 +98,8 @@ const bindContexts = async (contextMap: ContextMap) => {
 
                 const block = await blocks.queryStorage(blocksContext.commonLanguage.storage.FindOneByHeight, tx.height)
 
+                console.log('addressMovements:', tx.height);
+
                 await addressMovements.dispatch({
                     type: addressMovementsContext.commonLanguage.commands.ParseRequiredMovement,
                     payload: {

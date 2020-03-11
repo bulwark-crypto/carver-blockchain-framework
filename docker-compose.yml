@@ -91,6 +91,7 @@ services:
     volumes:
       - ./docker/coins/bwk/data:/home/bulwark/.bulwark
     ports:
+      - "52547:52547"
       - "52543:52543"
     environment:
       - RPC_USER=${RPC_USER}

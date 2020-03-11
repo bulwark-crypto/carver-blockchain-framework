@@ -25,9 +25,10 @@ You can use the following commands to pawn the basic namespaces. (These are all 
 
 ## Debugging coin syncing
 
-- You can use `docker-compose exec bwk bulwark-cli getinfo` to check sync status 
 - Look at logs with `docker logs -f bwk --tail 10`. (Replace bwk with your coin container name)
-- `docker-compose exec bwk bash -c "bulwark-cli stop && bulwarkd -reindex"` to reindex bwk in case of an error (On your next restart the chain will start from beginning)
+- `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 getinfo"` to check sync status 
+- `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 stop"` to gracefully shut down the wallet
+- `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 stop && bulwarkd -reindex"` to reindex bwk in case of an error (On your next restart the chain will start from beginning)
 
 ---
 

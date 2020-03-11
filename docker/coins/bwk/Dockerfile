@@ -23,3 +23,4 @@ USER bulwark
 VOLUME [ "/home/bulwark/.bulwark" ]
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 EXPOSE 52543
+EXPOSE 52547
