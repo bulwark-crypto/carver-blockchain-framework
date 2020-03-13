@@ -145,6 +145,14 @@ withContext(apiSession)
             }
 
 
+            // CORS handling
+            response.setHeader('Access-Control-Allow-Origin', '*');
+            response.setHeader('Access-Control-Allow-Headers', 'authorization,x-carver-framework-version');
+            if (request.method === 'OPTIONS') {
+                response.writeHead(200);
+                response.end();
+                return;
+            }
 
             const getNewSessionId = () => {
                 return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
@@ -152,14 +160,17 @@ withContext(apiSession)
             switch (request.method) {
                 case 'GET':
                     switch (request.url) {
-                        case '/reserveChannnel':
-                            await reserveChannnel();
-                            break;
                         case '/authSubscriber':
                             await authSubscriber();
                             break;
                         case '/authPublisher':
                             await authPublisher();
+                            break;
+                    }
+                case 'POST':
+                    switch (request.url) {
+                        case '/reserveChannnel':
+                            await reserveChannnel();
                             break;
                     }
             }
@@ -169,14 +180,6 @@ withContext(apiSession)
             response.end('ok');
             return;
 
-            // CORS handling
-            response.setHeader('Access-Control-Allow-Origin', '*');
-            response.setHeader('Access-Control-Allow-Headers', 'authorization,x-carver-framework-version');
-            if (request.method === 'OPTIONS') {
-                response.writeHead(200);
-                response.end();
-                return;
-            }
 
             const getPrivateKey = () => {
                 const token = request.headers['authorization'].split(/\s+/).pop();

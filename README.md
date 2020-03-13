@@ -18,7 +18,7 @@ If you have `DEVELOPMENT=1` in .env file uncommented all services will run excep
 
 You can use the following commands to pawn the basic namespaces. (These are all ran automatically without development flag)
 
-- `docker-compose exec api bash -c "npx tsc && node src/start.js API"` - Start Reservation API server (On port 3001)
+- `docker-compose exec api bash -c "npx tsc && node src/start.js API"` - Start Reservation API server (On port 3001). Once you initialize this you can access the frontend client via http://localhost:3000/
 - `docker-compose exec sync bash -c "npx tsc && node src/start.js SYNC"` - Start blockchain & data syncing. (This will require your chain to fully sync (See Logging and Monitoring section below.)
 
 # Logging and Monitoring

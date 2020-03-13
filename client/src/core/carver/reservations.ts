@@ -75,7 +75,7 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
             }
         });
 
-        const reservationRequest = await api.post('/users/login')
+        const reservationRequest = await api.post('/reserveChannnel')
         return reservationRequest.data;
     }
 

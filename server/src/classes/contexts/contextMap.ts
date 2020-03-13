@@ -116,7 +116,10 @@ const createContextMap = async (): Promise<ContextMap> => {
                 const event = unbufferObject<Event>(msg);
 
                 try {
-                    await registeredContext.dispatch(event)
+                    await registeredContext.dispatch(event);
+
+                    //@todo it might make sense to handle dispatching like queries. You can await dispatch() to make sure it executes
+
                     channel.ack(msg); // This command was processed without errors
                 } catch (err) {
                     //@todo add deadletter queue?
@@ -134,7 +137,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                 try {
                     const response = await registeredContext.query(type, payload);
 
-                    await channel.sendToQueue(replyTo, bufferObject(response), { // Do not return undefined query, always return null or object
+                    channel.sendToQueue(replyTo, bufferObject(response), { // Do not return undefined query, always return null or object
                         correlationId
                     });
 

@@ -48,7 +48,8 @@ services:
       - mongo
       - nchan
       - rabbitmq
-    working_dir: /usr/src/service
+    ports:
+      - "3001:3001" # reservation api
     command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
     networks:
       agent:
