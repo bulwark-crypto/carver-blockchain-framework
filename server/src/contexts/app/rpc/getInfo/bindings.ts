@@ -19,7 +19,8 @@ const bindContexts = async (contextMap: ContextMap) => {
     // Queries to handle
     withContext(rpcGetInfo)
         .handleQuery(rpcGetInfoContext.commonLanguage.queries.GetLatestRpcGetInfo, async () => {
-            const info = await rpc.call('getinfo');
+            const info: any = await rpc.call('getinfo');
+            console.log('Fetched rpc getinfo:', info.blocks);
             return info;
         })
         .handleStore(rpcGetInfoContext.commonLanguage.storage.FindLast, async () => {
