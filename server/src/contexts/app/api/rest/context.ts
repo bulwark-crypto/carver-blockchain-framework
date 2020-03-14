@@ -8,8 +8,8 @@ export interface Reservation {
 }
 
 const withCommandReserveSocket: Reducer = ({ state, event }) => {
-    const { id, ip, frameworkVersion, privateKey } = event.payload
-    const reservation = { id, ip, frameworkVersion, privateKey };
+    const { id, remoteAddress, frameworkVersion, privateKey } = event.payload
+    const reservation = { id, remoteAddress, frameworkVersion, privateKey };
 
     //@todo check reservation against reservations
 
@@ -51,6 +51,11 @@ const commonLanguage = {
         ReserveSocket: 'RESERVE_SOCKET',
         AuthorizeSubscriber: 'AUTHORIZE_SUBSCRIBER',
         AuthorizePublisher: 'AUTHORIZE_PUBLISHER',
+    },
+    errors: {
+        UnknownPath: 'UNKNOWN_PATH',
+        UnknownReservationError: 'UNKNOWN_RESERVATION_ERROR',
+        UnknownSubscriptionError: 'UNKNOWN_SUBSCRIPTION_ERROR'
     }
 }
 

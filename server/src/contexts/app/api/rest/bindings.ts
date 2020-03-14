@@ -44,22 +44,10 @@ const bindContexts = async (contextMap: ContextMap) => {
     withContext(apiRest)
         .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async (payload: Reservation) => {
             console.log('requested reservation:', payload);
-
             const id = await reserveNewSession(payload);
 
             return
         });
-
-    /*
-withContext(apiSession)
-    .streamEvents({
-        type: apiSessionContext.commonLanguage.events.SessionReserved,
-        sessionOnly: true,
-        callback: async (event) => {
-            console.log('**session actually reserved:', event);
-        }
-    });*/
-
 
     /**
      * Start the "reservation server".
@@ -82,24 +70,6 @@ withContext(apiSession)
             console.log(request.method);
             console.log(request.url);
 
-            /*
-                        const reserveChannel = async () => {
-                            const id = request.headers['x-channel-id']
-            
-                            await apiRest.dispatch({
-                                type: apiRestContext.commonLanguage.commands.ReserveChannel,
-                                payload: {
-                                    id,
-                                    remoteAddress,
-                                    frameworkVersion,
-                                    privateKey
-                                }
-                            })
-                        }*/
-
-            const reserveChannnel = async () => {
-                console.log('@todo');
-            }
             const authSubscriber = async () => {
                 // These are userful for looking at auth headers
                 //console.log(request.method);
@@ -109,7 +79,6 @@ withContext(apiSession)
                 const id = request.headers['x-channel-id'];
                 const ip = request.headers['x-forwarded-for']; // remote ip
 
-
                 await apiRest.dispatch({
                     type: apiRestContext.commonLanguage.commands.AuthorizeSubscriber,
                     payload: {
@@ -118,32 +87,6 @@ withContext(apiSession)
                     }
                 })
             }
-            /**
-             * To initialize
-             */
-            const authPublisher = async () => {
-                // These are userful for looking at auth headers
-                console.log(request.method);
-                console.log(request.url);
-                console.log(request.headers);
-
-                const [id, secret] = request.headers['x-channel-id'].split('_');
-
-                //@todo ensure only specific ip can be a publisher (via config)
-                const ip = request.headers['x-forwarded-for']; // remote ip 
-
-                const publisherType = request.headers['x-publisher-type']; //@todo ensure https only (configurable)
-
-
-                await apiRest.dispatch({
-                    type: apiRestContext.commonLanguage.commands.AuthorizePublisher,
-                    payload: {
-                        id,
-                        ip
-                    }
-                })
-            }
-
 
             // CORS handling
             response.setHeader('Access-Control-Allow-Origin', '*');
@@ -157,28 +100,6 @@ withContext(apiSession)
             const getNewSessionId = () => {
                 return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
             }
-            switch (request.method) {
-                case 'GET':
-                    switch (request.url) {
-                        case '/authSubscriber':
-                            await authSubscriber();
-                            break;
-                        case '/authPublisher':
-                            await authPublisher();
-                            break;
-                    }
-                case 'POST':
-                    switch (request.url) {
-                        case '/reserveChannnel':
-                            await reserveChannnel();
-                            break;
-                    }
-            }
-
-
-            response.writeHead(200);
-            response.end('ok');
-            return;
 
 
             const getPrivateKey = () => {
@@ -191,7 +112,7 @@ withContext(apiSession)
                 return Number(request.headers['x-carver-framework-version']);
             }
 
-            const getReply = async () => {
+            const reserveChannnel = async () => {
 
                 // For now all api endpoints will simply generate a new session
                 const id = getNewSessionId();
@@ -214,10 +135,51 @@ withContext(apiSession)
                 }
             }
 
-            const reply = await getReply();
+
+            const getReply = async () => {
+
+                switch (request.method) {
+                    case 'GET':
+                        switch (request.url) {
+                            case '/authSubscriber':
+                                try {
+                                    return await authSubscriber();
+                                } catch (err) {
+                                    console.log('athorization error:');
+                                    console.log(err);
+                                    throw { type: apiRestContext.commonLanguage.errors.UnknownSubscriptionError }
+                                }
+                        }
+                    case 'POST':
+                        switch (request.url) {
+                            case '/reserveChannnel':
+                                try {
+                                    return await reserveChannnel();
+                                } catch (err) {
+                                    console.log('reservation error:');
+                                    console.log(err);
+                                    throw { type: apiRestContext.commonLanguage.errors.UnknownReservationError }
+                                }
+                        }
+                }
+
+                throw { type: apiRestContext.commonLanguage.errors.UnknownPath }
+            }
+
 
             response.setHeader('Content-Type', 'application/json');
-            response.end(JSON.stringify(reply))
+
+            try {
+                const reply = await getReply();
+
+                response.writeHead(200);
+                response.end(JSON.stringify(reply))
+            } catch (err) {
+                console.log('err to frontend:', err);
+                response.writeHead(500);
+                response.end(JSON.stringify(err))
+            }
+
         }
 
         const server = http.createServer(requestHandler)

@@ -3,23 +3,17 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withCommandReserveNewSession: Reducer = ({ state, event }) => {
     const { payload } = event;
-    const { id, sourceIdentifier } = payload;
+    const { id, remoteAddress, frameworkVersion, privateKey } = payload;
 
     const newSession = {
-        id,
-        reservation: {
-            websocketEndpoint: `http://localhost:5000/` //@todo add config
-        },
-        source: {
-            identifier: sourceIdentifier
-        }
+        id, remoteAddress, frameworkVersion, privateKey
     }
     const activeSessions = [
         ...state.activeSessions,
         newSession
     ]
 
-    console.log('socket requested', activeSessions);
+    console.log('socket requested', payload);
     return withState(state)
         .set({
             activeSessions
