@@ -1,6 +1,7 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
+/*
 const withCommandReserveNewSession: Reducer = ({ state, event }) => {
     const { payload } = event;
     const { id, remoteAddress, frameworkVersion, privateKey } = payload;
@@ -37,12 +38,12 @@ const withCommandConnect: Reducer = ({ state, event }) => {
     return withState(state)
         .query(commonLanguage.queries.InsertNewUserContext, id);
 }
-
+*/
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
-        .reduce({ type: commonLanguage.commands.ReserveNewSession, event, callback: withCommandReserveNewSession })
-        .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
-        .reduce({ type: commonLanguage.queries.InsertNewUserContext, event, callback: withQueryInsertNewUserContext })
+    //.reduce({ type: commonLanguage.commands.ReserveNewSession, event, callback: withCommandReserveNewSession })
+    // .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
+    //.reduce({ type: commonLanguage.queries.InsertNewUserContext, event, callback: withQueryInsertNewUserContext })
 }
 
 const commonLanguage = {

@@ -20,7 +20,7 @@ const withCommandReserveSocket: Reducer = ({ state, event }) => {
                 reservation
             ]
         })
-        .query(commonLanguage.queries.CreateSessionContext, reservation)
+        .emit({ type: commonLanguage.events.ChannelReserved, payload: { id } });
 }
 
 const withCommandAuthorizeSubscriber: Reducer = ({ state, event }) => {
@@ -46,6 +46,9 @@ const commonLanguage = {
     type: 'API_REST',
     queries: {
         CreateSessionContext: 'CREATE_SESSION_CONTEXT'
+    },
+    events: {
+        ChannelReserved: 'CHANNEL_RESERVED'
     },
     commands: {
         ReserveSocket: 'RESERVE_SOCKET',

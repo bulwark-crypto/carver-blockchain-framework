@@ -97,13 +97,8 @@ const startNamespace = async (namespace: string) => {
       {
         await appBindings.bindContexts(contextMap);
 
-        const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-        const app = await appContextStore.get({ context: appContext });
-
-        await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
-
-        await apiSessionBindings.bindContexts(contextMap);
         await apiRestBindings.bindContexts(contextMap);
+        await apiSessionBindings.bindContexts(contextMap);
       }
       break;
   }

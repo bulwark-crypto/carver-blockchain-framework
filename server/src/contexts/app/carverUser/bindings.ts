@@ -22,7 +22,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
     const { registeredContext: carverUser } = await appContextStore.register({
         context: carverUserContext,
-        storeEvents: true, //@todo make it false
+        storeEvents: false, //@todo make it false
         id
     });
 

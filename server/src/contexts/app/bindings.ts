@@ -38,6 +38,8 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     }
     await initCollections();
+
+    await app.dispatch({ type: appContext.commonLanguage.commands.Initialize });
 }
 
 export default {
