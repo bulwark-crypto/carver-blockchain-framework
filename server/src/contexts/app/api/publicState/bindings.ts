@@ -1,16 +1,20 @@
 
-import { ContextStore } from '../../../../classes/contexts/contextStore';
-import { withContext } from '../../../../classes/logic/withContext';
+import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 import carverUserContext from '../../carverUser/context'
 import publicStateContext from '../publicState/context'
 
-const bindContexts = async (carverUsersContextStore: ContextStore, publicStatesContextStore: ContextStore, id: string) => {
-    const carverUser = await carverUsersContextStore.get(carverUserContext, id);
-    const publicState = await publicStatesContextStore.get(publicStateContext, id);
+const bindContexts = async (contextMap: ContextMap, id: string = null) => {
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const publicStateContextStore = appContextStore;
+
+    const { registeredContext: publicState } = await publicStateContextStore.register({
+        context: publicStateContext,
+        storeEvents: true
+    });
 
     // Events are streamed FROM carverUser are converted into commands for publicState
-    await withContext(carverUser)
+    await publicState
         .streamEvents({
             type: '*', // Forward all events from carverUser to publicState
             callback: async (event) => {

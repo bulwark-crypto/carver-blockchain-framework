@@ -15,6 +15,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
 const useSocket = (socket: any) => {
     const emit = (type: string, payload: any) => {
+        console.log('*emit:', type, payload)
         if (!socket) {
             return;
         }

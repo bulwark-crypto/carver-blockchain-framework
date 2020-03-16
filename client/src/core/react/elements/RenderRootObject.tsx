@@ -14,7 +14,7 @@ import { CarverUserContext } from '../contexts/CarverUser';
 const RenderRootObject: React.FC = () => {
     const { state: carverUserState, dispatch: carverUserDispatch } = useContext(CarverUserContext)
     const { setSocket } = useContext(SocketContext)
-    const [loggerState, loggerDispatch] = useReducer(loggerReducer, loggerInitialState);
+    const [loggerState, loggerDispatch] = useReducer(loggerReducer, loggerInitialState); //@todo move to it's own context
 
     const addLog = (...args: any) => {
         loggerDispatch({ type: loggerCommonLanguage.commands.Add, payload: args });
@@ -29,13 +29,20 @@ const RenderRootObject: React.FC = () => {
                 carverUserDispatch
             })
 
+
+            addLog('Connecting to reservation service...');
             const reservationResponse = await reservationService.getNewReservation()
+            const { id } = reservationResponse;
 
-            const socket = reservationService.getSocket(reservationResponse);
+            addLog(`Connecting to EventSource with reservation id: ${id}...`);
+            const eventSource = reservationService.getEventSource(reservationResponse);
 
-            setSocket(socket);
+            //setSocket(socket);
 
-            reservationService.bindReservation(socket);
+            addLog(`Binding EventSource with reservation id: ${id}...`);
+            reservationService.bindReservation(eventSource);
+
+            await reservationService.command('INITIALIZE', { test: 1 })
         } catch (err) {
             // @todo Proper error handling. World's greatest error handling right here.
             console.log(err);

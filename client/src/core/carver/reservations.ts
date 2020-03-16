@@ -10,21 +10,43 @@ interface Params {
     carverUserDispatch: React.Dispatch<Event>;
     loggerDispatch: React.Dispatch<Event>;
 }
+interface ReservationResponse {
+    id: string;
+}
 const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) => {
+
+    // Private key will allows client to identify themselves uniquely. dispatching commands will require this private key
+    // You can tachnically spectate with public key and command with private key
+    const privateKey = '@todo';
+
+    const reservationUrl = config.reservations.useWindowHostname ? `//${window.location.hostname}:${config.reservations.port}/` : '/';
+
+    const api = axios.create({
+        baseURL: reservationUrl,
+        timeout: 1000,
+        headers: {
+            'authorization': `Basic ${btoa(privateKey)}`,
+            'x-carver-framework-version': config.version
+        }
+    });
 
     const addLog = (...args: any) => {
         loggerDispatch({ type: loggerCommonLanguage.commands.Add, payload: args });
     }
 
-    const bindReservation = (socket: SocketIOClient.Socket) => { //@todo interface
-        addLog('Connecting to socket server...', (socket as any).query);
+    const command = async (type: string, params: any) => {
+        await api.post('/command', {
+            type,
+            params
+        });
+    }
 
+    const bindReservation = (eventSource: EventSource) => { //@todo interface
+
+        /*
         socket.on('connect', () => {
             addLog('Socket connection established successfuly. Welcome to Carver Blockchain Framework!');
-            /*
-            socket.emit('emit', {
-                type: carverUserCommonLanguage.commands.Connect
-            })*/
+        
         });
 
         socket.on('disconnect', () => {
@@ -46,42 +68,40 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
 
                 addLog('Dispatch:', eventToDispatch);
             });
-        }
+        }*/
+
+        eventSource.onmessage = function (e) {
+            console.log('**message', e)
+        };
+        eventSource.onerror = function (e) {
+            console.log('**error', e)
+        };
+        eventSource.onopen = function (e) {
+            console.log('**open', e)
+        };
     }
 
-    const getSocket = (reservationResponse: any) => { //@todo interface
-        const { id, reservation } = reservationResponse;
-        const { websocketEndpoint } = reservation
+    const getEventSource = (reservationResponse: ReservationResponse) => {
+        const { id } = reservationResponse;
+        const subscriberUrl = config.nchan.useWindowHostname ? `//${window.location.hostname}:${config.nchan.port}/sub/${id}` : `/sub/${id}`;
 
-        const socket = io(websocketEndpoint, {
-            query: { id }
-        });
-        return socket;
+        var eventSource = new EventSource(subscriberUrl);
+
+        return eventSource;
     }
 
     const getNewReservation = async () => {
         addLog('Reserving socket connection...');
 
-        // Private key will allows client to identify themselves uniquely. dispatching commands will require this private key
-        // You can tachnically spectate with public key and command with private key
-        const privateKey = '@todo';
-
-        const api = axios.create({
-            baseURL: config.reservations.endpoint,
-            timeout: 1000,
-            headers: {
-                'authorization': `Basic ${btoa(privateKey)}`,
-                'x-carver-framework-version': config.version
-            }
-        });
 
         const reservationRequest = await api.post('/reserveChannnel')
         return reservationRequest.data;
     }
 
     return {
+        command,
         bindReservation,
-        getSocket,
+        getEventSource,
         getNewReservation
     }
 }

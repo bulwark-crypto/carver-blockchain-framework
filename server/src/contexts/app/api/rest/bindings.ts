@@ -7,8 +7,6 @@ import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
 import { withContext } from '../../../../classes/logic/withContext';
 
-
-
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
@@ -19,10 +17,8 @@ const bindContexts = async (contextMap: ContextMap) => {
         storeEvents: true
     });
 
-
+    /*
     const reserveNewSession = async ({ id, ip }: Reservation) => {
-
-
         const payload = {
             id,
             ip // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
@@ -47,7 +43,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             const id = await reserveNewSession(payload);
 
             return
-        });
+        });*/
 
     /**
      * Start the "reservation server".
@@ -90,12 +86,15 @@ const bindContexts = async (contextMap: ContextMap) => {
 
             // CORS handling
             response.setHeader('Access-Control-Allow-Origin', '*');
-            response.setHeader('Access-Control-Allow-Headers', 'authorization,x-carver-framework-version');
+            response.setHeader('Access-Control-Allow-Headers', '*');
             if (request.method === 'OPTIONS') {
                 response.writeHead(200);
                 response.end();
                 return;
             }
+
+            console.log('here', request.method, request.url);
+
 
             const getNewSessionId = () => {
                 return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
@@ -143,6 +142,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                         switch (request.url) {
                             case '/authSubscriber':
                                 try {
+                                    console.log('atuh subscriber:!');
                                     return await authSubscriber();
                                 } catch (err) {
                                     console.log('athorization error:');
@@ -152,6 +152,12 @@ const bindContexts = async (contextMap: ContextMap) => {
                         }
                     case 'POST':
                         switch (request.url) {
+                            case '/command':
+                                console.log('***command');
+
+                                return true;
+
+                                break;
                             case '/reserveChannnel':
                                 try {
                                     return await reserveChannnel();
