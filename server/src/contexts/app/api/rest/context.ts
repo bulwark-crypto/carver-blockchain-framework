@@ -29,17 +29,18 @@ const withCommandAuthorizeSubscriber: Reducer = ({ state, event }) => {
 
     return state;
 }
-const withCommandAuthorizePublisher: Reducer = ({ state, event }) => {
-    console.log('*** auth publisher:')
-    console.log(event);
+const withCommandCarverUser: Reducer = ({ state, event }) => {
+    console.log('*** command carver user:', event)
+    const { id, type, params } = event.payload;
 
-    return state;
+    return withState(state)
+        .emit({ type: commonLanguage.events.CarverUserCommanded, payload: { id, type, params } });
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.ReserveSocket, event, callback: withCommandReserveSocket })
         .reduce({ type: commonLanguage.commands.AuthorizeSubscriber, event, callback: withCommandAuthorizeSubscriber })
-        .reduce({ type: commonLanguage.commands.AuthorizePublisher, event, callback: withCommandAuthorizePublisher })
+        .reduce({ type: commonLanguage.commands.CommandCarverUser, event, callback: withCommandCarverUser });
 }
 
 const commonLanguage = {
@@ -48,12 +49,14 @@ const commonLanguage = {
         CreateSessionContext: 'CREATE_SESSION_CONTEXT'
     },
     events: {
-        ChannelReserved: 'CHANNEL_RESERVED'
+        ChannelReserved: 'CHANNEL_RESERVED',
+        CarverUserCommanded: 'CARVER_USER_COMMANDED',
     },
     commands: {
         ReserveSocket: 'RESERVE_SOCKET',
-        AuthorizeSubscriber: 'AUTHORIZE_SUBSCRIBER',
-        AuthorizePublisher: 'AUTHORIZE_PUBLISHER',
+        AuthorizeSubscriber: 'AUTHORIZE_SUBSCRIBER', // Called by nchan
+
+        CommandCarverUser: 'COMMAND_CARVER_USER',
     },
     errors: {
         UnknownPath: 'UNKNOWN_PATH',

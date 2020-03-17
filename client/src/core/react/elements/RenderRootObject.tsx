@@ -42,7 +42,7 @@ const RenderRootObject: React.FC = () => {
             addLog(`Binding EventSource with reservation id: ${id}...`);
             reservationService.bindReservation(eventSource);
 
-            await reservationService.command('INITIALIZE', { test: 1 })
+            await reservationService.command(id, 'INITIALIZE')
         } catch (err) {
             // @todo Proper error handling. World's greatest error handling right here.
             console.log(err);

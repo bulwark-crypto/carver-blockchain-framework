@@ -147,8 +147,17 @@ const bindContexts = async (contextMap: ContextMap) => {
                 const { id } = event.payload;
 
                 await createContexts(id);
+            }
+        });
 
-                console.log('new id reserved:', id);
+    apiRest
+        .streamEvents({
+            type: apiRestContext.commonLanguage.events.CarverUserCommanded,
+            sessionOnly: true,
+            callback: async (event) => {
+                const { id, type, params } = event.payload;
+
+                console.log('user commanded:', id, type, params);
             }
         });
 

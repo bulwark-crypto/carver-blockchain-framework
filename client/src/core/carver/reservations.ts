@@ -34,8 +34,9 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
         loggerDispatch({ type: loggerCommonLanguage.commands.Add, payload: args });
     }
 
-    const command = async (type: string, params: any) => {
+    const command = async (id: string, type: string, params?: any) => {
         await api.post('/command', {
+            id,
             type,
             params
         });

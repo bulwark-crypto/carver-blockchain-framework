@@ -1,20 +1,20 @@
-import { ContextStore } from '../../../../classes/contexts/contextStore'
-
-import apiSessionContext from '../session/context'
-import apiRestContext, { Reservation } from './context'
+import apiRestContext from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
-import { withContext } from '../../../../classes/logic/withContext';
+
+import * as express from 'express'
+import * as bodyParser from 'body-parser'
+import * as cors from 'cors'
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
-    const apiSession = await appContextStore.get({ context: apiSessionContext });
+
 
     const { registeredContext: apiRest } = await appContextStore.register({
         context: apiRestContext,
-        storeEvents: true
+        storeEvents: false
     });
 
     /*
@@ -57,23 +57,68 @@ const bindContexts = async (contextMap: ContextMap) => {
      * 3. 
      */
     const bindServer = () => {
-        const http = require('http')
         const port = 3001 //@todo move to config
 
+        const server = express();
+        server.use(bodyParser.json());
+        server.use(cors())
 
-        const requestHandler = async (request: any, response: any) => {
+        server.post('/reserveChannnel', async (req, res) => {
+            const getNewSessionId = () => {
+                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
+            }
+            const getPrivateKey = () => {
+                const token = req.headers['authorization'].split(/\s+/).pop();
 
-            console.log(request.method);
-            console.log(request.url);
+                return Buffer.from(token, 'base64').toString()
+            }
 
-            const authSubscriber = async () => {
-                // These are userful for looking at auth headers
-                //console.log(request.method);
-                //console.log(request.url);
-                //console.log(request.headers);
+            const getCarverFrameworkVersion = () => {
+                return Number(req.headers['x-carver-framework-version']);
+            }
 
-                const id = request.headers['x-channel-id'];
-                const ip = request.headers['x-forwarded-for']; // remote ip
+            // For now all api endpoints will simply generate a new session
+            const id = getNewSessionId();
+            const frameworkVersion = getCarverFrameworkVersion();
+            const { remoteAddress } = req.connection;
+            const privateKey = getPrivateKey();
+
+            await apiRest.dispatch({
+                type: apiRestContext.commonLanguage.commands.ReserveSocket,
+                payload: {
+                    id,
+                    remoteAddress,
+                    frameworkVersion,
+                    privateKey
+                }
+            })
+
+            const response = {
+                id
+            };
+
+            res.json(response);
+        });
+
+        server.post('/command', async (req, res) => {
+            const { id, type, params } = req.body;
+
+            await apiRest.dispatch({
+                type: apiRestContext.commonLanguage.commands.CommandCarverUser,
+                payload: { id, type, params }
+            });
+            res.json(true)
+        });
+
+        server.get('/authSubscriber', async (req, res) => {
+            // These are useful for looking at auth headers
+            //console.log(request.method);
+            //console.log(request.url);
+            //console.log(request.headers);
+
+            try {
+                const id = req.headers['x-channel-id'];
+                const ip = req.headers['x-forwarded-for']; // remote ip
 
                 await apiRest.dispatch({
                     type: apiRestContext.commonLanguage.commands.AuthorizeSubscriber,
@@ -81,128 +126,17 @@ const bindContexts = async (contextMap: ContextMap) => {
                         id,
                         ip
                     }
-                })
-            }
-
-            // CORS handling
-            response.setHeader('Access-Control-Allow-Origin', '*');
-            response.setHeader('Access-Control-Allow-Headers', '*');
-            if (request.method === 'OPTIONS') {
-                response.writeHead(200);
-                response.end();
-                return;
-            }
-
-            console.log('here', request.method, request.url);
-
-
-            const getNewSessionId = () => {
-                return uuidv4(); // Each new session gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
-            }
-
-
-            const getPrivateKey = () => {
-                const token = request.headers['authorization'].split(/\s+/).pop();
-
-                return Buffer.from(token, 'base64').toString()
-            }
-
-            const getCarverFrameworkVersion = () => {
-                return Number(request.headers['x-carver-framework-version']);
-            }
-
-            const reserveChannnel = async () => {
-
-                // For now all api endpoints will simply generate a new session
-                const id = getNewSessionId();
-                const frameworkVersion = getCarverFrameworkVersion();
-                const { remoteAddress } = request.connection;
-                const privateKey = getPrivateKey();
-
-                await apiRest.dispatch({
-                    type: apiRestContext.commonLanguage.commands.ReserveSocket,
-                    payload: {
-                        id,
-                        remoteAddress,
-                        frameworkVersion,
-                        privateKey
-                    }
-                })
-
-                return {
-                    id
-                }
-            }
-
-
-            const getReply = async () => {
-
-                switch (request.method) {
-                    case 'GET':
-                        switch (request.url) {
-                            case '/authSubscriber':
-                                try {
-                                    console.log('atuh subscriber:!');
-                                    return await authSubscriber();
-                                } catch (err) {
-                                    console.log('athorization error:');
-                                    console.log(err);
-                                    throw { type: apiRestContext.commonLanguage.errors.UnknownSubscriptionError }
-                                }
-                        }
-                    case 'POST':
-                        switch (request.url) {
-                            case '/command':
-                                console.log('***command');
-
-                                return true;
-
-                                break;
-                            case '/reserveChannnel':
-                                try {
-                                    return await reserveChannnel();
-                                } catch (err) {
-                                    console.log('reservation error:');
-                                    console.log(err);
-                                    throw { type: apiRestContext.commonLanguage.errors.UnknownReservationError }
-                                }
-                        }
-                }
-
-                throw { type: apiRestContext.commonLanguage.errors.UnknownPath }
-            }
-
-
-            response.setHeader('Content-Type', 'application/json');
-
-            try {
-                const reply = await getReply();
-
-                response.writeHead(200);
-                response.end(JSON.stringify(reply))
+                });
             } catch (err) {
-                console.log('err to frontend:', err);
-                response.writeHead(500);
-                response.end(JSON.stringify(err))
+                console.log('athorization error:');
+                console.log(err);
+                res.status(500).json({ type: apiRestContext.commonLanguage.errors.UnknownSubscriptionError });
             }
+        });
 
-        }
-
-        const server = http.createServer(requestHandler)
-
-        server.listen(port, async (err: any) => {
-            if (err) {
-                //@todo handle error
-                return console.log('Could not start reservation port', err)
-            }
-
-            console.log(`Reservation server is listening on ${port}`)
-
-
-
-            console.log('started');
-
-        })
+        server.listen(port, () => {
+            console.log(`Reservation server is listening on ${port}`);
+        });
     }
     bindServer();
 }
