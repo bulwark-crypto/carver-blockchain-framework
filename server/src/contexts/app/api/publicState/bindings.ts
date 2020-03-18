@@ -3,21 +3,23 @@ import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 import carverUserContext from '../../carverUser/context'
 import publicStateContext from '../publicState/context'
+import { RegisteredContext } from '../../../../classes/contexts/registeredContext';
 
-const bindContexts = async (contextMap: ContextMap, id: string = null) => {
-    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const publicStateContextStore = appContextStore;
+const bindContexts = async (contextMap: ContextMap, carverUser: RegisteredContext, id: string) => {
+    const publicStateContextStore = await contextMap.getContextStore({ id: 'PUBLIC_STATES' });
 
     const { registeredContext: publicState } = await publicStateContextStore.register({
         context: publicStateContext,
-        storeEvents: true
+        storeEvents: false
     });
 
+
     // Events are streamed FROM carverUser are converted into commands for publicState
-    await publicState
+    await carverUser
         .streamEvents({
-            type: '*', // Forward all events from carverUser to publicState
+            type: '*',
             callback: async (event) => {
+                console.log('from carver user:', event)
 
                 switch (event.type) {
                     case carverUserContext.commonLanguage.events.Widgets.Added:

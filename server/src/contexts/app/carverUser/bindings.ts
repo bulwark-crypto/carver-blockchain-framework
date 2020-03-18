@@ -15,12 +15,10 @@ const getNextWidgetId = () => {
 }
 
 const bindContexts = async (contextMap: ContextMap, id: string = null) => {
-    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const usersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });
+    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
 
-
-    const userWidgetsContextStore = appContextStore;
-
-    const { registeredContext: carverUser } = await appContextStore.register({
+    const { registeredContext: carverUser } = await usersContextStore.register({
         context: carverUserContext,
         storeEvents: false, //@todo make it false
         id
@@ -29,7 +27,6 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
     // Fetch user's widget context store
     //const userWidgetsContextStore = createContextStore({ id: 'USER_WIDGETS', parent: contextStore });
 
-    const carverUserId = id;
 
     const getVariantsOnPage = (page: string, params: any[]) => {
         switch (page) {
@@ -126,6 +123,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
                 userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
             }
         })
+
+    return carverUser;
 }
 
 export default {

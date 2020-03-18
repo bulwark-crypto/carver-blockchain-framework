@@ -3,8 +3,6 @@ import { withContext } from '../../../../classes/logic/withContext';
 import { config } from '../../../../../config';
 import * as socketio from "socket.io";
 import carverUserContext from '../../carverUser/context'
-import carverUserBindings from '../../carverUser/bindings'
-import publicStateBindings from '../publicState/bindings'
 
 import apiSessionContext from './context'
 import apiRestContext from '../rest/context'
@@ -17,10 +15,6 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const apiRest = await appContextStore.get({ context: apiRestContext });
 
-    const createContexts = async (id: string) => {
-        await carverUserBindings.bindContexts(contextMap, id);
-        await publicStateBindings.bindContexts(contextMap, id);
-    }
 
     /*
     const old = async () => {
@@ -138,6 +132,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                 return newSession
             });
     }*/
+    /*
 
     apiRest
         .streamEvents({
@@ -161,7 +156,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             }
         });
 
-    console.log('in sessions');
+    console.log('in sessions');*/
 }
 
 

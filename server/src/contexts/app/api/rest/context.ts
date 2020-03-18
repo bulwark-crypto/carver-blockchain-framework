@@ -20,7 +20,7 @@ const withCommandReserveSocket: Reducer = ({ state, event }) => {
                 reservation
             ]
         })
-        .emit({ type: commonLanguage.events.ChannelReserved, payload: { id } });
+        .query(commonLanguage.queries.CreateSessionContext, { id, privateKey })
 }
 
 const withCommandAuthorizeSubscriber: Reducer = ({ state, event }) => {
@@ -49,7 +49,7 @@ const commonLanguage = {
         CreateSessionContext: 'CREATE_SESSION_CONTEXT'
     },
     events: {
-        ChannelReserved: 'CHANNEL_RESERVED',
+        //ChannelReserved: 'CHANNEL_RESERVED',
         CarverUserCommanded: 'CARVER_USER_COMMANDED',
     },
     commands: {
@@ -61,7 +61,10 @@ const commonLanguage = {
     errors: {
         UnknownPath: 'UNKNOWN_PATH',
         UnknownReservationError: 'UNKNOWN_RESERVATION_ERROR',
-        UnknownSubscriptionError: 'UNKNOWN_SUBSCRIPTION_ERROR'
+        UnknownSubscriptionError: 'UNKNOWN_SUBSCRIPTION_ERROR',
+
+        IdNotFound: 'ID_NOT_FOUND',
+        UnknownCommandException: 'UKNKNOWN_COMMAND_EXCEPTION'
     }
 }
 

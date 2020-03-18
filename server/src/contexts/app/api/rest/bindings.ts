@@ -2,20 +2,37 @@ import apiRestContext from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
+import { withContext } from '../../../../classes/logic/withContext';
 
 import * as express from 'express'
 import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 
+import carverUserBindings from '../../carverUser/bindings'
+import publicStateBindings from '../publicState/bindings'
+import { RegisteredContext } from '../../../../classes/contexts/registeredContext';
+
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-
-
 
     const { registeredContext: apiRest } = await appContextStore.register({
         context: apiRestContext,
         storeEvents: false
     });
+
+    const carverUserContexts = new Map<string, RegisteredContext>();
+
+    const createContexts = async (id: string, privateKey: string) => {
+        const carverUser = await carverUserBindings.bindContexts(contextMap, id);
+        await publicStateBindings.bindContexts(contextMap, carverUser, id);
+
+        carverUserContexts.set(id, carverUser); //@todo add privateKey to map
+    }
+    withContext(apiRest)
+        .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async ({ id, privateKey }) => {
+            await createContexts(id, privateKey);
+        });
+
 
     /*
     const reserveNewSession = async ({ id, ip }: Reservation) => {
@@ -36,14 +53,7 @@ const bindContexts = async (contextMap: ContextMap) => {
 
         return id;
     }
-
-    withContext(apiRest)
-        .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async (payload: Reservation) => {
-            console.log('requested reservation:', payload);
-            const id = await reserveNewSession(payload);
-
-            return
-        });*/
+*/
 
     /**
      * Start the "reservation server".
@@ -101,13 +111,23 @@ const bindContexts = async (contextMap: ContextMap) => {
         });
 
         server.post('/command', async (req, res) => {
-            const { id, type, params } = req.body;
+            const { id, privateKey, type, payload } = req.body;
 
-            await apiRest.dispatch({
-                type: apiRestContext.commonLanguage.commands.CommandCarverUser,
-                payload: { id, type, params }
-            });
-            res.json(true)
+            const carverUserKey = id;
+            console.log('key:', carverUserKey)
+
+            if (!carverUserContexts.has(carverUserKey)) {
+                res.status(500).json({ type: apiRestContext.commonLanguage.errors.IdNotFound });
+                return;
+            }
+
+            try {
+                const carverUser = carverUserContexts.get(carverUserKey); //@todo add private key to id
+                await carverUser.dispatch({ type, payload });
+                res.json(true);
+            } catch (err) {
+                res.status(500).json({ type: apiRestContext.commonLanguage.errors.UnknownCommandException });
+            }
         });
 
         server.get('/authSubscriber', async (req, res) => {

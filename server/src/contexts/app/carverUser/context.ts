@@ -107,7 +107,10 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         .set({
             id,
             isInitialized: true
-        });
+        })
+        .emit({
+            type: commonLanguage.events.Initialized
+        })
 }
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
     const { page } = event.payload;
@@ -154,6 +157,7 @@ const commonLanguage = {
         }
     },
     events: {
+        Initialized: 'INITIALIZED',
         Widgets: {
             Added: 'WIDGETS:ADDED',
             Set: 'WIDGETS:SET',

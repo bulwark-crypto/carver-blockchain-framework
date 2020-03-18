@@ -13,6 +13,11 @@ interface Params {
 interface ReservationResponse {
     id: string;
 }
+interface CommandParams {
+    id: string;
+    type: string;
+    payload?: any;
+}
 const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) => {
 
     // Private key will allows client to identify themselves uniquely. dispatching commands will require this private key
@@ -34,12 +39,8 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
         loggerDispatch({ type: loggerCommonLanguage.commands.Add, payload: args });
     }
 
-    const command = async (id: string, type: string, params?: any) => {
-        await api.post('/command', {
-            id,
-            type,
-            params
-        });
+    const command = async (params: CommandParams) => {
+        await api.post('/command', {...params,privateKey});
     }
 
     const bindReservation = (eventSource: EventSource) => { //@todo interface
