@@ -5,6 +5,9 @@ import carverUserContext from '../../carverUser/context'
 import publicStateContext from '../publicState/context'
 import { RegisteredContext } from '../../../../classes/contexts/registeredContext';
 
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { config } from '../../../../../config'
+
 const bindContexts = async (contextMap: ContextMap, carverUser: RegisteredContext, id: string) => {
     const publicStateContextStore = await contextMap.getContextStore({ id: 'PUBLIC_STATES' });
 
@@ -13,6 +16,19 @@ const bindContexts = async (contextMap: ContextMap, carverUser: RegisteredContex
         storeEvents: false
     });
 
+    const axiosInstance = axios.create();
+
+
+    // Forward any events from public state to frontend (via nchan)
+    await publicState
+        .streamEvents({
+            type: '*',
+            callback: async (event) => {
+                const pubEndpoint = `http://${config.nchan.host}:${config.nchan.port}/pub/${id}`;
+
+                await axiosInstance.post(pubEndpoint, event);
+            }
+        });
 
     // Events are streamed FROM carverUser are converted into commands for publicState
     await carverUser

@@ -8,6 +8,7 @@ export const config = {
         timeoutMs: 8 * 1000, // 8 seconds
     },
     db: {
+        //@todo use env
         url: 'mongodb://172.25.0.102:27017',
 
         username: 'dbuser',
@@ -28,6 +29,10 @@ export const config = {
     },
     rabbitmq: {
         url: 'amqp://172.25.0.103?heartbeat=5s' // from docker-compose.yml
+    },
+    nchan: {
+        host: '172.25.0.101',
+        port: 80
     },
 
 

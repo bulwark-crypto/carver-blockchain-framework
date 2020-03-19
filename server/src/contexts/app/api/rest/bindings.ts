@@ -114,7 +114,6 @@ const bindContexts = async (contextMap: ContextMap) => {
             const { id, privateKey, type, payload } = req.body;
 
             const carverUserKey = id;
-            console.log('key:', carverUserKey)
 
             if (!carverUserContexts.has(carverUserKey)) {
                 res.status(500).json({ type: apiRestContext.commonLanguage.errors.IdNotFound });
@@ -147,6 +146,7 @@ const bindContexts = async (contextMap: ContextMap) => {
                         ip
                     }
                 });
+                res.json(true);
             } catch (err) {
                 console.log('athorization error:');
                 console.log(err);

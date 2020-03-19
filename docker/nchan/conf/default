@@ -28,8 +28,8 @@ server {
 	}
 
 	location ~ /pub/([\w\-]+)$ {
-		allow 127.0.0.1; # For development (this will be removed)
-		allow 172.25.0.0/24; # Allow any ip from our custom network (on production this is limited to only reservation ip)
+		allow 127.0.0.1; # For development (so you can send messages manually. Ex: curl --request POST --data "test message" http://127.0.0.1:8013/pub/test
+		allow 172.25.0.100; # Allow reservation api ip
 		deny all;
 		
 		nchan_channel_id $1;
