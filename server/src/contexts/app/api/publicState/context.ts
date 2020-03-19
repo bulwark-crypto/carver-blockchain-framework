@@ -146,6 +146,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'PUBLIC_STATE',
     commands: {
         Initialize: 'INITIALIZE',
         Widgets: {

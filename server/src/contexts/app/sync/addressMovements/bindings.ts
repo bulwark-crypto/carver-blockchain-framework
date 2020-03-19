@@ -10,9 +10,9 @@ import { ContextMap } from '../../../../classes/contexts/contextMap';
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
-    const requiredMovements = await appContextStore.get({ context: requiredMovementsContext });
-    const txs = await appContextStore.get({ context: txsContext });
-    const blocks = await appContextStore.get({ context: blocksContext });
+    const requiredMovements = await appContextStore.getRemote({ context: requiredMovementsContext });
+    const txs = await appContextStore.getRemote({ context: txsContext });
+    const blocks = await appContextStore.getRemote({ context: blocksContext });
 
     const { registeredContext: addressMovements } = await appContextStore.register({
         context: addressMovementsContext,

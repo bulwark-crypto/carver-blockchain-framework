@@ -11,7 +11,7 @@ const rpc = createRpcInstance();
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const rpcBlocks = await appContextStore.get({ context: rpcBlocksContext });
+    const rpcBlocks = await appContextStore.getRemote({ context: rpcBlocksContext });
 
     const { registeredContext: rpcTxs } = await appContextStore.register({
         context: rpcTxsContext,

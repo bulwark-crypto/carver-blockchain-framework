@@ -24,6 +24,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         id
     });
 
+    const carverUserId = id;
+
     // Fetch user's widget context store
     //const userWidgetsContextStore = createContextStore({ id: 'USER_WIDGETS', parent: contextStore });
 
@@ -50,13 +52,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
         const { context, bindings } = getContext();
 
-        //@todo create widgets based on variant
-        /*const newWidget = await userWidgetsContextStore.register({
-            id,
-            storeEvents: false, // Do not use event store for emitting (These events are projected out to publicState context and do not need to be stored)
-            context
-        })
-        await bindings.bindContexts(userWidgetsContextStore, carverUserId, id);
+        /*await bindings.bindContexts(contextMap, carverUserId, id);
 
 
         await withContext(newWidget)
@@ -80,7 +76,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
     withContext(carverUser)
         .handleQuery(carverUserContext.commonLanguage.queries.DispatchToWidget, async ({ id, type, payload }) => {
-            const userWidget = await userWidgetsContextStore.get({ id });
+            const userWidget = await userWidgetsContextStore.getRemote({ id });
             await userWidget.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
@@ -119,7 +115,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
             for await (const id of widgetIds) {
-                const userWidget = await userWidgetsContextStore.get({ id });
+                const userWidget = await userWidgetsContextStore.getRemote({ id });
                 userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
             }
         })

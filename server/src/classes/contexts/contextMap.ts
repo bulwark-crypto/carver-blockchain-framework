@@ -27,8 +27,8 @@ interface RemoteContextStoreParams {
     id?: string;
 }
 export interface RemoteContextStore {
+    getRemote: (params: RemoteContextStoreParams) => Promise<RemoteRegisteredContext>;
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
-    get: (params: RemoteContextStoreParams) => Promise<RemoteRegisteredContext>;
     unregister: (params: RemoteContextStoreParams) => Promise<void>;
 }
 
@@ -156,7 +156,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
-        const get = async ({ context, id: contextId }: RemoteContextStoreParams) => {
+        const getRemote = async ({ context, id: contextId }: RemoteContextStoreParams) => {
             const id = getNetworkId(context, contextId);
 
             const streamEvents = async (params: ReplayEventsParams) => {
@@ -255,8 +255,9 @@ const createContextMap = async (): Promise<ContextMap> => {
 
         return {
             register,
-            get
-        } as any
+            unregister,
+            getRemote
+        }
     }
 
 

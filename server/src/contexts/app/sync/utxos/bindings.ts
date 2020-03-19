@@ -7,7 +7,7 @@ import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const rpcTxs = await appContextStore.get({ context: rpcTxsContext });
+    const rpcTxs = await appContextStore.getRemote({ context: rpcTxsContext });
 
     const { registeredContext: utxos } = await appContextStore.register({
         context: utxosContext,
