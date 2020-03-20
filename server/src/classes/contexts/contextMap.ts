@@ -14,6 +14,11 @@ import { config } from '../../../config';
 interface ContextMapParams {
     id: string;
 }
+enum QueueType {
+    EventStreamRequest = 'EVENT_STREAM_REQUEST',
+    Query = 'QUERY'
+}
+
 interface RemoteRegisteredContext {
     queryStorage: (query: string, payload?: any) => Promise<any>;
 
@@ -25,6 +30,11 @@ interface RemoteRegisteredContext {
 interface RemoteContextStoreParams {
     context?: any;
     id?: string;
+
+    /**
+     * If specified query responses will be forwarded to this context queue (and then callback will be executed)
+     */
+    replyToContext: RegisteredContext;
 }
 export interface RemoteContextStore {
     getRemote: (params: RemoteContextStoreParams) => Promise<RemoteRegisteredContext>;
@@ -65,10 +75,10 @@ const createContextMap = async (): Promise<ContextMap> => {
             return contextStores.get(contextStoreId);
         }
 
-        const newRemoteContextStore = await createContextStore({ id: contextStoreId });
-        contextStores.set(contextStoreId, newRemoteContextStore);
+        const contextStore = await createContextStore({ id: contextStoreId });
+        contextStores.set(contextStoreId, contextStore);
 
-        return newRemoteContextStore;
+        return contextStore;
     }
     const createContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
@@ -92,25 +102,58 @@ const createContextMap = async (): Promise<ContextMap> => {
             registeredContexts.add(registeredContext);
             registeredContextsById.set(id, registeredContext);
 
-            // Event stream requests queue (someone will ask for a set of events from a certain position)
-            const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
-            await channel.assertQueue(eventStreamRequestsQueue, { durable: false, });
-            await channel.consume(eventStreamRequestsQueue, async (msg) => {
-                const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
+            const queueName = id;
 
-                //@todo would be great if we don't stream all events and do them in batches (ex: request 50 at a time). Otheriwse if consumer exits unexpectedly there will be a lot of wasted events.
-                await registeredContext.streamEvents({
-                    ...replayEventsParams,
-                    callback: async (event) => {
-                        channel.sendToQueue(msg.properties.replyTo, bufferObject(event))
-                    }
-                })
+            await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
+            await channel.consume(queueName, async (msg) => {
+                const { correlationId, replyTo } = msg.properties;
 
-                channel.ack(msg);
+                switch (msg.properties.type) {
+                    // Event stream requests queue (someone will ask for a set of events from a certain position)
+                    case QueueType.EventStreamRequest:
+                        const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
+
+                        try {
+                            //@todo would be great if we don't stream all events and do them in batches (ex: request 50 at a time). Otheriwse if consumer exits unexpectedly there will be a lot of wasted events.
+                            await registeredContext.streamEvents({
+                                ...replayEventsParams,
+                                callback: async (event) => {
+                                    channel.sendToQueue(msg.properties.replyTo, bufferObject(event), {
+                                        correlationId
+                                    });
+                                }
+                            })
+
+                            channel.ack(msg);
+                        } catch (err) {
+                            //@todo add deadletter queue?
+                            //@todo how to handle failed queries?
+                            channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                        }
+                        break;
+                    case QueueType.Query:
+                        const { type, payload } = unbufferObject<Event>(msg);
+
+                        try {
+                            const response = await registeredContext.query(type, payload);
+
+                            channel.sendToQueue(replyTo, bufferObject(response), {
+                                correlationId
+                            });
+
+                            channel.ack(msg); // This command was processed without errors
+                        } catch (err) {
+                            //@todo add deadletter queue?
+                            //@todo how to handle failed queries?
+                            channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                        }
+                        break;
+                }
+
             }, { noAck: false })
 
             // Commands
-            const dispatchQueue = `${id}.dispatch`;
+            /*const dispatchQueue = `${id}.dispatch`;
             await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
             await channel.consume(dispatchQueue, async (msg) => {
                 const event = unbufferObject<Event>(msg);
@@ -125,30 +168,10 @@ const createContextMap = async (): Promise<ContextMap> => {
                     //@todo add deadletter queue?
                     channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
                 }
-            }, { noAck: false })
+            }, { noAck: false })*/
 
             // Queries
-            const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
-            await channel.assertQueue(queryStorageRequestsQueue, { durable: false });
-            await channel.consume(queryStorageRequestsQueue, async (msg) => {
-                const { type, payload } = unbufferObject<Event>(msg);
-                const { correlationId, replyTo } = msg.properties;
 
-                try {
-                    const response = await registeredContext.query(type, payload);
-
-                    channel.sendToQueue(replyTo, bufferObject(response), { // Do not return undefined query, always return null or object
-                        correlationId
-                    });
-
-                    channel.ack(msg); // This command was processed without errors
-                } catch (err) {
-                    //@todo add deadletter queue?
-                    //@todo how to handle failed queries?
-                    channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
-                }
-
-            });
 
             return {
                 registeredContext,
@@ -156,17 +179,23 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
-        const getRemote = async ({ context, id: contextId }: RemoteContextStoreParams) => {
+        const getRemote = async ({ context, id: contextId, replyToContext }: RemoteContextStoreParams) => {
             const id = getNetworkId(context, contextId);
 
-            const streamEvents = async (params: ReplayEventsParams) => {
-                const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
+            const replyToId = getNetworkId(replyToContext.context, replyToContext.id);
 
-                const eventStreamQueue = `${id}.eventStream.${!!params.type ? params.type : '*'}.${uuidv4()}`;
+            const remoteQueueName = id;
+            const replyToQueueName = id;
+
+            const streamEvents = async (params: ReplayEventsParams) => {
+                //const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
+
+                //const eventStreamQueue = `${id}.eventStream.${!!params.type ? params.type : '*'}.${uuidv4()}`;
 
                 // Create a temporary queue to accept new events
-                await channel.assertQueue(eventStreamQueue, { exclusive: true }); // this queue will be deleted after socket ends
+                //await channel.assertQueue(eventStreamQueue, { exclusive: true }); // this queue will be deleted after socket ends
 
+                /*
                 await channel.consume(eventStreamQueue, async (msg) => {
                     const event = unbufferObject<Event>(msg);
 
@@ -175,12 +204,13 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                     channel.ack(msg);
 
-                }, { noAck: false });
+                }, { noAck: false });*/
 
                 const { type, sequence, sessionOnly } = params;
                 const message = { type, sequence, sessionOnly };
-                channel.sendToQueue(eventStreamRequestsQueue, bufferObject(message), {
-                    replyTo: eventStreamQueue
+
+                channel.sendToQueue(remoteQueueName, bufferObject(message), {
+                    replyTo: replyToQueueName
                     //@todo correlationId?
                 })
             }
@@ -194,7 +224,6 @@ const createContextMap = async (): Promise<ContextMap> => {
                 })
             }
 
-            const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
             const queryStorageRepliesQueue = `${id}.queryStorageReplies.${uuidv4()}`;
             let activeQueries: any[] = [];
 
@@ -230,6 +259,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                 });
 
                 // Convert to Event and send to queue
+                const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
                 channel.sendToQueue(queryStorageRequestsQueue, bufferObject({ type: query, payload }), {
                     correlationId, // When response comes back into the response queue we can identify for which callback
                     replyTo: queryStorageRepliesQueue
