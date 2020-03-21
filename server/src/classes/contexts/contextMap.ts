@@ -16,13 +16,16 @@ interface ContextMapParams {
 }
 enum QueueType {
     EventStreamRequest = 'EVENT_STREAM_REQUEST',
-    Query = 'QUERY'
+    EventStreamResponse = 'EVENT_STREAM_RESEPONSE',
+
+    QueryRequest = 'QUERY_REQUEST',
+    QueryResponse = 'QUERY_RESPONSE'
 }
 
 interface RemoteRegisteredContext {
     queryStorage: (query: string, payload?: any) => Promise<any>;
 
-    dispatch: (event: Event) => Promise<void>;
+    //dispatch: (event: Event) => Promise<void>;
     streamEvents: (params: ReplayEventsParams) => Promise<void>;
 
     //disconnect: () => Promise<void>; //@todo
@@ -32,7 +35,7 @@ interface RemoteContextStoreParams {
     id?: string;
 
     /**
-     * If specified query responses will be forwarded to this context queue (and then callback will be executed)
+     * When fetching remote contexts we need to tell where to stream replies back to (including queries and event streams)
      */
     replyToContext: RegisteredContext;
 }
@@ -83,6 +86,7 @@ const createContextMap = async (): Promise<ContextMap> => {
     const createContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
+
         const getNetworkId = (context: Context, contextId: string) => {
             if (!context) {
                 return `[${contextStoreId}][${contextId}]`;
@@ -119,7 +123,8 @@ const createContextMap = async (): Promise<ContextMap> => {
                                 ...replayEventsParams,
                                 callback: async (event) => {
                                     channel.sendToQueue(msg.properties.replyTo, bufferObject(event), {
-                                        correlationId
+                                        correlationId,
+                                        type: QueueType.EventStreamResponse
                                     });
                                 }
                             })
@@ -131,14 +136,15 @@ const createContextMap = async (): Promise<ContextMap> => {
                             channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
                         }
                         break;
-                    case QueueType.Query:
+                    case QueueType.QueryRequest:
                         const { type, payload } = unbufferObject<Event>(msg);
 
                         try {
                             const response = await registeredContext.query(type, payload);
 
                             channel.sendToQueue(replyTo, bufferObject(response), {
-                                correlationId
+                                correlationId,
+                                type: QueueType.QueryResponse
                             });
 
                             channel.ack(msg); // This command was processed without errors
@@ -147,6 +153,38 @@ const createContextMap = async (): Promise<ContextMap> => {
                             //@todo how to handle failed queries?
                             channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
                         }
+                        break;
+
+                    case QueueType.EventStreamResponse:
+                        const event = unbufferObject<Event>(msg);
+
+                        if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
+                            console.log(correlationId);
+                            throw 'Event Stream Correlation Id Not Found';
+                        }
+
+                        const callback = registeredContext.correlationIdCallbacks.get(correlationId);
+
+                        //@todo what to do when the event we're streaming throws an exception?
+                        await callback(event);
+                        channel.ack(msg);
+
+                        break;
+
+                    case QueueType.QueryResponse:
+                        const reply = unbufferObject<any>(msg);
+
+                        if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
+                            console.log(correlationId);
+                            throw 'Query Response Correlation Id Not Found';
+                        }
+                        const callbacks = registeredContext.correlationIdCallbacks.get(correlationId);
+
+                        //@todo callbacks.reject(reply) with nack?
+                        registeredContext.correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
+                        callbacks.resolve(reply);
+                        channel.ack(msg);
+
                         break;
                 }
 
@@ -181,13 +219,21 @@ const createContextMap = async (): Promise<ContextMap> => {
 
         const getRemote = async ({ context, id: contextId, replyToContext }: RemoteContextStoreParams) => {
             const id = getNetworkId(context, contextId);
+            const remoteQueueName = id;
 
             const replyToId = getNetworkId(replyToContext.context, replyToContext.id);
-
-            const remoteQueueName = id;
-            const replyToQueueName = id;
+            const replyToQueueName = replyToId;
 
             const streamEvents = async (params: ReplayEventsParams) => {
+                //const { replyToContext } = params;
+                //const replyToId = getNetworkId(replyToContext.context, replyToContext.id);
+
+
+                const correlationId = uuidv4();
+
+                replyToContext.correlationIdCallbacks.set(correlationId, params.callback);
+
+
                 //const eventStreamRequestsQueue = `${id}.eventStreamRequests`;
 
                 //const eventStreamQueue = `${id}.eventStream.${!!params.type ? params.type : '*'}.${uuidv4()}`;
@@ -210,20 +256,23 @@ const createContextMap = async (): Promise<ContextMap> => {
                 const message = { type, sequence, sessionOnly };
 
                 channel.sendToQueue(remoteQueueName, bufferObject(message), {
-                    replyTo: replyToQueueName
-                    //@todo correlationId?
+                    replyTo: replyToQueueName,
+                    correlationId,
+                    type: QueueType.EventStreamRequest
                 })
             }
 
-            const dispatchQueue = `${id}.dispatch`;
-            await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
+            //const dispatchQueue = `${id}.dispatch`;
+            //await channel.assertQueue(dispatchQueue, { durable: false }); //@todo should dispatch queue be durable?
 
-            const dispatch = async (event: Event) => {
-                channel.sendToQueue(dispatchQueue, bufferObject(event), {
-                    //@todo correlationId? Would be useful for deadletter queue
-                })
-            }
+            /*
+                        const dispatch = async (event: Event) => {
+                            channel.sendToQueue(dispatchQueue, bufferObject(event), {
+                                //@todo correlationId? Would be useful for deadletter queue
+                            })
+                        }*/
 
+            /*
             const queryStorageRepliesQueue = `${id}.queryStorageReplies.${uuidv4()}`;
             let activeQueries: any[] = [];
 
@@ -245,24 +294,28 @@ const createContextMap = async (): Promise<ContextMap> => {
                     channel.ack(msg);
                 });
             }
-            await bindQueryStream();
+            await bindQueryStream();*/
 
             const queryStorage = async (query: string, payload: any) => {
                 const correlationId = uuidv4();
 
                 const queryPromise = new Promise((resolve, reject) => {
-                    activeQueries.push({
+                    /*activeQueries.push({
                         correlationId,
                         resolve,
                         reject
-                    });
+                    });*/
+
+
+                    replyToContext.correlationIdCallbacks.set(correlationId, { resolve, reject });
                 });
 
                 // Convert to Event and send to queue
-                const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
-                channel.sendToQueue(queryStorageRequestsQueue, bufferObject({ type: query, payload }), {
+                //const queryStorageRequestsQueue = `${id}.queryStorageRequests`;
+                channel.sendToQueue(remoteQueueName, bufferObject({ type: query, payload }), {
                     correlationId, // When response comes back into the response queue we can identify for which callback
-                    replyTo: queryStorageRepliesQueue
+                    replyTo: replyToQueueName,
+                    type: QueueType.QueryRequest
                 });
 
                 const reply = await queryPromise;
@@ -272,7 +325,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             return {
                 streamEvents,
-                dispatch,
+                //dispatch,
                 queryStorage
             }
         }

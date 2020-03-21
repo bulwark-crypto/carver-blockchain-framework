@@ -85,12 +85,12 @@ const startNamespace = async (namespace: string) => {
     case 'SYNC':
       {
         await rpcGetInfoBindings.bindContexts(contextMap);
-        await rpcBlocksBindings.bindContexts(contextMap);
+        /*await rpcBlocksBindings.bindContexts(contextMap);
         await rpcTxsBindings.bindContexts(contextMap);
         await utxosBindings.bindContexts(contextMap);
         await requiredMovementsBindings.bindContexts(contextMap);
         await addressesBindings.bindContexts(contextMap);
-        await addressMovementBindings.bindContexts(contextMap);
+        await addressMovementBindings.bindContexts(contextMap);*/
       }
       break;
     case 'API':

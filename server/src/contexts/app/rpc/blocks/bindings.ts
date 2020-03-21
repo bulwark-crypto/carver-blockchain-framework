@@ -13,12 +13,14 @@ const rpc = createRpcInstance();
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
-    const rpcGetInfo = await appContextStore.getRemote({ context: rpcGetInfoContext });
 
     const { registeredContext: rpcBlocks, stateStore: rpcBlocksStateStore } = await appContextStore.register({
         context: rpcBlocksContext,
         storeEvents: true
     });
+
+    const rpcGetInfo = await appContextStore.getRemote({ context: rpcGetInfoContext, replyToContext: rpcBlocks });
+
     const db = await dbStore.get();
 
     const initCollections = async () => {

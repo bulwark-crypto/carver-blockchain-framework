@@ -33,6 +33,12 @@ export interface RegisteredContext {
 
     disconnect: () => Promise<void>;
     streamEvents: (params: ReplayEventsParams) => Promise<void>;
+
+    /**
+     * Contains callbacks for both queries and event streams.
+     * When the remote context replies to the RegisteredContext queue it'll contain a correlationId that we'll call.
+     */
+    correlationIdCallbacks: Map<string, any>;
 }
 
 const createRegisteredContext = async ({ id, storeEvents, context }: RegisterContextParams) => {
@@ -46,6 +52,8 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     }
     // Event emitter is shared between events and registered context. That way we can handle requests outside of event store
     const emitter = new EventEmitter();
+
+    const correlationIdCallbacks = new Map<string, any>();
 
     const eventStore = await createEventStore({ emitter, id, storeEvents });
 
@@ -170,8 +178,9 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
         handleStore,
         query,
         streamEvents,
-        disconnect
+        disconnect,
 
+        correlationIdCallbacks
     } as RegisteredContext
 
     return {

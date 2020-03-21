@@ -13,7 +13,7 @@ import { ContextMap } from '../../../../classes/contexts/contextMap';
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
-    const apiRest = await appContextStore.getRemote({ context: apiRestContext });
+    //const apiRest = await appContextStore.getRemote({ context: apiRestContext });
 
 
     /*

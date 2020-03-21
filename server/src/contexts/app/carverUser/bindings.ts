@@ -76,8 +76,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
     withContext(carverUser)
         .handleQuery(carverUserContext.commonLanguage.queries.DispatchToWidget, async ({ id, type, payload }) => {
-            const userWidget = await userWidgetsContextStore.getRemote({ id });
-            await userWidget.dispatch({ type, payload })
+            /*const userWidget = await userWidgetsContextStore.getRemote({ id });
+            await userWidget.dispatch({ type, payload })*/
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
 
@@ -94,7 +94,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         .handleQuery(carverUserContext.commonLanguage.queries.RemoveWidgetContexts, async (widgetContextIds) => {
             for await (const widgetContextId of widgetContextIds) {
                 console.log('remove widget:', widgetContextId);
-                await userWidgetsContextStore.unregister({ id: widgetContextId })
+                //await userWidgetsContextStore.unregister({ id: widgetContextId })
             }
 
             return widgetContextIds;
@@ -115,8 +115,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
             for await (const id of widgetIds) {
-                const userWidget = await userWidgetsContextStore.getRemote({ id });
-                userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+                //const userWidget = await userWidgetsContextStore.getRemote({ id });
+                //userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
             }
         })
 

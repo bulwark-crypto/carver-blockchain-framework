@@ -1,4 +1,5 @@
 import { Event } from '../interfaces/events'
+import { RegisteredContext } from '../contexts/registeredContext';
 
 export interface EventStore {
     store: (events: Event[]) => Promise<void>;
