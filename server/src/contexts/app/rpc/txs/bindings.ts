@@ -106,8 +106,11 @@ const bindContexts = async (contextMap: ContextMap) => {
             callback: async (event) => {
                 const height = event.payload;
 
+                console.log('fetch txs:', height);
+
                 // Get rpc block from permanent store by height
                 const block = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
+
 
                 await rpcTxs.dispatch({
                     type: rpcTxsContext.commonLanguage.commands.ParseBlock,

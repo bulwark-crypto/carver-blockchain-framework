@@ -65,6 +65,8 @@ const bindContexts = async (contextMap: ContextMap) => {
                 // Get rpc block from permanent store by height
                 const rpcTx = await rpcTxs.queryStorage(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid);
 
+                console.log('utxos:', rpcTx.height);
+
                 await utxos.dispatch({
                     type: utxosContext.commonLanguage.commands.ParseTx,
                     payload: rpcTx,

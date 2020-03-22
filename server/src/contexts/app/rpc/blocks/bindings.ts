@@ -62,6 +62,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             const hash = await rpc.call('getblockhash', [height]);
             const block = await rpc.call('getblock', [hash]);
 
+            console.log('get block', height);
 
             return block;
         })

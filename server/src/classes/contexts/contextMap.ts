@@ -11,12 +11,14 @@ import { RegisteredContext, RegisterContextParams } from './registeredContext'
 import { Context } from '../interfaces/context';
 import { config } from '../../../config';
 
+import * as async from 'async';
+
 interface ContextMapParams {
     id: string;
 }
 enum QueueType {
     EventStreamRequest = 'EVENT_STREAM_REQUEST',
-    EventStreamResponse = 'EVENT_STREAM_RESEPONSE',
+    EventStreamResponse = 'EVENT_STREAM_RESPONSE',
 
     QueryRequest = 'QUERY_REQUEST',
     QueryResponse = 'QUERY_RESPONSE'
@@ -108,6 +110,11 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             const queueName = id;
 
+            console.log('register:', queueName);
+
+
+            const eventStreamQueues = new Map<string, any>();
+
             await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
             await channel.consume(queueName, async (msg) => {
                 const { correlationId, replyTo } = msg.properties;
@@ -119,10 +126,11 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                         try {
                             //@todo would be great if we don't stream all events and do them in batches (ex: request 50 at a time). Otheriwse if consumer exits unexpectedly there will be a lot of wasted events.
+                            //@todo it's possible to batch replies as well (ex: 5 events per message)
                             await registeredContext.streamEvents({
                                 ...replayEventsParams,
                                 callback: async (event) => {
-                                    channel.sendToQueue(msg.properties.replyTo, bufferObject(event), {
+                                    channel.sendToQueue(replyTo, bufferObject(event), {
                                         correlationId,
                                         type: QueueType.EventStreamResponse
                                     });
@@ -149,6 +157,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                             channel.ack(msg); // This command was processed without errors
                         } catch (err) {
+                            console.log('** query error:', err);
                             //@todo add deadletter queue?
                             //@todo how to handle failed queries?
                             channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
@@ -163,10 +172,22 @@ const createContextMap = async (): Promise<ContextMap> => {
                             throw 'Event Stream Correlation Id Not Found';
                         }
 
-                        const callback = registeredContext.correlationIdCallbacks.get(correlationId);
+                        // We don't want to await for each message (as an event can query so it'll deadlock waiting for a query as the event can't finish). We'll add it to queue and process one at a time.
+                        if (!eventStreamQueues.has(event.type)) {
+                            const eventStreamQueue = async.queue(async (event, callback) => {
 
-                        //@todo what to do when the event we're streaming throws an exception?
-                        await callback(event);
+                                const correlationIdCallback = registeredContext.correlationIdCallbacks.get(correlationId);
+
+                                //@todo what to do when the event we're streaming throws an exception?
+                                await correlationIdCallback(event);
+
+                                callback();
+                            });
+                            eventStreamQueues.set(event.type, eventStreamQueue);
+                        }
+
+                        eventStreamQueues.get(event.type).push(event);
+
                         channel.ack(msg);
 
                         break;
@@ -186,6 +207,8 @@ const createContextMap = async (): Promise<ContextMap> => {
                         channel.ack(msg);
 
                         break;
+                    default:
+                        throw 'Unknown queue type';
                 }
 
             }, { noAck: false })
@@ -221,7 +244,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             const id = getNetworkId(context, contextId);
             const remoteQueueName = id;
 
-            const replyToId = getNetworkId(replyToContext.context, replyToContext.id);
+            const replyToId = replyToContext.id;
             const replyToQueueName = replyToId;
 
             const streamEvents = async (params: ReplayEventsParams) => {
@@ -298,6 +321,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             const queryStorage = async (query: string, payload: any) => {
                 const correlationId = uuidv4();
+
 
                 const queryPromise = new Promise((resolve, reject) => {
                     /*activeQueries.push({

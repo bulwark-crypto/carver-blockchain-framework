@@ -28,3 +28,9 @@ You can use the following commands to pawn the basic namespaces. (These are all 
 - `docker-compose exec mongo bash -c "mongo"` to connect to mongo database. 
 - `use carverFramework`
 - `show collections`
+
+## RabbitMQ
+
+You can access RabbitMQ Management panel: http://localhost:15672/
+
+You will need to create a user if you are using this as instructed here (Connect to RabbitMQ terminal via Docker): https://www.rabbitmq.com/management.html#cli-examples
