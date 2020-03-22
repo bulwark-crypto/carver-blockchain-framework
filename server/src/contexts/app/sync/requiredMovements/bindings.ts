@@ -1,5 +1,4 @@
 import { withContext } from '../../../../classes/logic/withContext';
-import { ContextStore } from '../../../../classes/contexts/contextStore';
 
 import requiredMovementsContext from './context'
 import utxosContext from '../utxos/context'

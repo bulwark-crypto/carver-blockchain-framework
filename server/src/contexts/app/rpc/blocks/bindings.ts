@@ -7,8 +7,6 @@ import rpcGetInfoContext from '../getInfo/context'
 import rpcBlocksContext from './context'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
 
-import appContext from '../../../app/context'
-
 const rpc = createRpcInstance();
 
 const bindContexts = async (contextMap: ContextMap) => {

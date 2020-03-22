@@ -1,6 +1,5 @@
 import { createRpcInstance } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
-import { ContextStore } from '../../../../classes/contexts/contextStore';
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
 import rpcTxsContext from './context'
