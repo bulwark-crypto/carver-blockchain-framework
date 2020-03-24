@@ -17,11 +17,11 @@ interface ContextMapParams {
     id: string;
 }
 enum QueueType {
-    EventStreamRequest = 'EVENT_STREAM_REQUEST',
-    EventStreamResponse = 'EVENT_STREAM_RESPONSE',
+    EventStreamRequest = 'EventStreamRequest',
+    EventStreamResponse = 'EventStreamResponse',
 
-    QueryRequest = 'QUERY_REQUEST',
-    QueryResponse = 'QUERY_RESPONSE'
+    QueryRequest = 'QueryRequest',
+    QueryResponse = 'QueryResponse'
 }
 
 interface RemoteRegisteredContext {
@@ -58,7 +58,7 @@ stream events = request/reply
 const createContextMap = async (): Promise<ContextMap> => {
     const conn = await amqp.connect(config.rabbitmq.url);//@todo move to config (and this will be a docker container)
     const defaultChannel = await conn.createChannel();
-    await defaultChannel.prefetch(1); // Limit each consumer to max processing of 1 message
+    //await defaultChannel.prefetch(1); // Limit each consumer to max processing of 1 message 
 
     const bufferObject = (objectToBuffer: any) => {
         return Buffer.from(JSON.stringify(objectToBuffer))
@@ -87,10 +87,10 @@ const createContextMap = async (): Promise<ContextMap> => {
 
         const getNetworkId = (context: Context, contextId: string) => {
             if (!context) {
-                return `[${contextStoreId}][${contextId}]`;
+                return `${contextStoreId}_${contextId}`;
             }
 
-            return `[${contextStoreId}][${context.commonLanguage.type}]${!!contextId ? `[${contextId}]` : ''}`
+            return `${contextStoreId}_${context.commonLanguage.type}${!!contextId ? `_${contextId}` : ''}`
         }
 
         const registeredContexts = new Set<RegisteredContext>();
@@ -133,11 +133,11 @@ const createContextMap = async (): Promise<ContextMap> => {
                                 }
                             })
 
-                            channel.ack(msg);
+                            //channel.ack(msg);
                         } catch (err) {
                             //@todo add deadletter queue?
                             //@todo how to handle failed queries?
-                            channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                            //channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
                         }
                         break;
                     case QueueType.QueryRequest:
@@ -151,17 +151,18 @@ const createContextMap = async (): Promise<ContextMap> => {
                                 type: QueueType.QueryResponse
                             });
 
-                            channel.ack(msg); // This command was processed without errors
+                            //channel.ack(msg); // This command was processed without errors
                         } catch (err) {
                             console.log('** query error:', err);
                             //@todo add deadletter queue?
                             //@todo how to handle failed queries?
-                            channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                            //channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
                         }
                         break;
 
                     case QueueType.EventStreamResponse:
                         const event = unbufferObject<Event>(msg);
+                        //channel.ack(msg);
 
                         if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
                             console.log(correlationId);
@@ -184,12 +185,12 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                         eventStreamQueues.get(event.type).push(event);
 
-                        channel.ack(msg);
 
                         break;
 
                     case QueueType.QueryResponse:
                         const reply = unbufferObject<any>(msg);
+                        //channel.ack(msg);
 
                         if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
                             console.log(correlationId);
@@ -200,14 +201,13 @@ const createContextMap = async (): Promise<ContextMap> => {
                         //@todo callbacks.reject(reply) with nack?
                         registeredContext.correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
                         callbacks.resolve(reply);
-                        channel.ack(msg);
 
                         break;
                     default:
                         throw 'Unknown queue type';
                 }
 
-            }, { noAck: false })
+            }, { noAck: true })
 
             return {
                 registeredContext,
