@@ -6,6 +6,7 @@ import rpcTxsContext from '../../rpc/txs/context'
 
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
+import { initCache } from '../../../../classes/logic/cache';
 
 const bindContexts = async (contextMap: ContextMap) => {
 
@@ -63,10 +64,9 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     await resumeState();
 
+    const cache = initCache();
+
     withContext(requiredMovements)
-        .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (requiredMovements) => {
-            await db.collection('requiredMovements').insertOne(requiredMovements);
-        })
         .handleQuery(requiredMovementsContext.commonLanguage.queries.GetUtxosForTx, async ({ rpcTx, utxoLabels, sequence }) => {
             const txUtxos = await utxos.queryStorage(utxosContext.commonLanguage.storage.GetByLabels, utxoLabels);
 
@@ -77,8 +77,19 @@ const bindContexts = async (contextMap: ContextMap) => {
                 sequence
             }
         })
+        .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (requiredMovements) => {
+            const { txid } = requiredMovements;
+
+            await db.collection('requiredMovements').insertOne(requiredMovements);
+
+            cache.insert({ data: requiredMovements, keys: [{ txid }] }); // Pre-cache by txid
+        })
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindOneByTxId, async (txid) => {
-            return await db.collection('requiredMovements').findOne({ txid });
+            return await cache.find({
+                key: { txid }, miss: async () => {
+                    return await db.collection('requiredMovements').findOne({ txid });
+                }
+            });
         })
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindCount, async ({ filter }) => {
 

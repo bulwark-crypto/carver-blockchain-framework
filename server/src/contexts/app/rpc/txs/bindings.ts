@@ -5,6 +5,7 @@ import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 import rpcTxsContext from './context'
 import rpcBlocksContext from '../blocks/context'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
+import { initCache } from '../../../../classes/logic/cache';
 
 const rpc = createRpcInstance();
 
@@ -53,6 +54,8 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     await resumeState();
 
+    const cache = initCache();
+
     withContext(rpcTxs)
         .handleQuery(rpcTxsContext.commonLanguage.queries.GetRawTransaction, async ({ txid, height, sequence }) => {
             //await withPermanentStore(rpcBlocks.permanentStore).query(rpcBlocksContext.commonLanguage.permanentStore.GetBlockByHeight, height);
@@ -68,33 +71,53 @@ const bindContexts = async (contextMap: ContextMap) => {
             }
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.InsertOne, async (tx) => {
+            const { txid, height } = tx;
             await db.collection('txs').insertOne(tx);
+
+            cache.insert({ data: tx, keys: [{ txid }, { height }] }); // Pre-cache by height
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.GetByHeight, async (height) => {
-            return await db.collection('txs').find({ height }).toArray();
+            return await cache.find({
+                key: { height }, miss: async () => {
+                    return await db.collection('txs').find({ height }).toArray();
+                }
+            });
+
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.FindOneByTxId, async (txid) => {
-            return await db.collection('txs').findOne({ txid });
+            return await cache.find({
+                key: { txid }, miss: async () => {
+                    return await db.collection('txs').findOne({ txid });
+                }
+            });
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.FindCount, async () => {
-            //@todo get initial, keep internal track to avoid db query
-            const count = await db
-                .collection('txs')
-                .estimatedDocumentCount();
+            return await cache.find({
+                key: 'count', miss: async () => {
+                    //@todo get initial, keep internal track to avoid db query
+                    const count = await db
+                        .collection('txs')
+                        .estimatedDocumentCount();
 
-            return count;
+                    return count;
+                }
+            });
 
         })
         .handleStore(rpcTxsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit }) => {
-            //@todo add caching
-            const blocks = await db
-                .collection('txs')
-                .find({})
-                .sort({ _id: -1 })
-                .skip(page * limit)
-                .limit(limit);
+            return await cache.find({
+                key: { page, limit }, miss: async () => {
+                    //@todo add caching
+                    const blocks = await db
+                        .collection('txs')
+                        .find({})
+                        .sort({ _id: -1 })
+                        .skip(page * limit)
+                        .limit(limit);
 
-            return blocks.toArray();
+                    return blocks.toArray();
+                }
+            });
         });
 
 

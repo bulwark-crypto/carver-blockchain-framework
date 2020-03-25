@@ -7,6 +7,8 @@ import rpcGetInfoContext from '../getInfo/context'
 import rpcBlocksContext from './context'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
 
+import { initCache } from '../../../../classes/logic/cache'
+
 const rpc = createRpcInstance();
 
 const bindContexts = async (contextMap: ContextMap) => {
@@ -53,6 +55,8 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     await resumeState();
 
+    const cache = initCache();
+
     withContext(rpcBlocks)
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {
             //@todo we can split this up into two differnet contexts (RPC:BLOCKHASH, RPC:BLOCK)
@@ -65,10 +69,17 @@ const bindContexts = async (contextMap: ContextMap) => {
             return block;
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.InsertOne, async (rpcBlock) => {
+            const { height } = rpcBlock;
             await db.collection('blocks').insertOne(rpcBlock)
+
+            cache.insert({ data: rpcBlock, keys: [{ height }] }); // Pre-cache by height
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, async (height) => {
-            return await db.collection('blocks').findOne({ height })
+            return await cache.find({
+                key: { height }, miss: async () => {
+                    return await db.collection('blocks').findOne({ height });
+                }
+            });
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindCount, async () => {
             // Current height will equal number of blocks. So we don't even need to query db to find number of blocks in db.
@@ -78,15 +89,18 @@ const bindContexts = async (contextMap: ContextMap) => {
 
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindManyByPage, async ({ page, limit }) => {
-            //@todo add caching
-            const blocks = await db
-                .collection('blocks')
-                .find({})
-                .sort({ height: -1 })
-                .skip(page * limit)
-                .limit(limit);
+            return await cache.find({
+                key: { page, limit }, miss: async () => {
+                    const blocks = await db
+                        .collection('blocks')
+                        .find({})
+                        .sort({ height: -1 })
+                        .skip(page * limit)
+                        .limit(limit);
 
-            return blocks.toArray();
+                    return blocks.toArray();
+                }
+            });
         });
 
 

@@ -35,6 +35,16 @@ export const config = {
         port: 80
     },
 
+    cache: {
+        default: {
+            /**
+             * Default size of cached items in queue. Contexts can specify their own cache sizes but most will default to this max size. (ex: cache max 10,000 blocks)
+             * Uses npm "double-ended-queue" internally
+             */
+            maxLength: 10000
+        }
+    },
+
 
     /**
      * Default node-ipc settings
