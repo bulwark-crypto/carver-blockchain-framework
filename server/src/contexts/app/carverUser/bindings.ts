@@ -9,6 +9,7 @@ import carverUserContext from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../classes/contexts/contextMap';
+import tableContext from '../../widgets/common/table/context'
 
 const getNextWidgetId = () => {
     return uuidv4(); // Each new widget gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
@@ -26,10 +27,6 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
     const carverUserId = id;
 
-    // Fetch user's widget context store
-    //const userWidgetsContextStore = createContextStore({ id: 'USER_WIDGETS', parent: contextStore });
-
-
     const getVariantsOnPage = (page: string, params: any[]) => {
         switch (page) {
             case 'blocks':
@@ -44,16 +41,16 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
             //@todo move this into some config outside of this context
             switch (variant) {
                 case 'blocks':
-                    return { context: commonTableWidgetContext, bindings: blocksWidgetBindings };
+                    return { bindings: blocksWidgetBindings };
                 case 'txs':
-                    return { context: commonTableWidgetContext, bindings: txsWidgetBindings };
+                    return { bindings: txsWidgetBindings };
             }
         }
 
-        const { context, bindings } = getContext();
 
-        /*await bindings.bindContexts(contextMap, carverUserId, id);
+        const { bindings } = getContext();
 
+        const newWidget = await bindings.bindContexts(contextMap, carverUserId, id);
 
         await withContext(newWidget)
             // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
@@ -68,14 +65,14 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
                     });
 
                 }
-            })*/
-        const newWidget = null as any;
+            });
 
         return newWidget;
     }
 
     withContext(carverUser)
         .handleQuery(carverUserContext.commonLanguage.queries.DispatchToWidget, async ({ id, type, payload }) => {
+            console.log('dispatch to widget:', id, type, payload);
             /*const userWidget = await userWidgetsContextStore.getRemote({ id });
             await userWidget.dispatch({ type, payload })*/
         })
@@ -115,8 +112,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
             for await (const id of widgetIds) {
-                //const userWidget = await userWidgetsContextStore.getRemote({ id });
-                //userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+                const userWidget = await userWidgetsContextStore.getLocal({ context: tableContext, id });
+                userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
             }
         })
 

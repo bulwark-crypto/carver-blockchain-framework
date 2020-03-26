@@ -121,7 +121,7 @@ const reducer: Reducer = ({ state, event }) => {
     //@todo add rate limit for incoming commands
 
     return withState(state)
-        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
+        .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize }) // This will be called by frontend
         .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
 
         .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })

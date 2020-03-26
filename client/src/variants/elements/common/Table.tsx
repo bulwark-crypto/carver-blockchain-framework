@@ -37,7 +37,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
     const { columns } = options;
 
     if (!rows) {
-        return <Box>Loading...</Box>
+        return <Box>Loading Table...</Box>
     }
 
     const onChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => {

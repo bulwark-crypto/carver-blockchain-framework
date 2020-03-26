@@ -4,17 +4,25 @@ import { ContextStore } from '../../../classes/contexts/contextStore';
 import tableContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
 import carverUserContext from '../../app/carverUser/context'
+import { ContextMap } from '../../../classes/contexts/contextMap';
 
-const bindContexts = async (contextStore: ContextStore, carverUserId: string, id: string) => {
-    const tableWidget = await contextStore.get(tableContext, id);
+const bindContexts = async (contextMap: ContextMap, carverUserId: string, id: string) => {
+    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
+    const { registeredContext: tableWidget } = await userWidgetsContextStore.register({
+        id,
+        context: tableContext,
+        storeEvents: false,
+        inMemory: true
+    });
 
-    // Each widget has access to the user that is displaying this widget. Allowing us to easily navigate between pages and add additional widgets on a page.
-    const carverUserContextStore = await contextStore.getParent('SESSIONS');
-    const carverUser = await carverUserContextStore.get(carverUserContext, carverUserId);
+    const carverUsersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });;
+    const carverUser = await carverUsersContextStore.getLocal({
+        context: carverUserContext,
+        id: carverUserId
+    });
 
-    // Since widgets are created in 'USER' contextStore, we need to get access to 'CORE' contextStore to fetch projected data
-    const coreContextStore = await contextStore.getParent('CORE');
-    const rpcBlocks = await coreContextStore.get(rpcBlocksContext);
+    const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const rpcBlocks = await appContextStore.getRemote({ context: rpcBlocksContext, replyToContext: carverUser });
 
     // Only return partial getinfo information (Other known fields are not useful)
     const getRowsFromBlocks = (blocks: any[]) => {
@@ -32,7 +40,7 @@ const bindContexts = async (contextStore: ContextStore, carverUserId: string, id
 
     withContext(tableWidget)
         .handleQuery(tableContext.commonLanguage.queries.FindPage, async (pageQuery) => {
-            const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
+            const blocks = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromBlocks(blocks);
 
             return {
@@ -47,8 +55,8 @@ const bindContexts = async (contextStore: ContextStore, carverUserId: string, id
         .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const pageQueryNoRewards = { ...pageQuery, isReward: false };
 
-            const count = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindCount, pageQueryNoRewards);
-            const blocks = await rpcBlocks.query(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQueryNoRewards);
+            const count = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindCount, pageQueryNoRewards);
+            const blocks = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQueryNoRewards);
             const rows = getRowsFromBlocks(blocks);
 
             return {
@@ -57,6 +65,8 @@ const bindContexts = async (contextStore: ContextStore, carverUserId: string, id
                 pageQuery
             }
         })
+
+    return tableWidget;
 }
 
 export default {
