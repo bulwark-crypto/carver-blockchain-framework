@@ -14,6 +14,10 @@ export interface RegisterContextParams {
      * If set to true events eimtted in Reducer will not be stored in database.
      */
     storeEvents?: boolean;
+    /**
+     * If set to true the context will not be registered on RabbitMQ and can only be accessed via getLocal() in ContextStore
+     */
+    inMemory?: boolean;
     id?: string;
 }
 

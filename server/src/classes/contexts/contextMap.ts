@@ -101,7 +101,7 @@ const createContextMap = async (): Promise<ContextMap> => {
         const registeredContexts = new Set<RegisteredContext>();
         const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
 
-        const register = async ({ id: contextId, storeEvents, context }: RegisterContextParams) => {
+        const register = async ({ id: contextId, storeEvents, context, inMemory }: RegisterContextParams) => {
             const id = getNetworkId(context, contextId);
 
             const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
@@ -109,110 +109,116 @@ const createContextMap = async (): Promise<ContextMap> => {
             registeredContexts.add(registeredContext);
             registeredContextsById.set(id, registeredContext);
 
-            const queueName = id;
+            const bindRabbitMQ = async () => {
+                const queueName = id;
 
-            console.log('register:', queueName);
+                const eventStreamQueues = new Map<string, any>();
 
+                await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
+                await channel.consume(queueName, async (msg) => {
+                    const { correlationId, replyTo } = msg.properties;
 
-            const eventStreamQueues = new Map<string, any>();
+                    switch (msg.properties.type) {
+                        // Event stream requests queue (someone will ask for a set of events from a certain position)
+                        case QueueType.EventStreamRequest:
+                            const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
 
-            await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
-            await channel.consume(queueName, async (msg) => {
-                const { correlationId, replyTo } = msg.properties;
+                            try {
+                                //@todo would be great if we don't stream all events and do them in batches (ex: request 50 at a time). Otheriwse if consumer exits unexpectedly there will be a lot of wasted events.
+                                //@todo it's possible to batch replies as well (ex: 5 events per message)
+                                await registeredContext.streamEvents({
+                                    ...replayEventsParams,
+                                    callback: async (event) => {
+                                        channel.sendToQueue(replyTo, bufferObject(event), {
+                                            correlationId,
+                                            type: QueueType.EventStreamResponse
+                                        });
+                                    }
+                                })
 
-                switch (msg.properties.type) {
-                    // Event stream requests queue (someone will ask for a set of events from a certain position)
-                    case QueueType.EventStreamRequest:
-                        const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
+                                //channel.ack(msg);
+                            } catch (err) {
+                                //@todo add deadletter queue?
+                                //@todo how to handle failed queries?
+                                //channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                            }
+                            break;
+                        case QueueType.QueryRequest:
+                            const { type, payload } = unbufferObject<Event>(msg);
 
-                        try {
-                            //@todo would be great if we don't stream all events and do them in batches (ex: request 50 at a time). Otheriwse if consumer exits unexpectedly there will be a lot of wasted events.
-                            //@todo it's possible to batch replies as well (ex: 5 events per message)
-                            await registeredContext.streamEvents({
-                                ...replayEventsParams,
-                                callback: async (event) => {
-                                    channel.sendToQueue(replyTo, bufferObject(event), {
-                                        correlationId,
-                                        type: QueueType.EventStreamResponse
-                                    });
-                                }
-                            })
+                            try {
+                                const response = await registeredContext.query(type, payload);
 
+                                channel.sendToQueue(replyTo, bufferObject(response), {
+                                    correlationId,
+                                    type: QueueType.QueryResponse
+                                });
+
+                                //channel.ack(msg); // This command was processed without errors
+                            } catch (err) {
+                                console.log('** query error:', err);
+                                //@todo add deadletter queue?
+                                //@todo how to handle failed queries?
+                                //channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
+                            }
+                            break;
+
+                        case QueueType.EventStreamResponse:
+                            const event = unbufferObject<Event>(msg);
                             //channel.ack(msg);
-                        } catch (err) {
-                            //@todo add deadletter queue?
-                            //@todo how to handle failed queries?
-                            //channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
-                        }
-                        break;
-                    case QueueType.QueryRequest:
-                        const { type, payload } = unbufferObject<Event>(msg);
 
-                        try {
-                            const response = await registeredContext.query(type, payload);
+                            if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
+                                console.log(correlationId);
+                                throw 'Event Stream Correlation Id Not Found';
+                            }
 
-                            channel.sendToQueue(replyTo, bufferObject(response), {
-                                correlationId,
-                                type: QueueType.QueryResponse
-                            });
+                            // We don't want to await for each message (as an event can query so it'll deadlock waiting for a query as the event can't finish). We'll add it to queue and process one at a time.
+                            if (!eventStreamQueues.has(event.type)) {
+                                const eventStreamQueue = async.queue(async (event, callback) => {
 
-                            //channel.ack(msg); // This command was processed without errors
-                        } catch (err) {
-                            console.log('** query error:', err);
-                            //@todo add deadletter queue?
-                            //@todo how to handle failed queries?
-                            //channel.nack(msg, false, false); // Fail message and don't requeue it, go to next command
-                        }
-                        break;
+                                    const correlationIdCallback = registeredContext.correlationIdCallbacks.get(correlationId);
 
-                    case QueueType.EventStreamResponse:
-                        const event = unbufferObject<Event>(msg);
-                        //channel.ack(msg);
+                                    //@todo what to do when the event we're streaming throws an exception?
+                                    await correlationIdCallback(event);
 
-                        if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
-                            console.log(correlationId);
-                            throw 'Event Stream Correlation Id Not Found';
-                        }
+                                    callback();
+                                });
+                                eventStreamQueues.set(event.type, eventStreamQueue);
+                            }
 
-                        // We don't want to await for each message (as an event can query so it'll deadlock waiting for a query as the event can't finish). We'll add it to queue and process one at a time.
-                        if (!eventStreamQueues.has(event.type)) {
-                            const eventStreamQueue = async.queue(async (event, callback) => {
-
-                                const correlationIdCallback = registeredContext.correlationIdCallbacks.get(correlationId);
-
-                                //@todo what to do when the event we're streaming throws an exception?
-                                await correlationIdCallback(event);
-
-                                callback();
-                            });
-                            eventStreamQueues.set(event.type, eventStreamQueue);
-                        }
-
-                        eventStreamQueues.get(event.type).push(event);
+                            eventStreamQueues.get(event.type).push(event);
 
 
-                        break;
+                            break;
 
-                    case QueueType.QueryResponse:
-                        const reply = unbufferObject<any>(msg);
-                        //channel.ack(msg);
+                        case QueueType.QueryResponse:
+                            const reply = unbufferObject<any>(msg);
+                            //channel.ack(msg);
 
-                        if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
-                            console.log(correlationId);
-                            throw 'Query Response Correlation Id Not Found';
-                        }
-                        const callbacks = registeredContext.correlationIdCallbacks.get(correlationId);
+                            if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
+                                console.log(correlationId);
+                                throw 'Query Response Correlation Id Not Found';
+                            }
+                            const callbacks = registeredContext.correlationIdCallbacks.get(correlationId);
 
-                        //@todo callbacks.reject(reply) with nack?
-                        registeredContext.correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
-                        callbacks.resolve(reply);
+                            //@todo callbacks.reject(reply) with nack?
+                            registeredContext.correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
+                            callbacks.resolve(reply);
 
-                        break;
-                    default:
-                        throw 'Unknown queue type';
-                }
+                            break;
+                        default:
+                            throw 'Unknown queue type';
+                    }
 
-            }, { noAck: true })
+                }, { noAck: true });
+
+                console.log('RabbitMQ Queue Bound:', queueName);
+            }
+
+            if (!inMemory) {
+                await bindRabbitMQ();
+            }
+
 
             return {
                 registeredContext,

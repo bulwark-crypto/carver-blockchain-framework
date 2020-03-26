@@ -18,8 +18,10 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
     });
 
     const { registeredContext: publicState } = await publicStateContextStore.register({
+        id,
         context: publicStateContext,
-        storeEvents: false
+        storeEvents: false,
+        inMemory: true
     });
 
     const axiosInstance = axios.create();
