@@ -108,6 +108,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             id,
             isInitialized: true
         })
+        .emit({ type: commonLanguage.events.Initialized })
         .query(commonLanguage.queries.FindWidgetContextsOnPage, { page: 'blocks' }); // As soon as carver user initializes navigate to blocks page
 }
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {

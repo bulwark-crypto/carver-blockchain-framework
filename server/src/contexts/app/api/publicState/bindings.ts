@@ -46,6 +46,15 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
                 console.log('from carver user:', event)
 
                 switch (event.type) {
+                    case carverUserContext.commonLanguage.events.Initialized:
+                        {
+                            await publicState.dispatch({
+                                id,
+                                type: publicStateContext.commonLanguage.commands.Initialize,
+                                payload: { id }
+                            });
+                        }
+                        break;
                     case carverUserContext.commonLanguage.events.Widgets.Added:
                         {
                             const initialWidgetsState = event.payload;
