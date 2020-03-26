@@ -29,6 +29,10 @@ interface RemoteRegisteredContext {
     streamEvents: (params: ReplayEventsParams) => Promise<void>;
     //disconnect: () => Promise<void>; //@todo
 }
+interface GetLocalParams {
+    context?: any;
+    id: string;
+}
 interface RemoteContextStoreParams {
     context?: any;
     id?: string;
@@ -40,6 +44,7 @@ interface RemoteContextStoreParams {
 }
 export interface RemoteContextStore {
     getRemote: (params: RemoteContextStoreParams) => Promise<RemoteRegisteredContext>;
+    getLocal: (params: GetLocalParams) => Promise<RegisteredContext>;
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
     unregister: (params: RemoteContextStoreParams) => Promise<void>;
 }
@@ -215,6 +220,15 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
+        const getLocal = async ({ context, id: contextStoreId }: GetLocalParams) => {
+            const id = getNetworkId(context, contextStoreId);
+
+            if (!registeredContextsById.has(id)) {
+                throw `${id} local context not found`
+            }
+            return registeredContextsById.get(id);
+        }
+
         const getRemote = async ({ context, id: contextId, replyToContext }: RemoteContextStoreParams) => {
             const id = getNetworkId(context, contextId);
             const remoteQueueName = id;
@@ -270,6 +284,7 @@ const createContextMap = async (): Promise<ContextMap> => {
         return {
             register,
             unregister,
+            getLocal,
             getRemote
         }
     }

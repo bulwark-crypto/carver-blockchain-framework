@@ -24,7 +24,7 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const createContexts = async (id: string, privateKey: string) => {
         const carverUser = await carverUserBindings.bindContexts(contextMap, id);
-        await publicStateBindings.bindContexts(contextMap, carverUser, id);
+        await publicStateBindings.bindContexts(contextMap, id);
 
         carverUserContexts.set(id, carverUser); //@todo add privateKey to map
     }

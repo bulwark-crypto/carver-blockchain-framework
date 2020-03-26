@@ -8,8 +8,14 @@ import { RegisteredContext } from '../../../../classes/contexts/registeredContex
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { config } from '../../../../../config'
 
-const bindContexts = async (contextMap: ContextMap, carverUser: RegisteredContext, id: string) => {
+const bindContexts = async (contextMap: ContextMap, id: string) => {
     const publicStateContextStore = await contextMap.getContextStore({ id: 'PUBLIC_STATES' });
+
+    const carverUsersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });;
+    const carverUser = await carverUsersContextStore.getLocal({
+        context: carverUserContext,
+        id
+    });
 
     const { registeredContext: publicState } = await publicStateContextStore.register({
         context: publicStateContext,
