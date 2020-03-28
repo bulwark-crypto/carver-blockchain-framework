@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useReducer } from 'react';
 
+import { initReservationService } from '../../carver/reservations'
+
 export interface SocketContextValue {
-    socket: SocketIOClient.Socket;
-    setSocket: React.Dispatch<React.SetStateAction<SocketIOClient.Socket | undefined>>;
+    socket: ReturnType<typeof initReservationService>;
+    setSocket: React.Dispatch<ReturnType<typeof initReservationService>>;
 }
 
 const SocketContext = React.createContext<SocketContextValue>(null as any);
@@ -13,23 +15,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
     return <SocketContext.Provider value={{ socket, setSocket } as any}>{children}</SocketContext.Provider>
 }
 
-const useSocket = (socket: any) => {
-    const emit = (type: string, payload: any) => {
-        console.log('*emit:', type, payload)
-        if (!socket) {
-            return;
-        }
-
-        socket.emit('emit', { type, payload })
-    }
-
-    return {
-        emit
-    }
-}
-
 export {
     SocketContext,
-    SocketContextProvider,
-    useSocket
+    SocketContextProvider
 }

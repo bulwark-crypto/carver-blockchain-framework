@@ -5,7 +5,7 @@ import TablePaginationActions from '@material-ui/core/TablePagination/TablePagin
 import { commonLanguage as carverUserCommonLanguage } from '../../../core/carver/contexts/publicState/context'
 import { VariantProps } from '../../configuration';
 
-import { useSocket, SocketContext } from '../../../core/react/contexts/Socket'
+import { SocketContext } from '../../../core/react/contexts/Socket'
 
 export interface Column {
     key: string;
@@ -29,7 +29,6 @@ interface Props extends VariantProps {
 }
 const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => {
     const { socket } = useContext(SocketContext)
-    const { emit } = useSocket(socket);
 
     const widget = object;
     const { id, rows } = widget;
@@ -41,24 +40,30 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
     }
 
     const onChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => {
-        emit(carverUserCommonLanguage.commands.Widgets.Command, {
-            id,
-            type: commonLanguage.commands.UpdatePage,
+        socket.command({
+            type: carverUserCommonLanguage.commands.Widgets.Command,
             payload: {
-                page
+                id,
+                type: commonLanguage.commands.UpdatePage,
+                payload: {
+                    page
+                }
             }
-        })
+        });
     }
 
     const onChangeRowsPerPage: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement> = (event) => {
         const limit = event.target.value
-        emit(carverUserCommonLanguage.commands.Widgets.Command, {
-            id,
-            type: commonLanguage.commands.UpdateLimit,
+        socket.command({
+            type: carverUserCommonLanguage.commands.Widgets.Command,
             payload: {
-                limit
+                id,
+                type: commonLanguage.commands.UpdateLimit,
+                payload: {
+                    limit
+                }
             }
-        })
+        });
     }
 
     const tableRows = rows.map((row: any) => {
@@ -75,13 +80,16 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
             if (!options.clickable) {
                 return;
             }
-            emit(carverUserCommonLanguage.commands.Widgets.Command, {
-                id,
-                type: commonLanguage.commands.Select,
+            socket.command({
+                type: carverUserCommonLanguage.commands.Widgets.Command,
                 payload: {
-                    id: row.id
+                    id,
+                    type: commonLanguage.commands.Select,
+                    payload: {
+                        id: row.id
+                    }
                 }
-            })
+            });
         }
 
         return <TableRow onClick={onClick} key={row.id} hover>{getColumns()}</TableRow>

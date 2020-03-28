@@ -72,9 +72,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
     withContext(carverUser)
         .handleQuery(carverUserContext.commonLanguage.queries.DispatchToWidget, async ({ id, type, payload }) => {
-            console.log('dispatch to widget:', id, type, payload);
-            /*const userWidget = await userWidgetsContextStore.getRemote({ id });
-            await userWidget.dispatch({ type, payload })*/
+            const userWidget = await userWidgetsContextStore.getLocal({ context: commonTableWidgetContext, id });
+            await userWidget.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
 

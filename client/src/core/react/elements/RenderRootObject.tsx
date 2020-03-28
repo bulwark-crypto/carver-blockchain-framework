@@ -37,12 +37,12 @@ const RenderRootObject: React.FC = () => {
             addLog(`Connecting to EventSource with reservation id: ${id}...`);
             const eventSource = reservationService.getEventSource(reservationResponse);
 
-            //setSocket(socket);
-
             addLog(`Binding EventSource with reservation id: ${id}...`);
-            reservationService.bindReservation(eventSource);
+            reservationService.bindReservation(id, eventSource);
 
-            await reservationService.command({id, type: 'INITIALIZE', payload: {id}})
+            setSocket(reservationService);
+
+            await reservationService.command({ id, type: 'INITIALIZE', payload: { id } })
         } catch (err) {
             // @todo Proper error handling. World's greatest error handling right here.
             console.log(err);

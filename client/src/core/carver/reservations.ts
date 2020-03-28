@@ -14,7 +14,7 @@ interface ReservationResponse {
     id: string;
 }
 interface CommandParams {
-    id: string;
+    id?: string;
     type: string;
     payload?: any;
 }
@@ -35,15 +35,22 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
         }
     });
 
+    let reservationId = '';
+
     const addLog = (...args: any) => {
         loggerDispatch({ type: loggerCommonLanguage.commands.Add, payload: args });
     }
 
     const command = async (params: CommandParams) => {
-        await api.post('/command', {...params,privateKey});
+        await api.post('/command', {
+            ...params,
+            privateKey,
+            id: reservationId
+        });
     }
 
-    const bindReservation = (eventSource: EventSource) => { //@todo interface
+    const bindReservation = (id: string, eventSource: EventSource) => { //@todo interface
+        reservationId = id;
 
         /*
         socket.on('connect', () => {
@@ -73,11 +80,11 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
         }*/
 
         eventSource.onmessage = function (e) {
-            const event= JSON.parse(e.data);
+            const event = JSON.parse(e.data);
             switch (event.type) {
                 case carverUserCommonLanguage.events.Updated:
-                    carverUserDispatch(event);    
-                    
+                    carverUserDispatch(event);
+
                     break;
                 default:
                     console.log(event);

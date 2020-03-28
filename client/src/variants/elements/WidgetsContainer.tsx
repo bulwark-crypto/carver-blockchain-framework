@@ -4,23 +4,36 @@ import { VariantProps } from '../configuration'
 import { Box, Grid, Button, Paper } from '@material-ui/core';
 
 import { commonLanguage as carverUserCommonLanguage } from '../../core/carver/contexts/publicState/context'
-import { SocketContext, useSocket } from '../../core/react/contexts/Socket'
+import { SocketContext } from '../../core/react/contexts/Socket'
 
 const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
     const { socket } = useContext(SocketContext)
-    const { emit } = useSocket(socket);
 
     const addWidget = (variant: string) => {
-        emit(carverUserCommonLanguage.commands.Widgets.Add, {
-            variant
+        socket.command({
+            type: carverUserCommonLanguage.commands.Widgets.Add,
+            payload: {
+                variant
+            }
         });
+
     }
     const removeWidget = (id: number) => {
-        emit(carverUserCommonLanguage.commands.Widgets.Remove, { id });
+        socket.command({
+            type: carverUserCommonLanguage.commands.Widgets.Remove,
+            payload: {
+                id
+            }
+        });
     }
 
     const navigatePage = (page: string) => {
-        emit(carverUserCommonLanguage.commands.Pages.Navigate, { page });
+        socket.command({
+            type: carverUserCommonLanguage.commands.Pages.Navigate,
+            payload: {
+                page
+            }
+        });
     }
 
     const renderWidgets = () => {
