@@ -8,11 +8,18 @@ const reducer: Reducer = (state, event) => {
             const timePrefix = new Date().toISOString()
 
             const log = JSON.stringify(payload);
-            const logLine = `${timePrefix}: ${log}\n`;
+            const logLine = `${timePrefix}: ${log}`;
+
+            const lines = state.lines as string[];
+            const newLines = [
+                ...(lines.length > 10 ? lines.splice(lines.length - 10) : lines),
+                logLine
+            ]
 
             return {
                 ...state,
-                textLog: state.textLog + logLine
+                lines: newLines,
+                textLog: newLines.reduce((linesText: string, line: string) => `${linesText}\n${line}`, '')
             };
     }
     return state
@@ -24,6 +31,7 @@ const commonLanguage = {
     },
 }
 const initialState = {
+    lines: [] as string[],
     textLog: ''
 }
 

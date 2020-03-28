@@ -43,8 +43,6 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
         .streamEvents({
             type: '*',
             callback: async (event) => {
-                console.log('from carver user:', event)
-
                 switch (event.type) {
                     case carverUserContext.commonLanguage.events.Initialized:
                         {
