@@ -44,9 +44,9 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
         return childrenIds.map((childId: any) => {
             return <Paper key={childId}>
                 <Box p={1} m={1}>
-                    <Button variant="contained" onClick={() => removeWidget(childId)}>
+                    {/*<Button variant="contained" onClick={() => removeWidget(childId)}>
                         Remove
-                    </Button>
+                    </Button>*/}
                     <RenderObject objectId={childId} />
                 </Box>
             </Paper>

@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, ListItemText, ListItem, List } from '@material-ui/core';
+import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, ListItemText, ListItem, List, ListSubheader } from '@material-ui/core';
 import TablePaginationActions from '@material-ui/core/TablePagination/TablePaginationActions';
 
 import { commonLanguage as carverUserCommonLanguage } from '../../../core/carver/contexts/publicState/context'
@@ -10,6 +10,8 @@ import { SocketContext } from '../../../core/react/contexts/Socket'
 export interface Row {
     key: string;
     title: string;
+    format?: (data: any) => any;
+    header?: string;
 }
 export interface BasicListOptions {
     rows: Row[];
@@ -37,9 +39,21 @@ const BasicList: React.FC<Props> = React.memo(({ object, options }) => {
 
     const tableRows = rows.map((row: any) => {
 
-        return <ListItem key={row.key}>
-            <ListItemText primary={`${row.title}: ${widget[row.key]}`} />
-        </ListItem>
+        const value = row.format ? row.format(widget[row.key]) : widget[row.key];
+
+        const getHeader = () => {
+            if (!row.header) {
+                return null;
+            }
+            return <ListSubheader>{row.header}</ListSubheader>
+        }
+
+        return <>
+            {getHeader()}
+            <ListItem key={row.key}>
+                <ListItemText primary={row.title} secondary={value} />
+            </ListItem>
+        </>
     });
 
     return <Box>
