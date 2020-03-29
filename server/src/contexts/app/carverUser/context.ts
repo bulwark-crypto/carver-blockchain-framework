@@ -85,16 +85,16 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
         }])
 }
 
+/*
 const withCommandConnect: Reducer = ({ state, event }) => {
     if (state.isConnected) {
         throw commonLanguage.errors.isAlreadyConnected;
     }
 
-
     //@todo emit 
     return withState(state)
         .set({ isConnected: true })
-}
+}*/
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
@@ -123,7 +123,7 @@ const reducer: Reducer = ({ state, event }) => {
 
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize }) // This will be called by frontend
-        .reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
+        //.reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
 
         .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
         .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
@@ -143,7 +143,6 @@ const commonLanguage = {
     commands: {
         Initialize: 'INITIALIZE',
         Connect: 'CONNECT',
-        CompleteConnection: 'COMPLETE_CONNECTION',
 
         Widgets: {
             Add: 'WIDGETS:ADD',

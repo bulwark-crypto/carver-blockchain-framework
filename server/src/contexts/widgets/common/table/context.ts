@@ -86,6 +86,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
+    type: 'WIDGET',
     commands: {
         Select: 'SELECT',
         Initialize: 'INITIALIZE',

@@ -1,6 +1,7 @@
 
 import WidgetsContainerElement from './elements/WidgetsContainer'
 import BlocksElement from './elements/Blocks'
+import BlockInfoElement from './elements/BlockInfo'
 import TxsElement from './elements/Txs'
 
 export interface VariantProps {
@@ -36,6 +37,13 @@ const variantConfigurations = {
 
         element: TxsElement
     } as Configuration,
+
+    blockInfo: {
+        title: 'Block Info',
+        description: 'Gets details for a specific block height',
+
+        element: BlockInfoElement
+    }
 }
 
 export { variantConfigurations }

@@ -4,6 +4,7 @@ import { createContextStore, ContextStore } from '../../../classes/contexts/cont
 import commonTableWidgetContext from '../../widgets/common/table/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'
 import txsWidgetBindings from '../../widgets/txs/bindings'
+import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
 
 import carverUserContext from './context'
 
@@ -33,6 +34,9 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
                 return [{ variant: 'blocks' }]
             case 'transactions':
                 return [{ variant: 'txs' }]
+            case 'block':
+                console.log('get variant on page:', page, params);
+                return [{ variant: 'blockInfo' }]
         }
     }
 
@@ -44,6 +48,8 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
                     return { bindings: blocksWidgetBindings };
                 case 'txs':
                     return { bindings: txsWidgetBindings };
+                case 'blockInfo':
+                    return { bindings: blockInfoWidgetBindings };
             }
         }
 
