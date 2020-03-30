@@ -1,5 +1,7 @@
 import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
+import { RemoteContextStore, ContextMap } from '../../../classes/contexts/contextMap';
+import { RegisteredContext } from '../../../classes/contexts/registeredContext';
 
 
 interface DispatchToWidgetPayload {
@@ -11,6 +13,13 @@ export interface WidgetContext {
     variant: any;
 }
 
+export interface WidgetBindingParams {
+    contextMap: ContextMap;
+    userWidgetsContextStore: RemoteContextStore;
+    carverUser: RegisteredContext;
+    carverUserId: string;
+    id: string;
+}
 
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
     const newWidgetContexts = event.payload as WidgetContext[];
@@ -115,6 +124,7 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
     const { page } = event.payload;
 
     return withState(state)
+
         .query(commonLanguage.queries.FindWidgetContextsOnPage, { page })
 }
 

@@ -28,6 +28,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
     const carverUserId = id;
 
+
     const getVariantsOnPage = (page: string, params: any[]) => {
         switch (page) {
             case 'blocks':
@@ -56,7 +57,13 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
 
         const { bindings } = getContext();
 
-        const newWidget = await bindings.bindContexts(contextMap, carverUserId, id);
+        const newWidget = await bindings.bindContexts({
+            contextMap,
+            userWidgetsContextStore,
+            carverUser,
+            carverUserId,
+            id
+        });
 
         await withContext(newWidget)
             // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)

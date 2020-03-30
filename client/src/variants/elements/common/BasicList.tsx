@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, ListItemText, ListItem, List, ListSubheader } from '@material-ui/core';
+import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, ListItemText, ListItem, List, ListSubheader, Typography } from '@material-ui/core';
 import TablePaginationActions from '@material-ui/core/TablePagination/TablePaginationActions';
 
 import { commonLanguage as carverUserCommonLanguage } from '../../../core/carver/contexts/publicState/context'

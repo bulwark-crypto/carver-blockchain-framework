@@ -1,24 +1,15 @@
 import { withContext } from '../../../classes/logic/withContext';
-import { ContextStore } from '../../../classes/contexts/contextStore';
 
 import basicListContext from '../common/basicList/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
-import carverUserContext from '../../app/carverUser/context'
-import { ContextMap } from '../../../classes/contexts/contextMap';
+import { WidgetBindingParams } from '../../app/carverUser/context'
 
-const bindContexts = async (contextMap: ContextMap, carverUserId: string, id: string) => {
-    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
+const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
     const { registeredContext: tableWidget } = await userWidgetsContextStore.register({
         id,
         context: basicListContext,
         storeEvents: false,
         inMemory: true
-    });
-
-    const carverUsersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });;
-    const carverUser = await carverUsersContextStore.getLocal({
-        context: carverUserContext,
-        id: carverUserId
     });
 
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
@@ -29,7 +20,7 @@ const bindContexts = async (contextMap: ContextMap, carverUserId: string, id: st
     withContext(tableWidget)
         .handleQuery(basicListContext.commonLanguage.queries.FindInitialState, async () => {
 
-            const block = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
+            const { block } = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
 
             console.log('**block:', block)
 

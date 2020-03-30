@@ -1,24 +1,15 @@
 import { withContext } from '../../../classes/logic/withContext';
-import { ContextStore } from '../../../classes/contexts/contextStore';
 
 import tableContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
-import carverUserContext from '../../app/carverUser/context'
-import { ContextMap } from '../../../classes/contexts/contextMap';
+import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
 
-const bindContexts = async (contextMap: ContextMap, carverUserId: string, id: string) => {
-    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
+const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
     const { registeredContext: tableWidget } = await userWidgetsContextStore.register({
         id,
         context: tableContext,
         storeEvents: false,
         inMemory: true
-    });
-
-    const carverUsersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });;
-    const carverUser = await carverUsersContextStore.getLocal({
-        context: carverUserContext,
-        id: carverUserId
     });
 
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
