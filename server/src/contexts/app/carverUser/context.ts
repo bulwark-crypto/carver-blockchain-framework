@@ -11,14 +11,17 @@ interface DispatchToWidgetPayload {
 export interface WidgetContext {
     id: string;
     variant: any;
+    isShared: boolean;
 }
 
 export interface WidgetBindingParams {
-    contextMap: ContextMap;
-    userWidgetsContextStore: RemoteContextStore;
-    carverUser: RegisteredContext;
-    carverUserId: string;
     id: string;
+    contextMap: ContextMap;
+
+    userWidgetsContextStore?: RemoteContextStore;
+    sharedWidgetsContextStore?: RemoteContextStore;
+    carverUser?: RegisteredContext;
+    carverUserId?: string;
 }
 
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
@@ -86,11 +89,12 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
 }
 
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
-    const { variant } = event.payload;
+    const { variant, isShared } = event.payload;
 
     return withState(state)
         .query(commonLanguage.queries.InsertNewWidgetContexts, [{
-            variant
+            variant,
+            isShared
         }])
 }
 

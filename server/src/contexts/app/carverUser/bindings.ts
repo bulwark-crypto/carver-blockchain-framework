@@ -5,7 +5,7 @@ import commonTableWidgetContext from '../../widgets/common/table/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'
 import txsWidgetBindings from '../../widgets/txs/bindings'
 import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
-import statsBindings from '../../widgets/stats/bindings'
+import statsBindings from '../../widgets/shared/stats/bindings'
 
 import carverUserContext from './context'
 
@@ -17,7 +17,12 @@ const getNextWidgetId = () => {
     return uuidv4(); // Each new widget gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.
 }
 
-const bindContexts = async (contextMap: ContextMap, id: string = null) => {
+interface BindContextParams {
+    contextMap: ContextMap;
+    id: string;
+    sharedWidgets: Map<string, any>;
+}
+const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams) => {
     const usersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });
     const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
 
@@ -53,7 +58,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
             case 'transactions':
                 return [{ variant: 'txs' }]
             case 'stats':
-                return [{ variant: 'stats' }]
+                return [{ variant: 'stats', isShared: true }]
 
             case 'block':
                 console.log('get variant on page:', page, params);
@@ -74,21 +79,6 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
             id
         });
 
-        await withContext(newWidget)
-            // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
-            .streamEvents({
-                type: '*',
-
-                callback: async (event) => {
-                    //@todo move these into commonLanguage as they're common amongst widgets
-                    await carverUser.dispatch({
-                        type: carverUserContext.commonLanguage.commands.Widgets.Emit,
-                        payload: { id, ...event } // event will be emitted to frontend with id (id, type, payload)
-                    });
-
-                }
-            });
-
         return newWidget;
     }
 
@@ -100,7 +90,7 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
 
             const newWidgetContexts = [];
-            for await (const { variant } of newWidgets) {
+            for await (const { variant, isShared } of newWidgets) {
                 const id = getNextWidgetId()
                 await createWidgetContext(id, variant);
 
@@ -119,14 +109,43 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
         })
 
         .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async ({ page, params }) => {
-            const variants = getVariantsOnPage(page, params);
+            const variants = getVariantsOnPage(page, params) as any;
 
             const pageWidgetContexts = [];
-            for await (const { variant } of variants) {
-                const id = getNextWidgetId()
-                await createWidgetContext(id, variant);
+            for await (const { variant, isShared } of variants) {
 
-                pageWidgetContexts.push({ id, variant });
+                const getWidgetContext = async () => {
+                    if (isShared) {
+                        const { id, registeredContext } = sharedWidgets.get(variant);
+                        return { id, registeredContext };
+                    } else {
+                        const id = getNextWidgetId()
+                        const registeredContext = await createWidgetContext(id, variant);
+                        return { id, registeredContext }
+
+                    }
+                }
+
+                const { id, registeredContext } = await getWidgetContext();
+
+                // Forward all events from this widget to this carver user
+                await withContext(registeredContext)
+                    // Proxy all events from a widget to the user (that way they can get forwarded to frontend from user context)
+                    .streamEvents({
+                        type: '*',
+
+                        callback: async (event) => {
+                            //@todo move these into commonLanguage as they're common amongst widgets
+                            await carverUser.dispatch({
+                                type: carverUserContext.commonLanguage.commands.Widgets.Emit,
+                                payload: { id, ...event } // event will be emitted to frontend with id (id, type, payload)
+                            });
+
+                        }
+                    });
+
+                pageWidgetContexts.push({ id, variant, isShared });
+
             }
 
             return pageWidgetContexts

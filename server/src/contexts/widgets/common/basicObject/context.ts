@@ -1,5 +1,4 @@
-import { withState, Reducer } from '../../../classes/logic/withState'
-
+import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withQueryFindInitialState: Reducer = ({ state, event }) => {
     const { usersOnline } = event.payload
@@ -49,7 +48,9 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         .query(commonLanguage.queries.FindInitialState, state.pageQuery); // When context is initialized 
 }
 
-
+/**
+ * Basic widget that can be initialized one and keeps internal state that can be updated
+ */
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })

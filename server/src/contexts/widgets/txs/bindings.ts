@@ -5,7 +5,7 @@ import syncRequiredMovementsContext from '../../app/sync/requiredMovements/conte
 import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
 
 const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
-    const { registeredContext: tableWidget } = await userWidgetsContextStore.register({
+    const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
         context: tableContext,
         storeEvents: false,
@@ -32,7 +32,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
         });
     }
 
-    withContext(tableWidget)
+    withContext(widget)
         .handleQuery(tableContext.commonLanguage.queries.FindPage, async (pageQuery) => {
             const pageQueryWithFilter = { ...pageQuery, filter: { isReward: false } };
 
@@ -63,7 +63,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
         })
 
 
-    return tableWidget;
+    return widget;
 }
 
 export default {

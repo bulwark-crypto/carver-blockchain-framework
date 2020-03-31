@@ -1,10 +1,10 @@
-import { withContext } from '../../../classes/logic/withContext';
+import { withContext } from '../../../../classes/logic/withContext';
 
-import statsContext from './context'
-import { WidgetBindingParams } from '../../app/carverUser/context'
-import apiRestContext from '../../app/api/rest/context'
+import statsContext from '../../common/basicObject/context'
+import { WidgetBindingParams } from '../../../app/carverUser/context'
+import apiRestContext from '../../../app/api/rest/context'
 
-const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
+const bindContexts = async ({ contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
         context: statsContext,

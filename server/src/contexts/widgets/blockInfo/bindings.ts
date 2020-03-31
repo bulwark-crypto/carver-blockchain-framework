@@ -5,7 +5,7 @@ import rpcBlocksContext from '../../app/rpc/blocks/context'
 import { WidgetBindingParams } from '../../app/carverUser/context'
 
 const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
-    const { registeredContext: tableWidget } = await userWidgetsContextStore.register({
+    const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
         context: basicListContext,
         storeEvents: false,
@@ -15,7 +15,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
     const rpcBlocks = await appContextStore.getRemote({ context: rpcBlocksContext, replyToContext: carverUser });
 
-    withContext(tableWidget)
+    withContext(widget)
         .handleQuery(basicListContext.commonLanguage.queries.FindInitialState, async () => {
 
             const { height, confirmations, hash, difficulty, size, date } = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, 1);
@@ -23,7 +23,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
             return { height, confirmations, hash, difficulty, size, date }
         })
 
-    return tableWidget;
+    return widget;
 }
 
 export default {

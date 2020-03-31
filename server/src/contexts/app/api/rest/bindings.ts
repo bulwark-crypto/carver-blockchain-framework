@@ -12,6 +12,12 @@ import carverUserBindings from '../../carverUser/bindings'
 import publicStateBindings from '../publicState/bindings'
 import { RegisteredContext } from '../../../../classes/contexts/registeredContext';
 
+import widgetStatsBindings from '../../../widgets/shared/stats/bindings'
+
+interface RegisterShareWidgetParams {
+    widgetBindings: any;
+}
+
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
@@ -20,10 +26,21 @@ const bindContexts = async (contextMap: ContextMap) => {
         storeEvents: false
     });
 
+    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
+    const registerSharedWidget = async ({ widgetBindings }: RegisterShareWidgetParams) => {
+        const id = uuidv4();
+        const registeredContext = await widgetBindings.bindContexts({ contextMap: contextMap, id, userWidgetsContextStore })
+
+        return { registeredContext, id };
+    }
+
+    const sharedWidgets = new Map<string, any>();
+    sharedWidgets.set('stats', await registerSharedWidget({ widgetBindings: widgetStatsBindings }));
+
     const carverUserContexts = new Map<string, RegisteredContext>();
 
     const createContexts = async (id: string, privateKey: string) => {
-        const carverUser = await carverUserBindings.bindContexts(contextMap, id);
+        const carverUser = await carverUserBindings.bindContexts({ contextMap, id, sharedWidgets });
         await publicStateBindings.bindContexts(contextMap, id);
 
         carverUserContexts.set(id, carverUser); //@todo add privateKey to map
