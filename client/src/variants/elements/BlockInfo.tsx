@@ -6,6 +6,8 @@ import moment from 'moment';
 
 const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
 
+
+    //@todo move to helpers
     const dateFormat = (date: Date, fmt = 'YYYY-MM-DD HH:mm:ss') => {
         if (!date) {
             date = new Date();

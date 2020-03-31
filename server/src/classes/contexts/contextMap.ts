@@ -31,7 +31,7 @@ interface RemoteRegisteredContext {
 }
 interface GetLocalParams {
     context?: any;
-    id: string;
+    id?: string;
 }
 interface RemoteContextStoreParams {
     context?: any;

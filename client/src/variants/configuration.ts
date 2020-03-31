@@ -2,6 +2,7 @@
 import WidgetsContainerElement from './elements/WidgetsContainer'
 import BlocksElement from './elements/Blocks'
 import BlockInfoElement from './elements/BlockInfo'
+import StatsElement from './elements/Stats'
 import TxsElement from './elements/Txs'
 
 export interface VariantProps {
@@ -43,6 +44,13 @@ const variantConfigurations = {
         description: 'Gets details for a specific block height',
 
         element: BlockInfoElement
+    },
+
+    stats: {
+        title: 'Stats',
+        description: 'Gets detailed information of current state of the network',
+
+        element: StatsElement
     }
 }
 

@@ -15,7 +15,7 @@ import { RegisteredContext } from '../../../../classes/contexts/registeredContex
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
-    const { registeredContext: apiRest } = await appContextStore.register({
+    const { registeredContext: apiRest, stateStore: apiRestStateStore } = await appContextStore.register({
         context: apiRestContext,
         storeEvents: false
     });
@@ -31,7 +31,14 @@ const bindContexts = async (contextMap: ContextMap) => {
     withContext(apiRest)
         .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async ({ id, privateKey }) => {
             await createContexts(id, privateKey);
+        })
+        .handleStore(apiRestContext.commonLanguage.storage.FindStats, async () => {
+            const { reservations } = apiRestStateStore.state
+            return {
+                usersOnline: reservations.length
+            }
         });
+
 
 
     /*

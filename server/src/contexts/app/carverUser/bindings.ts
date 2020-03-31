@@ -5,6 +5,7 @@ import commonTableWidgetContext from '../../widgets/common/table/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'
 import txsWidgetBindings from '../../widgets/txs/bindings'
 import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
+import statsBindings from '../../widgets/stats/bindings'
 
 import carverUserContext from './context'
 
@@ -29,33 +30,41 @@ const bindContexts = async (contextMap: ContextMap, id: string = null) => {
     const carverUserId = id;
 
 
+    const getWidgetBindings = (variant: string) => {
+        //@todo move this into some config outside of this context
+        switch (variant) {
+            case 'blocks':
+                return { bindings: blocksWidgetBindings };
+            case 'txs':
+                return { bindings: txsWidgetBindings };
+            case 'blockInfo':
+                return { bindings: blockInfoWidgetBindings };
+            case 'stats':
+                return { bindings: statsBindings };
+        }
+    }
+
+
+    //@todo move this into the context
     const getVariantsOnPage = (page: string, params: any[]) => {
         switch (page) {
             case 'blocks':
                 return [{ variant: 'blocks' }]
             case 'transactions':
                 return [{ variant: 'txs' }]
+            case 'stats':
+                return [{ variant: 'stats' }]
+
             case 'block':
                 console.log('get variant on page:', page, params);
                 return [{ variant: 'blockInfo' }]
+            //@todo address
+            //@todo tx
         }
     }
 
     const createWidgetContext = async (id: string, variant: string) => {
-        const getContext = () => {
-            //@todo move this into some config outside of this context
-            switch (variant) {
-                case 'blocks':
-                    return { bindings: blocksWidgetBindings };
-                case 'txs':
-                    return { bindings: txsWidgetBindings };
-                case 'blockInfo':
-                    return { bindings: blockInfoWidgetBindings };
-            }
-        }
-
-
-        const { bindings } = getContext();
+        const { bindings } = getWidgetBindings(variant);
 
         const newWidget = await bindings.bindContexts({
             contextMap,

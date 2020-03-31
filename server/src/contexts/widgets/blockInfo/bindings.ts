@@ -15,16 +15,12 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
     const rpcBlocks = await appContextStore.getRemote({ context: rpcBlocksContext, replyToContext: carverUser });
 
-    const height = 1;
-
     withContext(tableWidget)
         .handleQuery(basicListContext.commonLanguage.queries.FindInitialState, async () => {
 
-            const { block } = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, height);
+            const { height, confirmations, hash, difficulty, size, date } = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, 1);
 
-            console.log('**block:', block)
-
-            return block;
+            return { height, confirmations, hash, difficulty, size, date }
         })
 
     return tableWidget;

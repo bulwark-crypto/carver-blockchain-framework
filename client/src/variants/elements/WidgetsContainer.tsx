@@ -66,6 +66,11 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
                         Transactions Page
                     </Button>
                 </Grid>
+                <Grid item>
+                    <Button variant="contained" onClick={() => navigatePage('stats')}>
+                        Stats Page
+                    </Button>
+                </Grid>
             </Grid>
         </Box>
         <Box mb={3}>
