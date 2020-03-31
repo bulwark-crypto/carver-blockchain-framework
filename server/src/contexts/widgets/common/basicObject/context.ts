@@ -31,7 +31,7 @@ const withCommandUpdate: Reducer = ({ state, event }) => {
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
-        throw commonLanguage.errors.isAlreadyInitialized;
+        //throw commonLanguage.errors.isAlreadyInitialized; //@todo this is commented out for shared widgets. As we add more widgets we'll figure out a good pattern to uncomment this (ex: FindCurrentState)
     }
     const { id, variant } = event.payload;
 
@@ -45,7 +45,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
                 variant
             }
         })
-        .query(commonLanguage.queries.FindInitialState, state.pageQuery); // When context is initialized 
+        .query(commonLanguage.queries.FindInitialState); // When context is initialized 
 }
 
 /**
