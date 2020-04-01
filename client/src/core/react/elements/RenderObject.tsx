@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Box } from '@material-ui/core';
+import { Box, Grid, Paper } from '@material-ui/core';
 
 import { CarverUserContext } from '../contexts/CarverUser'
 import { variantConfigurations, Configuration } from '../../../variants/configuration';
@@ -11,16 +11,23 @@ export interface RenderObjectParams {
 const RenderObject: React.FC<RenderObjectParams> = ({ objectId }) => {
     const { state } = useContext(CarverUserContext);
 
-
     const childrenIds = state.children[objectId];
     const object = state.objects[objectId];
 
-    const variantConfiguration = (variantConfigurations as any)[object.variant] as Configuration;
+    const variantConfiguration = variantConfigurations.get(object.variant)
     if (!variantConfiguration) {
         return <Box>Unable to find variant: {object.variant}</Box>
     }
 
-    return <variantConfiguration.element object={object} childrenIds={childrenIds} />
+    const { gridBreakpoints } = variantConfiguration;
+
+    return <Grid item {...gridBreakpoints}>
+        <Paper>
+            <Box p={1} m={1}>
+                <variantConfiguration.element object={object} childrenIds={childrenIds} />
+            </Box>
+        </Paper>
+    </Grid>
 }
 
 export {

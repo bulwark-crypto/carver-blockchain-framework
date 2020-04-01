@@ -42,18 +42,14 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
         }
 
         return childrenIds.map((childId: any) => {
-            return <Paper key={childId}>
-                <Box p={1} m={1}>
-                    {/*<Button variant="contained" onClick={() => removeWidget(childId)}>
+            return <RenderObject key={childId} objectId={childId} />
+            {/*<Button variant="contained" onClick={() => removeWidget(childId)}>
                         Remove
                     </Button>*/}
-                    <RenderObject objectId={childId} />
-                </Box>
-            </Paper>
         })
     }
 
-    return <div>
+    return <>
         <Box mb={3}>
             <Grid container spacing={1}>
                 <Grid item>
@@ -82,8 +78,10 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
                 </Grid>
             </Grid>
         </Box>
-        {renderWidgets()}
-    </div>
+        <Grid container spacing={1}>
+            {renderWidgets()}
+        </Grid>
+    </>
 
 }
 

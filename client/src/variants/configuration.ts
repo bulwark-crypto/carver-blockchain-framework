@@ -10,48 +10,54 @@ export interface VariantProps {
     childrenIds: string[];
 }
 export interface Configuration {
-    variant: string;
     title: string;
     description?: string;
     element: React.FC<VariantProps>;
     options?: any;
+    gridBreakpoints?: any;
 }
-const variantConfigurations = {
+const variants = {
 
     widgetsContainer: {
         title: 'Widgets Container',
         description: 'This variant contains a set of widgets. Children of this object are further rendered as variants',
 
         element: WidgetsContainerElement,
-    } as Configuration,
+        gridBreakpoints: { xs: 12 }
+    },
 
     blocks: {
         title: 'Blocks',
         description: 'List of most recent blockchain blocks.',
 
-        element: BlocksElement
-    } as Configuration,
+        element: BlocksElement,
+        gridBreakpoints: { xs: 12 }
+    },
 
     txs: {
         title: 'Transactions',
         description: 'List of most recent blockchain transactions. Can specify additional filter for txs of a specific block.',
 
-        element: TxsElement
-    } as Configuration,
+        element: TxsElement,
+        gridBreakpoints: { xs: 12 }
+    },
 
     blockInfo: {
         title: 'Block Info',
         description: 'Gets details for a specific block height',
 
-        element: BlockInfoElement
+        element: BlockInfoElement,
+        gridBreakpoints: { xs: 12 }
     },
 
     stats: {
         title: 'Stats',
         description: 'Gets detailed information of current state of the network',
 
-        element: StatsElement
+        element: StatsElement,
+        gridBreakpoints: { xs: 12 }
     }
 }
+const variantConfigurations = new Map<string, Configuration>(Object.entries(variants));
 
 export { variantConfigurations }
