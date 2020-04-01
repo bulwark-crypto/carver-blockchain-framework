@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { Box, Grid, Paper } from '@material-ui/core';
+import { Box, Grid, Paper, Card, CardHeader, CardContent, CardActions, IconButton } from '@material-ui/core';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 import { CarverUserContext } from '../contexts/CarverUser'
 import { variantConfigurations, Configuration } from '../../../variants/configuration';
@@ -22,12 +23,13 @@ const RenderObject: React.FC<RenderObjectParams> = ({ objectId }) => {
     const { gridBreakpoints } = variantConfiguration;
 
     return <Grid item {...gridBreakpoints}>
-        <Paper>
-            <Box p={1} m={1}>
+        <Card>
+
+            <CardContent>
                 <variantConfiguration.element object={object} childrenIds={childrenIds} />
-            </Box>
-        </Paper>
-    </Grid>
+            </CardContent>
+        </Card>
+    </Grid >
 }
 
 export {

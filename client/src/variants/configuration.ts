@@ -4,6 +4,7 @@ import BlocksElement from './elements/Blocks'
 import BlockInfoElement from './elements/BlockInfo'
 import StatsElement from './elements/Stats'
 import TxsElement from './elements/Txs'
+import TxElement from './elements/Tx'
 
 export interface VariantProps {
     object: any;
@@ -48,6 +49,14 @@ const variants = {
 
         element: BlockInfoElement,
         gridBreakpoints: { xs: 12 }
+    },
+
+    tx: {
+        title: 'Transaction Details',
+        description: 'List tx properties',
+
+        element: TxElement,
+        gridBreakpoints: { xs: 6 }
     },
 
     stats: {

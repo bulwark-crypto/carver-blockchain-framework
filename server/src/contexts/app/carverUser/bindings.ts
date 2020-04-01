@@ -5,7 +5,8 @@ import commonTableWidgetContext from '../../widgets/common/table/context'
 import blocksWidgetBindings from '../../widgets/blocks/bindings'
 import txsWidgetBindings from '../../widgets/txs/bindings'
 import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
-import statsBindings from '../../widgets/shared/stats/bindings'
+import statsWidgetBindings from '../../widgets/shared/stats/bindings'
+import txWidgetBindings from '../../widgets/tx/bindings'
 
 import carverUserContext from './context'
 
@@ -46,7 +47,9 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             case 'blockInfo':
                 return { bindings: blockInfoWidgetBindings };
             case 'stats':
-                return { bindings: statsBindings };
+                return { bindings: statsWidgetBindings };
+            case 'tx':
+                return { bindings: txWidgetBindings };
         }
     }
 
@@ -62,10 +65,10 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 return [{ variant: 'stats', isShared: true }]
 
             case 'block':
-                console.log('get variant on page:', page, params);
                 return [{ variant: 'blockInfo' }]
+            case 'tx':
+                return [{ variant: 'tx' }]
             //@todo address
-            //@todo tx
         }
     }
 

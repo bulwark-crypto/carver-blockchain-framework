@@ -45,8 +45,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
             };
         })
         .handleQuery(tableContext.commonLanguage.queries.SelectRow, async ({ row }) => {
-            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Widgets.Add, payload: { variant: 'txs' } })
-            console.log('txs:', row, 'carverUser:', carverUser, 'carverUserId:', carverUserId);
+            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'tx' } })
         })
         .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const pageQueryWithFilter = { ...pageQuery, filter: { isReward: false } };
