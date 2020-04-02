@@ -27,15 +27,6 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
         });
     }
 
-    const navigatePage = (page: string) => {
-        socket.command({
-            type: carverUserCommonLanguage.commands.Pages.Navigate,
-            payload: {
-                page
-            }
-        });
-    }
-
     const renderWidgets = () => {
         if (!childrenIds) {
             return null;
@@ -50,25 +41,6 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
     }
 
     return <>
-        <Box mb={3}>
-            <Grid container spacing={1}>
-                <Grid item>
-                    <Button variant="contained" onClick={() => navigatePage('blocks')}>
-                        Blocks Page
-                    </Button>
-                </Grid>
-                <Grid item>
-                    <Button variant="contained" onClick={() => navigatePage('transactions')}>
-                        Transactions Page
-                    </Button>
-                </Grid>
-                <Grid item>
-                    <Button variant="contained" onClick={() => navigatePage('stats')}>
-                        Stats Page
-                    </Button>
-                </Grid>
-            </Grid>
-        </Box>
         <Box mb={3}>
             <Grid container>
                 <Grid item>
