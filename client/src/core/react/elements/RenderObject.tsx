@@ -22,13 +22,21 @@ const RenderObject: React.FC<RenderObjectParams> = ({ objectId }) => {
 
     const { gridBreakpoints } = variantConfiguration;
 
-    return <Grid item {...gridBreakpoints}>
-        <Card>
+    const getWidgetContents = () => {
+        switch (object.variant) {
+            case 'widgetsContainer':
+                return <variantConfiguration.element object={object} childrenIds={childrenIds} />
+        }
 
+        return <Box m={2}><Card>
             <CardContent>
                 <variantConfiguration.element object={object} childrenIds={childrenIds} />
             </CardContent>
-        </Card>
+        </Card></Box>
+    }
+
+    return <Grid item {...gridBreakpoints}>
+        {getWidgetContents()}
     </Grid >
 }
 

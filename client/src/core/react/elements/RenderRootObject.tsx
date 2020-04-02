@@ -65,7 +65,7 @@ const RenderRootObject: React.FC = () => {
         return <RenderObject objectId={rootId} />;
     }
 
-    return <Box p={2}>
+    return <>
         {renderRootObject()}
         <TextField
             label="Debug Log"
@@ -76,6 +76,6 @@ const RenderRootObject: React.FC = () => {
                 readOnly: true,
             }}
         />
-    </Box>
+    </>
 }
 export default RenderRootObject;

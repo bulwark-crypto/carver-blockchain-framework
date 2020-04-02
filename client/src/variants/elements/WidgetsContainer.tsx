@@ -41,7 +41,7 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
     }
 
     return <>
-        <Box mb={3}>
+        <Box m={2}>
             <Grid container>
                 <Grid item>
                     <Button variant="contained" onClick={() => addWidget('blocks')}>
