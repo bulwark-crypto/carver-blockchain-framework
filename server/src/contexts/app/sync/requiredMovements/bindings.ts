@@ -92,29 +92,22 @@ const bindContexts = async (contextMap: ContextMap) => {
             });
         })
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindCount, async ({ filter }) => {
+            return await cache.find({
+                key: { count: true, filter }, miss: async () => {
+                    const requiredMovements = await db
+                        .collection('requiredMovements')
+                        .find(filter, { projection: { consolidatedAddressAmounts: 0 } })
 
-            // Current height will equal number of blocks. So we don't even need to query db to find number of blocks in db.
-            const { rewardsCount, nonRewardsCount } = requiredMovementsStateStore.state;
-
-            if (!filter) {
-                return rewardsCount + nonRewardsCount;
-            }
-
-            const { isReward } = filter;
-            if (!isReward) {
-                return nonRewardsCount;
-            }
-
-            return rewardsCount;
+                    return requiredMovements.count(); //@todo it's possible to read this from another context
+                }
+            });
         })
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter }) => {
-
-            const { isReward } = filter;
 
             //@todo add caching
             const requiredMovements = await db
                 .collection('requiredMovements')
-                .find({ isReward }, { projection: { consolidatedAddressAmounts: 0 } })
+                .find(filter, { projection: { consolidatedAddressAmounts: 0 } })
                 .sort({ _id: -1 })
                 .skip(page * limit)
                 .limit(limit);

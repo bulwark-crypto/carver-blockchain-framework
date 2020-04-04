@@ -15,6 +15,7 @@ import { RegisteredContext } from '../../../../classes/contexts/registeredContex
 import widgetStatsBindings from '../../../widgets/shared/stats/bindings'
 
 interface RegisterShareWidgetParams {
+    variant: string;
     widgetBindings: any;
 }
 
@@ -27,15 +28,10 @@ const bindContexts = async (contextMap: ContextMap) => {
     });
 
     const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
-    const registerSharedWidget = async ({ widgetBindings }: RegisterShareWidgetParams) => {
-        const id = uuidv4();
-        const registeredContext = await widgetBindings.bindContexts({ contextMap: contextMap, id, userWidgetsContextStore })
 
-        return { registeredContext, id };
-    }
 
     const sharedWidgets = new Map<string, any>();
-    sharedWidgets.set('stats', await registerSharedWidget({ widgetBindings: widgetStatsBindings }));
+
 
     const carverUserContexts = new Map<string, RegisteredContext>();
 
@@ -57,6 +53,13 @@ const bindContexts = async (contextMap: ContextMap) => {
         });
 
 
+    const registerSharedWidget = async ({ variant, widgetBindings }: RegisterShareWidgetParams) => {
+        const id = uuidv4();
+        const registeredContext = await widgetBindings.bindContexts({ contextMap: contextMap, id, userWidgetsContextStore, variantParams: { variant } })
+
+        return { registeredContext, id };
+    }
+    await registerSharedWidget({ variant: 'stats', widgetBindings: widgetStatsBindings });
 
     /*
     const reserveNewSession = async ({ id, ip }: Reservation) => {

@@ -108,14 +108,14 @@ const bindContexts = async (contextMap: ContextMap) => {
             return await cache.find({
                 key: { page, limit }, miss: async () => {
                     //@todo add caching
-                    const blocks = await db
+                    const txs = await db
                         .collection('txs')
                         .find({})
                         .sort({ _id: -1 })
                         .skip(page * limit)
                         .limit(limit);
 
-                    return blocks.toArray();
+                    return txs.toArray();
                 }
             });
         });

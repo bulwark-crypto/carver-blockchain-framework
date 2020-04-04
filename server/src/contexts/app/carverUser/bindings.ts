@@ -67,7 +67,7 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
 
             case 'block':
                 const { height } = params;
-                return [{ variant: 'blockInfo', height }]
+                return [{ variant: 'blockInfo', height }, { variant: 'txs', height }]
             case 'tx':
                 const { txid } = params;
                 return [{ variant: 'tx', txid }]

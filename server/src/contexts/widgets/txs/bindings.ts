@@ -4,7 +4,9 @@ import tableContext from '../common/table/context'
 import syncRequiredMovementsContext from '../../app/sync/requiredMovements/context'
 import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
 
-const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
+const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
+    const { height, variant } = variantParams;
+
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
         context: tableContext,
@@ -12,8 +14,13 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
         inMemory: true
     });
 
+    const filter = height ? { height } : { isReward: false }
+
+    await widget.dispatch({ type: tableContext.commonLanguage.commands.SetInitialState, payload: { filter } })
+
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
     const syncRequiredMovements = await appContextStore.getRemote({ context: syncRequiredMovementsContext, replyToContext: carverUser });
+
 
     // Only return partial getinfo information (Other known fields are not useful)
     const getRowsFromtTxs = (txs: any[]) => {
@@ -34,9 +41,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
 
     withContext(widget)
         .handleQuery(tableContext.commonLanguage.queries.FindPage, async (pageQuery) => {
-            const pageQueryWithFilter = { ...pageQuery, filter: { isReward: false } };
-
-            const txs = await syncRequiredMovements.queryStorage(syncRequiredMovementsContext.commonLanguage.storage.FindManyByPage, pageQueryWithFilter);
+            const txs = await syncRequiredMovements.queryStorage(syncRequiredMovementsContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromtTxs(txs);
 
             return {
@@ -49,10 +54,8 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
             await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'tx', txid } })
         })
         .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
-            const pageQueryWithFilter = { ...pageQuery, filter: { isReward: false } };
-
-            const count = await syncRequiredMovements.queryStorage(syncRequiredMovementsContext.commonLanguage.storage.FindCount, pageQueryWithFilter);
-            const txs = await syncRequiredMovements.queryStorage(syncRequiredMovementsContext.commonLanguage.storage.FindManyByPage, pageQueryWithFilter);
+            const count = await syncRequiredMovements.queryStorage(syncRequiredMovementsContext.commonLanguage.storage.FindCount, pageQuery);
+            const txs = await syncRequiredMovements.queryStorage(syncRequiredMovementsContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromtTxs(txs);
 
             return {
@@ -61,7 +64,6 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
                 pageQuery
             }
         })
-
 
     return widget;
 }

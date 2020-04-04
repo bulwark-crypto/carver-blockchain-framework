@@ -4,7 +4,9 @@ import tableContext from '../common/table/context'
 import rpcBlocksContext from '../../app/rpc/blocks/context'
 import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
 
-const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
+const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
+    const { variant } = variantParams;
+
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
         context: tableContext,

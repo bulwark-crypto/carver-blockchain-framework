@@ -4,7 +4,9 @@ import statsContext from '../../common/basicObject/context'
 import { WidgetBindingParams } from '../../../app/carverUser/context'
 import apiRestContext from '../../../app/api/rest/context'
 
-const bindContexts = async ({ contextMap, id, userWidgetsContextStore }: WidgetBindingParams) => {
+const bindContexts = async ({ contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
+    const { variant } = variantParams;
+
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
         context: statsContext,

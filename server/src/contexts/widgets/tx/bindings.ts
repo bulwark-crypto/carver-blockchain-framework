@@ -5,7 +5,7 @@ import rpcTxsContext from '../../app/rpc/txs/context'
 import { WidgetBindingParams } from '../../app/carverUser/context'
 
 const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
-    const { txid } = variantParams;
+    const { txid, variant } = variantParams;
 
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
@@ -24,6 +24,8 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
 
             return { txid, confirmations, time }
         })
+
+
 
     return widget;
 }

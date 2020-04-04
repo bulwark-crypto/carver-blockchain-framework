@@ -49,6 +49,22 @@ const withQueryFindInitialState: Reducer = ({ state, event }) => {
         });
 }
 
+const withCommandSetInitialState: Reducer = ({ state, event }) => {
+    if (state.isInitialized) {
+        throw commonLanguage.errors.isAlreadyInitialized;
+    }
+
+    const { filter } = event.payload;
+
+
+    return withState(state)
+        .set({
+            pageQuery: {
+                ...state.pageQuery,
+                filter
+            }
+        });
+}
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.isAlreadyInitialized;
@@ -78,6 +94,7 @@ const withCommandSelect: Reducer = ({ state, event }) => {
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
+        .reduce({ type: commonLanguage.commands.SetInitialState, event, callback: withCommandSetInitialState })
         .reduce({ type: commonLanguage.commands.UpdatePage, event, callback: withCommandUpdatePage })
         .reduce({ type: commonLanguage.commands.UpdateLimit, event, callback: withCommandUpdateLimit })
         .reduce({ type: commonLanguage.commands.Select, event, callback: withCommandSelect })
@@ -90,8 +107,10 @@ const commonLanguage = {
     commands: {
         Select: 'SELECT',
         Initialize: 'INITIALIZE',
+        SetInitialState: 'SET_INITIAL_STATE',
         UpdatePage: 'UPDATE_PAGE',
         UpdateLimit: 'UPDATE_LIMIT',
+        UpdateFilter: 'UPDATE_FILTER'
     },
     queries: {
         FindInitialState: 'FIND_INITIAL_STATE',
@@ -112,7 +131,8 @@ const commonLanguage = {
 const initialState = {
     pageQuery: {
         page: 0,
-        limit: 10
+        limit: 10,
+        filter: {}
     },
     rows: [] as any[],
     count: 0,

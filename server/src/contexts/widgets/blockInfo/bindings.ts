@@ -6,7 +6,7 @@ import { WidgetBindingParams } from '../../app/carverUser/context'
 
 //@todo rename context from blockInfo to block?
 const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
-    const { height } = variantParams;
+    const { height, variant } = variantParams;
 
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
