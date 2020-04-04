@@ -40,8 +40,8 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
             };
         })
         .handleQuery(tableContext.commonLanguage.queries.SelectRow, async ({ row }) => {
-            console.log('--select:', row);
-            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'block' } })
+            const { height } = row;
+            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'block', height } })
         })
         .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const pageQueryNoRewards = { ...pageQuery, isReward: false };

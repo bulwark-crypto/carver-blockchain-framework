@@ -12,6 +12,7 @@ import MainAppBar from './core/react/elements/MainAppBar';
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
+    background: '#f9f9f9'
   },
   appBarSpacer: theme.mixins.toolbar,
   content: {

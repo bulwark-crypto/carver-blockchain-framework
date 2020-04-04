@@ -22,6 +22,7 @@ export interface WidgetBindingParams {
     sharedWidgetsContextStore?: RemoteContextStore;
     carverUser?: RegisteredContext;
     carverUserId?: string;
+    variantParams: any; // Will always contain at least { variant }
 }
 
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
@@ -125,11 +126,10 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         .query(commonLanguage.queries.FindWidgetContextsOnPage, { page: 'blocks' }); // As soon as carver user initializes navigate to blocks page
 }
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
-    const { page } = event.payload;
+    const params = event.payload;
 
     return withState(state)
-
-        .query(commonLanguage.queries.FindWidgetContextsOnPage, { page })
+        .query(commonLanguage.queries.FindWidgetContextsOnPage, params)
 }
 
 const reducer: Reducer = ({ state, event }) => {

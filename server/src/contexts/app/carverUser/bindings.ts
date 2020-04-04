@@ -55,7 +55,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
 
 
     //@todo move this into the context
-    const getVariantsOnPage = (page: string, params: any[]) => {
+    const getVariantsOnPage = (params: any) => {
+        const { page } = params;
         switch (page) {
             case 'blocks':
                 return [{ variant: 'blocks' }]
@@ -65,14 +66,17 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 return [{ variant: 'stats', isShared: true }]
 
             case 'block':
-                return [{ variant: 'blockInfo' }]
+                const { height } = params;
+                return [{ variant: 'blockInfo', height }]
             case 'tx':
-                return [{ variant: 'tx' }]
+                const { txid } = params;
+                return [{ variant: 'tx', txid }]
             //@todo address
         }
     }
 
-    const createWidgetContext = async (id: string, variant: string) => {
+    const createWidgetContext = async (id: string, variantParams: any) => {
+        const { variant } = variantParams;
         const { bindings } = getWidgetBindings(variant);
 
         const newWidget = await bindings.bindContexts({
@@ -80,7 +84,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             userWidgetsContextStore,
             carverUser,
             carverUserId,
-            id
+            id,
+            variantParams
         });
 
         return newWidget;
@@ -131,11 +136,13 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             return widgetContextIds;
         })
 
-        .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async ({ page, params }) => {
-            const variants = getVariantsOnPage(page, params) as any;
+        .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async (params) => {
+            const { page } = params;
+            const variants = getVariantsOnPage(params) as any;
 
             const pageWidgetContexts = [];
-            for await (const { variant, isShared } of variants) {
+            for await (const variantParams of variants) {
+                const { variant, isShared } = variantParams;
 
                 const getWidgetContext = async () => {
                     if (isShared) {
@@ -143,7 +150,7 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                         return { id, registeredContext };
                     } else {
                         const id = getNextWidgetId()
-                        const registeredContext = await createWidgetContext(id, variant);
+                        const registeredContext = await createWidgetContext(id, variantParams);
                         return { id, registeredContext }
 
                     }
