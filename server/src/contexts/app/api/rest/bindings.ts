@@ -57,7 +57,7 @@ const bindContexts = async (contextMap: ContextMap) => {
         const id = uuidv4();
         const registeredContext = await widgetBindings.bindContexts({ contextMap: contextMap, id, userWidgetsContextStore, variantParams: { variant } })
 
-        return { registeredContext, id };
+        sharedWidgets.set(variant, { registeredContext, id });
     }
     await registerSharedWidget({ variant: 'stats', widgetBindings: widgetStatsBindings });
 
