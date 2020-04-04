@@ -15,7 +15,6 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
     });
 
     const filter = height ? { height } : { isReward: false }
-
     await widget.dispatch({ type: tableContext.commonLanguage.commands.SetInitialState, payload: { filter } })
 
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });

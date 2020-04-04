@@ -28,7 +28,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             await db.collection('addressMovementBalances').createIndex({ label: 1 }, { unique: true });
             await db.collection('addressMovementBalances').createIndex({ sequence: 1 });
 
-            await db.collection('addressMovements').createIndex({ isReward: 1, sequence: 1 });
+            await db.collection('addressMovements').createIndex({ txid: 1 });
 
             await db.collection('versions').insertOne({ id: addressMovements.id, version: 1 });
         }
@@ -45,6 +45,7 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     const lastAddressMovementBalance = await getLastAddressMovementBalance();
 
+    // Feels like addressMovementBalances can be in it's own context
     withContext(addressMovements)
         .handleQuery(addressMovementsContext.commonLanguage.queries.FindBalancesByLabels, async (labels) => {
             if (labels.length === 0) {
@@ -66,6 +67,18 @@ const bindContexts = async (contextMap: ContextMap) => {
             }
 
             await db.collection('addressMovements').insertMany(addressMovements);
+        })
+        .handleStore(addressMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter }) => {
+            let query = db.collection('addressMovements')
+                .find(filter);
+            if (page) {
+                query = query.skip(page * limit);
+            }
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            return await query.toArray();
         })
         .handleStore(addressMovementsContext.commonLanguage.storage.UpdateAddressBalances, async (addressesBalancesToUpdate) => {
             if (addressesBalancesToUpdate.length === 0) {

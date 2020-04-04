@@ -5,6 +5,7 @@ import BlockInfoElement from './elements/BlockInfo'
 import StatsElement from './elements/Stats'
 import TxsElement from './elements/Txs'
 import TxElement from './elements/Tx'
+import AddressMovementsElement from './elements/AddressMovements'
 
 export interface VariantProps {
     object: any;
@@ -53,10 +54,10 @@ const variants = {
 
     tx: {
         title: 'Transaction Details',
-        description: 'List tx properties',
+        description: 'Get details of a transaction',
 
         element: TxElement,
-        gridBreakpoints: { xs: 6 }
+        gridBreakpoints: { xs: 12 }
     },
 
     stats: {
@@ -65,6 +66,14 @@ const variants = {
 
         element: StatsElement,
         gridBreakpoints: { xs: 12 }
+    },
+
+    addressMovements: {
+        title: 'Address movements',
+        description: 'Shows a list of addresses where funds moved from/to',
+
+        element: AddressMovementsElement,
+        gridBreakpoints: { xs: 6 }
     }
 }
 const variantConfigurations = new Map<string, Configuration>(Object.entries(variants));

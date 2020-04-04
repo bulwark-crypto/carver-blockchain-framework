@@ -156,6 +156,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                                 //channel.ack(msg); // This command was processed without errors
                             } catch (err) {
+                                console.log(type);
                                 console.log('** query error:', err);
                                 //@todo add deadletter queue?
                                 //@todo how to handle failed queries?

@@ -105,14 +105,19 @@ const bindContexts = async (contextMap: ContextMap) => {
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter }) => {
 
             //@todo add caching
-            const requiredMovements = await db
+            let query = db
                 .collection('requiredMovements')
                 .find(filter, { projection: { consolidatedAddressAmounts: 0 } })
-                .sort({ _id: -1 })
-                .skip(page * limit)
-                .limit(limit);
+                .sort({ _id: -1 });
 
-            return requiredMovements.toArray();
+            if (page) {
+                query = query.skip(page * limit);
+            }
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            return await query.toArray();
         });
 
     utxos

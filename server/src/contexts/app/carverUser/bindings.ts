@@ -7,6 +7,7 @@ import txsWidgetBindings from '../../widgets/txs/bindings'
 import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
 import statsWidgetBindings from '../../widgets/shared/stats/bindings'
 import txWidgetBindings from '../../widgets/tx/bindings'
+import addressMovementsWidgetBindings, { AddressMovementDirection } from '../../widgets/addressMovements/bindings'
 
 import carverUserContext from './context'
 
@@ -50,6 +51,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 return { bindings: statsWidgetBindings };
             case 'tx':
                 return { bindings: txWidgetBindings };
+            case 'addressMovements':
+                return { bindings: addressMovementsWidgetBindings };
         }
     }
 
@@ -70,7 +73,10 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 return [{ variant: 'blockInfo', height }, { variant: 'txs', height }]
             case 'tx':
                 const { txid } = params;
-                return [{ variant: 'tx', txid }]
+                return [
+                    { variant: 'tx', txid },
+                    { variant: 'addressMovements', txid, direction: AddressMovementDirection.FromAddress },
+                    { variant: 'addressMovements', txid, direction: AddressMovementDirection.ToAddress }]
             //@todo address
         }
     }

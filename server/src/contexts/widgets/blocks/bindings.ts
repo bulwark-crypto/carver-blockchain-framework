@@ -46,10 +46,8 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
             await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'block', height } })
         })
         .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
-            const pageQueryNoRewards = { ...pageQuery, isReward: false };
-
-            const count = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindCount, pageQueryNoRewards);
-            const blocks = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQueryNoRewards);
+            const count = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindCount, pageQuery);
+            const blocks = await rpcBlocks.queryStorage(rpcBlocksContext.commonLanguage.storage.FindManyByPage, pageQuery);
             const rows = getRowsFromBlocks(blocks);
 
             return {

@@ -21,7 +21,10 @@ const withQueryFindPage: Reducer = ({ state, event }) => {
     const { rows, pageQuery } = event.payload;
 
     return withState(state)
-        .set({ pageQuery })
+        .set({
+            pageQuery,
+            rows
+        })
         .emit({
             type: commonLanguage.events.PublicState.Updated, // Public state of the widget was partially updated
             payload: {
