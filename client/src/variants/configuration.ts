@@ -6,6 +6,7 @@ import StatsElement from './elements/Stats'
 import TxsElement from './elements/Txs'
 import TxElement from './elements/Tx'
 import AddressMovementsForTxElement from './elements/AddressMovementsForTx'
+import AddressMovementsForAddressElement from './elements/AddressMovementsForAddress'
 
 export interface VariantProps {
     object: any;
@@ -69,12 +70,21 @@ const variants = {
     },
 
     addressMovementsForTx: {
-        title: 'Address movements',
-        description: 'Shows a list of addresses where funds moved from/to',
+        title: 'Address Movements (By Tx)',
+        description: 'Shows a list of addresses where funds moved from/to.',
 
         element: AddressMovementsForTxElement,
         gridBreakpoints: { xs: 6 }
-    }
+    },
+
+    addressMovementsForAddress: {
+        title: 'Address Movements (By Address)',
+        description: 'Shows a list of running balance for a specific address',
+
+        element: AddressMovementsForAddressElement,
+        gridBreakpoints: { xs: 12 }
+    },
+
 }
 const variantConfigurations = new Map<string, Configuration>(Object.entries(variants));
 

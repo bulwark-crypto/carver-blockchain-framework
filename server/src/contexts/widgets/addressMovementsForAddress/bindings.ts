@@ -2,20 +2,14 @@ import { withContext } from '../../../classes/logic/withContext';
 
 import tableContext from '../common/table/context'
 import addressMovementsContext from '../../app/sync/addressMovements/context'
-import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
-
-export enum AddressMovementDirection {
-    FromAddress,
-    ToAddress
-}
+import { WidgetBindingParams } from '../../app/carverUser/context'
 
 interface VariantParams {
-    txid: string;
+    label: string;
     variant: string;
-    direction: AddressMovementDirection;
 }
 const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
-    const { txid, direction }: VariantParams = variantParams;
+    const { label }: VariantParams = variantParams;
 
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
@@ -24,11 +18,14 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
         inMemory: true
     });
 
-
     await widget.dispatch({
         type: tableContext.commonLanguage.commands.SetInitialState, payload: {
             filter: {
-                txid
+                label
+            },
+            sort: {
+                label: 1,
+                _id: -1
             }
         }
     })
@@ -38,31 +35,25 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
 
 
     // Only return partial getinfo information (Other known fields are not useful)
-    const getTxAddressMovements = (addressMovements: any[]) => {
-        const filteredTxAddressMovements = direction === AddressMovementDirection.FromAddress ?
-            addressMovements.filter(tx => tx.amountOut > 0).map((tx) => ({ ...tx, amount: tx.amountOut })) :
-            addressMovements.filter(tx => tx.amountIn > 0).map((tx) => ({ ...tx, amount: tx.amountIn }));
-
-        return filteredTxAddressMovements
-            .sort((tx1, tx2) => tx2.amount - tx1.amount)
-            .map(({ sequence, label, amount }: any) => {
+    const getAddressMovements = (addressMovements: any[]) => {
+        return addressMovements
+            .map(({ sequence, amountIn, balance, isReward, amountOut, date, txid }: any) => {
                 return {
                     id: sequence, //@todo id is only temporary until you can specify which key to use for id on frontend tables
-                    label,
-                    amount
+                    amountIn,
+                    amountOut,
+                    date,
+                    txid,
+                    balance,
+                    isReward
                 };
             });
     }
 
     withContext(widget)
-
-        .handleQuery(tableContext.commonLanguage.queries.SelectRow, async ({ row }) => {
-            const { label } = row;
-            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'address', label } })
-        })
         .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
             const queriedAddressMovements = await addressMovements.queryStorage(addressMovementsContext.commonLanguage.storage.FindManyByPage, pageQuery);
-            const rows = getTxAddressMovements(queriedAddressMovements);
+            const rows = getAddressMovements(queriedAddressMovements);
 
             return {
                 rows,

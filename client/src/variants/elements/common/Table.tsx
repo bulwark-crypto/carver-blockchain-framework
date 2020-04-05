@@ -11,6 +11,7 @@ export interface Column {
     key: string;
     title: string;
     sortable?: boolean;
+    format?: (data: any) => any;
 }
 export interface VariantCommonTableOptions {
     columns: Column[];
@@ -70,10 +71,12 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
 
         const getColumns = () => {
             return columns.map((column, index) => {
+                const value = column.format ? column.format(row) : row[column.key];
+
                 if (index === 0) {
-                    return <TableCell component="th" scope="row" key={index}>{row[column.key]}</TableCell>
+                    return <TableCell component="th" scope="row" key={index}>{value}</TableCell>
                 }
-                return <TableCell align="right" key={index}>{row[column.key]}</TableCell>
+                return <TableCell align="right" key={index}>{value}</TableCell>
             });
         }
         const onClick = () => {

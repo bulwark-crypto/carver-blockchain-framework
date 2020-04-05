@@ -85,6 +85,11 @@ const bindContexts = async (contextMap: ContextMap) => {
 
             return await query.toArray();
         })
+        .handleStore(addressMovementsContext.commonLanguage.storage.FindCount, async ({ filter }) => {
+            const query = db.collection('addressMovements').find(filter);
+
+            return await query.count();
+        })
         .handleStore(addressMovementsContext.commonLanguage.storage.UpdateAddressBalances, async (addressesBalancesToUpdate) => {
             if (addressesBalancesToUpdate.length === 0) {
                 return;

@@ -35,11 +35,9 @@ const BasicList: React.FC<Props> = React.memo(({ object, options }) => {
 
     const { rows } = options;
 
-    console.log('**widget:', widget, rows);
-
     const tableRows = rows.map((row: any) => {
 
-        const value = row.format ? row.format(widget[row.key]) : widget[row.key];
+        const value = row.format ? row.format(widget) : widget[row.key];
 
         const getHeader = () => {
             if (!row.header) {

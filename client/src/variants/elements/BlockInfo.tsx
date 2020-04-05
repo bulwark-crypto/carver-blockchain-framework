@@ -1,21 +1,9 @@
 import React from 'react';
 import { VariantProps } from '../configuration';
 import { BasicList, BasicListOptions } from './common/BasicList'
-
-import moment from 'moment';
+import dateFormat from '../helpers/dateFormat';
 
 const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
-
-
-    //@todo move to helpers
-    const dateFormat = (date: Date, fmt = 'YYYY-MM-DD HH:mm:ss') => {
-        if (!date) {
-            date = new Date();
-        }
-
-        return `${moment(date).utc().format(fmt)} UTC`;
-    };
-
     const options: BasicListOptions = {
         rows: [
             {
@@ -38,12 +26,14 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds 
             {
                 key: 'size',
                 title: 'Size',
-                format: (size: number) => `${(size / 1024).toFixed(2)} kB`
+                format: (row) => {
+                    return `${(row.size / 1024).toFixed(2)} kB`;
+                }
             },
             {
                 key: 'date',
                 title: 'Date',
-                format: (date: Date) => dateFormat(date)
+                format: (row) => dateFormat(row.date)
             },
 
         ],

@@ -46,7 +46,7 @@ const withQueryFindBalancesByAddresses: Reducer = ({ state, event }) => {
     state.requiredMovement.consolidatedAddressAmounts.forEach((movementData: any) => {
         const { isNew, ...addressBalance } = getAddressBalanceByLabel(movementData.label)
 
-        const balance = addressBalance.balance - movementData.amount;
+        const balance = addressBalance.balance + movementData.amount;
         const { label } = addressBalance
 
         const isReward = txType === CarverTxType.ProofOfWork || txType === CarverTxType.ProofOfStake;
