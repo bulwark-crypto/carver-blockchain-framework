@@ -45,9 +45,9 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
 
         return filteredTxAddressMovements
             .sort((tx1, tx2) => tx2.amount - tx1.amount)
-            .map(({ sequence, label, amount }: any) => {
+            .map(({ _id, sequence, label, amount }: any) => {
                 return {
-                    id: sequence, //@todo id is only temporary until you can specify which key to use for id on frontend tables
+                    id: _id, //@todo id is only temporary until you can specify which key to use for id on frontend tables
                     label,
                     amount
                 };

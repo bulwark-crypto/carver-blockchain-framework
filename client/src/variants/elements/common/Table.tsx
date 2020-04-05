@@ -74,9 +74,9 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
                 const value = column.format ? column.format(row) : row[column.key];
 
                 if (index === 0) {
-                    return <TableCell component="th" scope="row" key={index}>{value}</TableCell>
+                    return <TableCell component="th" scope="row" key={column.key}>{value}</TableCell>
                 }
-                return <TableCell align="right" key={index}>{value}</TableCell>
+                return <TableCell align="right" key={column.key}>{value}</TableCell>
             });
         }
         const onClick = () => {
@@ -118,7 +118,8 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
                         </TableSortLabel>
                     </TableCell>*/
                 }
-                return <TableCell key={index} align={index === 0 ? 'left' : 'right'}>{column.title}</TableCell>
+
+                return <TableCell key={column.title} align={index === 0 ? 'left' : 'right'}>{column.title}</TableCell>
 
             });
         }
