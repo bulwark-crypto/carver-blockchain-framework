@@ -29,6 +29,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             await db.collection('addressMovementBalances').createIndex({ sequence: 1 });
 
             await db.collection('addressMovements').createIndex({ txid: 1 });
+            await db.collection('addressMovements').createIndex({ label: 1, _id: 1 });
 
             await db.collection('versions').insertOne({ id: addressMovements.id, version: 1 });
         }
@@ -68,14 +69,18 @@ const bindContexts = async (contextMap: ContextMap) => {
 
             await db.collection('addressMovements').insertMany(addressMovements);
         })
-        .handleStore(addressMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter }) => {
+        .handleStore(addressMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter, sort }) => {
             let query = db.collection('addressMovements')
                 .find(filter);
+
             if (page) {
                 query = query.skip(page * limit);
             }
             if (limit) {
                 query = query.limit(limit);
+            }
+            if (sort) {
+                query = query.sort(sort);
             }
 
             return await query.toArray();

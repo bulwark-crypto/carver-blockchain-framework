@@ -57,14 +57,15 @@ const withCommandSetInitialState: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
 
-    const { filter } = event.payload;
+    const { filter, sort } = event.payload;
 
 
     return withState(state)
         .set({
             pageQuery: {
                 ...state.pageQuery,
-                filter
+                filter,
+                sort
             }
         });
 }
@@ -135,7 +136,8 @@ const initialState = {
     pageQuery: {
         page: 0,
         limit: 10,
-        filter: {}
+        filter: {},
+        sort: null as any
     },
     rows: [] as any[],
     count: 0,

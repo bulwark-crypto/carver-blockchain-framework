@@ -5,7 +5,7 @@ import BlockInfoElement from './elements/BlockInfo'
 import StatsElement from './elements/Stats'
 import TxsElement from './elements/Txs'
 import TxElement from './elements/Tx'
-import AddressMovementsElement from './elements/AddressMovements'
+import AddressMovementsForTxElement from './elements/AddressMovementsForTx'
 
 export interface VariantProps {
     object: any;
@@ -68,11 +68,11 @@ const variants = {
         gridBreakpoints: { xs: 12 }
     },
 
-    addressMovements: {
+    addressMovementsForTx: {
         title: 'Address movements',
         description: 'Shows a list of addresses where funds moved from/to',
 
-        element: AddressMovementsElement,
+        element: AddressMovementsForTxElement,
         gridBreakpoints: { xs: 6 }
     }
 }

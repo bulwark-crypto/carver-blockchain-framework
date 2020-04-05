@@ -1,7 +1,6 @@
 import { Event } from '../../../../classes/interfaces/events'
 import { withContext } from '../../../../classes/logic/withContext';
 import { config } from '../../../../../config';
-import * as socketio from "socket.io";
 import carverUserContext from '../../carverUser/context'
 
 import apiSessionContext from './context'

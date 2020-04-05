@@ -8,7 +8,7 @@ The framework currently features the world's most advanced Masternode / Proof Of
 
 Modify `.env` file and replace all "CHANGEME" lines with a random password. (This will be automated via a script in the future)
 
-Install docker and run: `docker compose up -d` (you can remove `-d` option to run in the same terminal and Ctrl+C to stop the framework)
+Install docker and run: `docker compose up -d`. At the moment you will also need to run `npm start SYNC` and `npm start API`.
 
 You can access frontend on http://localhost:3000/ (this is automatically ran in "client" Docker container). You can see check out [Development & Commands](docs/development.md) for quick start.
 

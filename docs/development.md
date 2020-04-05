@@ -1,14 +1,14 @@
 
 # Development
 
-If you have `DEVELOPMENT=1` in .env file uncommented all services will run except Carver Framework contexts. This makes it easy to test spawn, restart and add new contexts as needed.
+If you have `DEVELOPMENT=1` (Currently this is not functional but intended in the future) in .env file uncommented all services will run except Carver Framework contexts. This makes it easy to test spawn, restart and add new contexts as needed.
 
 Visual Studio Code is suggested for development. You can use either Windows or Linux as the entire stack runs in Docker and you don't need to install any other software/frameworks locally.
 
 You can use the following commands to pawn the basic namespaces. (These are all ran automatically without development flag)
 
-- `docker-compose exec api bash -c "npx tsc && node src/start.js API"` - Start Reservation API server (On port 3001). Once you initialize this you can access the frontend client via http://localhost:3000/
-- `docker-compose exec sync bash -c "npx tsc && node src/start.js SYNC"` - Start blockchain & data syncing. (This will require your chain to fully sync (See Logging and Monitoring section below.)
+- `docker-compose exec api bash -c "npm start API"` - Start Reservation API server (On port 3001). Once you initialize this you can access the frontend client via http://localhost:3000/
+- `docker-compose exec sync bash -c "npm start SYNC"` - Start blockchain & data syncing. (This will require your chain to fully sync (See Logging and Monitoring section below.)
 
 # Logging and Monitoring
 

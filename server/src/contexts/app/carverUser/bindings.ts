@@ -7,7 +7,7 @@ import txsWidgetBindings from '../../widgets/txs/bindings'
 import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
 import statsWidgetBindings from '../../widgets/shared/stats/bindings'
 import txWidgetBindings from '../../widgets/tx/bindings'
-import addressMovementsWidgetBindings, { AddressMovementDirection } from '../../widgets/addressMovements/bindings'
+import addressMovementsForTxWidgetBindings, { AddressMovementDirection } from '../../widgets/addressMovementsForTx/bindings'
 
 import carverUserContext from './context'
 
@@ -51,8 +51,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 return { bindings: statsWidgetBindings };
             case 'tx':
                 return { bindings: txWidgetBindings };
-            case 'addressMovements':
-                return { bindings: addressMovementsWidgetBindings };
+            case 'addressMovementsForTx':
+                return { bindings: addressMovementsForTxWidgetBindings };
         }
     }
 
@@ -75,8 +75,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 const { txid } = params;
                 return [
                     { variant: 'tx', txid },
-                    { variant: 'addressMovements', txid, direction: AddressMovementDirection.FromAddress },
-                    { variant: 'addressMovements', txid, direction: AddressMovementDirection.ToAddress }]
+                    { variant: 'addressMovementsForTx', txid, direction: AddressMovementDirection.FromAddress },
+                    { variant: 'addressMovementsForTx', txid, direction: AddressMovementDirection.ToAddress }]
             //@todo address
         }
     }
@@ -125,7 +125,7 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             const newWidgetContexts = [];
             for await (const { variant, isShared } of newWidgets) {
                 const id = getNextWidgetId()
-                const registeredContext = await createWidgetContext(id, variant);
+                const registeredContext = await createWidgetContext(id, { variant });
                 await subscribeToWidgetContext(id, registeredContext);
 
                 newWidgetContexts.push({ id, variant });
@@ -143,7 +143,6 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
         })
 
         .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async (params) => {
-            const { page } = params;
             const variants = getVariantsOnPage(params) as any;
 
             const pageWidgetContexts = [];
