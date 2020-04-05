@@ -37,9 +37,9 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
     // Only return partial getinfo information (Other known fields are not useful)
     const getAddressMovements = (addressMovements: any[]) => {
         return addressMovements
-            .map(({ sequence, amountIn, balance, isReward, amountOut, date, txid }: any) => {
+            .map(({ _id, sequence, amountIn, balance, isReward, amountOut, date, txid }: any) => {
                 return {
-                    id: sequence, //@todo id is only temporary until you can specify which key to use for id on frontend tables
+                    id: _id, //@todo id is only temporary until you can specify which key to use for id on frontend tables
                     amountIn,
                     amountOut,
                     date,
@@ -51,13 +51,25 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
     }
 
     withContext(widget)
-        .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
+        .handleQuery(tableContext.commonLanguage.queries.FindPage, async (pageQuery) => {
             const queriedAddressMovements = await addressMovements.queryStorage(addressMovementsContext.commonLanguage.storage.FindManyByPage, pageQuery);
+
             const rows = getAddressMovements(queriedAddressMovements);
 
             return {
                 rows,
-                count: rows.length,
+                pageQuery
+            }
+        })
+        .handleQuery(tableContext.commonLanguage.queries.FindInitialState, async (pageQuery) => {
+            const queriedAddressMovements = await addressMovements.queryStorage(addressMovementsContext.commonLanguage.storage.FindManyByPage, pageQuery);
+            const count = await addressMovements.queryStorage(addressMovementsContext.commonLanguage.storage.FindCount, pageQuery);
+
+            const rows = getAddressMovements(queriedAddressMovements);
+
+            return {
+                rows,
+                count,
                 pageQuery
             }
         })
