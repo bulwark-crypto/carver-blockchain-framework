@@ -28,12 +28,11 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
     await widget.dispatch({
         type: tableContext.commonLanguage.commands.SetInitialState, payload: {
             findRowByIdCallback: (state: any, id: string) => {
-                const rows = [
+                const addresses = [
                     ...state.rows.from,
                     ...state.rows.to
                 ]
-                console.log('find:', id, 'from:', rows);
-                return { test: 123 }
+                return addresses.find((address) => address.id === id);
             },
             filter: {
                 txid
@@ -66,7 +65,6 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
     withContext(widget)
 
         .handleQuery(tableContext.commonLanguage.queries.SelectRow, async ({ row }) => {
-            console.log('row selected:', row);
             const { label } = row;
             await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'address', label } })
         })
