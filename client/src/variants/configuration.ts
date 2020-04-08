@@ -74,7 +74,7 @@ const variants = {
         description: 'Shows a list of addresses where funds moved from/to.',
 
         element: AddressMovementsForTxElement,
-        gridBreakpoints: { xs: 6 }
+        gridBreakpoints: { xs: 12 }
     },
 
     addressMovementsForAddress: {

@@ -7,7 +7,7 @@ import txsWidgetBindings from '../../widgets/txs/bindings'
 import blockInfoWidgetBindings from '../../widgets/blockInfo/bindings'
 import statsWidgetBindings from '../../widgets/shared/stats/bindings'
 import txWidgetBindings from '../../widgets/tx/bindings'
-import addressMovementsForTxWidgetBindings, { AddressMovementDirection } from '../../widgets/addressMovementsForTx/bindings'
+import addressMovementsForTxWidgetBindings from '../../widgets/addressMovementsForTx/bindings'
 
 import addressMovementsForAddressBindings from '../../widgets/addressMovementsForAddress/bindings'
 
@@ -82,8 +82,7 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 const { txid } = params;
                 return [
                     { variant: 'tx', txid },
-                    { variant: 'addressMovementsForTx', txid, direction: AddressMovementDirection.FromAddress },
-                    { variant: 'addressMovementsForTx', txid, direction: AddressMovementDirection.ToAddress }]
+                    { variant: 'addressMovementsForTx', txid }]
             //@todo address
         }
     }

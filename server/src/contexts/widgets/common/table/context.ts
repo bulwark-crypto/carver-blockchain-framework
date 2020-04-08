@@ -57,11 +57,12 @@ const withCommandSetInitialState: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
 
-    const { filter, sort } = event.payload;
+    const { filter, sort, findRowByIdCallback } = event.payload;
 
 
     return withState(state)
         .set({
+            findRowByIdCallback: (findRowByIdCallback ? findRowByIdCallback : state.findRowByIdCallback),
             pageQuery: {
                 ...state.pageQuery,
                 filter,
@@ -89,7 +90,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
 }
 
 const withCommandSelect: Reducer = ({ state, event }) => {
-    const row = (state.rows as any[]).find((row) => row.id === event.payload.id)
+    const row = state.findRowByIdCallback(state, event.payload.id);
 
     return withState(state)
         .query(commonLanguage.queries.SelectRow, { row });
@@ -140,6 +141,12 @@ const initialState = {
         sort: null as any
     },
     rows: [] as any[],
+    /**
+     * You can override and create a custom filter for rows (For example rows can be have nested arrays of data)
+     */
+    findRowByIdCallback: (state: any, id: string) => {
+        return (state.rows as any[]).find((row) => row.id === id);
+    },
     count: 0,
 
     configuration: {

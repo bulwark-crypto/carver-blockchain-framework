@@ -27,8 +27,9 @@ const commonLanguage = {
 }
 interface Props extends VariantProps {
     options: VariantCommonTableOptions;
+    rowMap?: (rows: any[]) => any;
 }
-const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => {
+const VariantCommonTable: React.FC<Props> = React.memo(({ object, options, rowMap }) => {
     const { socket } = useContext(SocketContext)
 
     const widget = object;
@@ -66,8 +67,10 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
             }
         });
     }
+    const mappedRows = rowMap ? rowMap(rows) : rows;
 
-    const tableRows = rows.map((row: any) => {
+    const tableRows = mappedRows.map((row: any) => {
+
 
         const getColumns = () => {
             return columns.map((column, index) => {
