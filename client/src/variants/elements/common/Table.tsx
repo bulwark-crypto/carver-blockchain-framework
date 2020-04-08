@@ -33,7 +33,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options, rowMa
     const { socket } = useContext(SocketContext)
 
     const widget = object;
-    const { id, rows } = widget;
+    const { id, rows, hidePagination } = widget;
 
     const { columns } = options;
 
@@ -129,6 +129,29 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options, rowMa
 
         return <TableRow>{getColumns()}</TableRow>
     }
+    const getTableFooter = () => {
+        if (hidePagination) {
+            return null;
+        }
+        return <TableFooter>
+            <TableRow>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    count={widget.count}
+                    rowsPerPage={widget.pageQuery.limit}
+                    page={widget.pageQuery.page}
+                    SelectProps={{
+                        inputProps: { 'aria-label': 'rows per page' },
+                        native: false,
+                    }}
+
+                    onChangePage={onChangePage}
+                    onChangeRowsPerPage={onChangeRowsPerPage}
+                    ActionsComponent={TablePaginationActions}
+                />
+            </TableRow>
+        </TableFooter>
+    }
 
     return <TableContainer>
         <Table aria-label="simple table" size={'small'}>
@@ -138,24 +161,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options, rowMa
             <TableBody>
                 {tableRows}
             </TableBody>
-            <TableFooter>
-                <TableRow>
-                    <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]}
-                        count={widget.count}
-                        rowsPerPage={widget.pageQuery.limit}
-                        page={widget.pageQuery.page}
-                        SelectProps={{
-                            inputProps: { 'aria-label': 'rows per page' },
-                            native: false,
-                        }}
-
-                        onChangePage={onChangePage}
-                        onChangeRowsPerPage={onChangeRowsPerPage}
-                        ActionsComponent={TablePaginationActions}
-                    />
-                </TableRow>
-            </TableFooter>
+            {getTableFooter()}
         </Table>
     </TableContainer>
 

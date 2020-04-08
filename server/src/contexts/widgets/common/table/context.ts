@@ -37,6 +37,8 @@ const withQueryFindPage: Reducer = ({ state, event }) => {
 const withQueryFindInitialState: Reducer = ({ state, event }) => {
     const { rows, count, pageQuery } = event.payload
 
+    const { hidePagination } = state;
+
     return withState(state)
         .set({
             rows,
@@ -47,7 +49,8 @@ const withQueryFindInitialState: Reducer = ({ state, event }) => {
             payload: {
                 rows,
                 pageQuery,
-                count
+                count,
+                hidePagination
             }
         });
 }
@@ -57,7 +60,7 @@ const withCommandSetInitialState: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
 
-    const { filter, sort, findRowByIdCallback } = event.payload;
+    const { filter, sort, findRowByIdCallback, hidePagination } = event.payload;
 
 
     return withState(state)
@@ -67,7 +70,8 @@ const withCommandSetInitialState: Reducer = ({ state, event }) => {
                 ...state.pageQuery,
                 filter,
                 sort
-            }
+            },
+            hidePagination
         });
 }
 const withCommandInitialize: Reducer = ({ state, event }) => {

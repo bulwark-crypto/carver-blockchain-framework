@@ -28,12 +28,17 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
     await widget.dispatch({
         type: tableContext.commonLanguage.commands.SetInitialState, payload: {
             findRowByIdCallback: (state: any, id: string) => {
-                console.log('find:', id, 'from:', state);
+                const rows = [
+                    ...state.rows.from,
+                    ...state.rows.to
+                ]
+                console.log('find:', id, 'from:', rows);
                 return { test: 123 }
             },
             filter: {
                 txid
-            }
+            },
+            hidePagination: true
         }
     })
 
