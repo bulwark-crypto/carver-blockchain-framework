@@ -2,14 +2,14 @@ import React from 'react';
 import { VariantProps } from '../configuration';
 import { BasicList, BasicListOptions } from './common/BasicList'
 import dateFormat from '../helpers/dateFormat';
+import { Grid, Card, CardContent } from '@material-ui/core';
 
 const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
-    const options: BasicListOptions = {
+    const leftOptions: BasicListOptions = {
         rows: [
             {
                 key: 'height',
                 title: 'Height',
-                header: 'Block Info'
             },
             {
                 key: 'confirmations',
@@ -18,7 +18,12 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds 
             {
                 key: 'hash',
                 title: 'Hash'
-            },
+            }
+        ],
+        clickable: false
+    }
+    const rightOptions: BasicListOptions = {
+        rows: [
             {
                 key: 'difficulty',
                 title: 'Difficulty'
@@ -41,7 +46,22 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds 
     }
 
 
-    return <BasicList object={object} childrenIds={childrenIds} options={options} />
+    return <Grid container spacing={2}>
+        <Grid item sm={6}>
+            <Card>
+                <CardContent>
+                    <BasicList object={object} childrenIds={childrenIds} options={leftOptions} />
+                </CardContent>
+            </Card>
+        </Grid>
+        <Grid item sm={6}>
+            <Card>
+                <CardContent>
+                    <BasicList object={object} childrenIds={childrenIds} options={rightOptions} />
+                </CardContent>
+            </Card>
+        </Grid>
+    </Grid>
 })
 
 export default VariantBlocks

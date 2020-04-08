@@ -1,6 +1,7 @@
 import React from 'react';
 import { VariantProps } from '../configuration';
 import { BasicList, BasicListOptions } from './common/BasicList'
+import { Card, CardContent } from '@material-ui/core';
 
 const VariantTx: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
 
@@ -23,7 +24,11 @@ const VariantTx: React.FC<VariantProps> = React.memo(({ object, childrenIds }) =
     }
 
 
-    return <BasicList object={object} childrenIds={childrenIds} options={options} />
+    return <Card>
+        <CardContent>
+            <BasicList object={object} childrenIds={childrenIds} options={options} />
+        </CardContent>
+    </Card>
 })
 
 export default VariantTx

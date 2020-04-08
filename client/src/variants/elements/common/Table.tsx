@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter } from '@material-ui/core';
+import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, CardContent, Card } from '@material-ui/core';
 import TablePaginationActions from '@material-ui/core/TablePagination/TablePaginationActions';
 
 import { commonLanguage as carverUserCommonLanguage } from '../../../core/carver/contexts/publicState/context'
@@ -127,36 +127,34 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options }) => 
         return <TableRow>{getColumns()}</TableRow>
     }
 
-    return <Box>
-        <TableContainer>
-            <Table aria-label="simple table" size={'small'}>
-                <TableHead>
-                    {getTableHeader()}
-                </TableHead>
-                <TableBody>
-                    {tableRows}
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        <TablePagination
-                            rowsPerPageOptions={[5, 10, 25]}
-                            count={widget.count}
-                            rowsPerPage={widget.pageQuery.limit}
-                            page={widget.pageQuery.page}
-                            SelectProps={{
-                                inputProps: { 'aria-label': 'rows per page' },
-                                native: false,
-                            }}
+    return <TableContainer>
+        <Table aria-label="simple table" size={'small'}>
+            <TableHead>
+                {getTableHeader()}
+            </TableHead>
+            <TableBody>
+                {tableRows}
+            </TableBody>
+            <TableFooter>
+                <TableRow>
+                    <TablePagination
+                        rowsPerPageOptions={[5, 10, 25]}
+                        count={widget.count}
+                        rowsPerPage={widget.pageQuery.limit}
+                        page={widget.pageQuery.page}
+                        SelectProps={{
+                            inputProps: { 'aria-label': 'rows per page' },
+                            native: false,
+                        }}
 
-                            onChangePage={onChangePage}
-                            onChangeRowsPerPage={onChangeRowsPerPage}
-                            ActionsComponent={TablePaginationActions}
-                        />
-                    </TableRow>
-                </TableFooter>
-            </Table>
-        </TableContainer>
-    </Box>
+                        onChangePage={onChangePage}
+                        onChangeRowsPerPage={onChangeRowsPerPage}
+                        ActionsComponent={TablePaginationActions}
+                    />
+                </TableRow>
+            </TableFooter>
+        </Table>
+    </TableContainer>
 
 })
 

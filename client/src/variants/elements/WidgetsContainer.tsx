@@ -50,7 +50,7 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
                 </Grid>
             </Grid>
         </Box>
-        <Grid container spacing={1}>
+        <Grid container spacing={2}>
             {renderWidgets()}
         </Grid>
     </>

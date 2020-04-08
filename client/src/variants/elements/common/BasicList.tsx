@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, ListItemText, ListItem, List, ListSubheader, Typography } from '@material-ui/core';
+import { TableCell, Box, TableContainer, TableHead, TablePagination, TableRow, Table, TableBody, TableFooter, ListItemText, ListItem, List, ListSubheader, Typography, Card, CardContent } from '@material-ui/core';
 
 import { VariantProps } from '../../configuration';
 
@@ -48,11 +48,9 @@ const BasicList: React.FC<Props> = React.memo(({ object, options }) => {
         </div>
     });
 
-    return <Box>
-        <List>
-            {tableRows}
-        </List>
-    </Box>
+    return <List>
+        {tableRows}
+    </List>
 
 })
 

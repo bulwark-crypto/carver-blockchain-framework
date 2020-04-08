@@ -3,6 +3,7 @@ import { VariantProps } from '../configuration';
 import { BasicList, BasicListOptions } from './common/BasicList'
 
 import moment from 'moment';
+import { Card, CardContent } from '@material-ui/core';
 
 const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
 
@@ -18,7 +19,11 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds 
     }
 
 
-    return <BasicList object={object} childrenIds={childrenIds} options={options} />
+    return <Card>
+        <CardContent>
+            <BasicList object={object} childrenIds={childrenIds} options={options} />
+        </CardContent>
+    </Card>
 })
 
 export default VariantBlocks
