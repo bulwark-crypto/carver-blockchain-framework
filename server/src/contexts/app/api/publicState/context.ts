@@ -16,17 +16,16 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Pushed,
-                id,
-                parent: null,
-
+                // Reduce root state
+                type: commonLanguage.events.Reduced,
                 payload: {
-                    variant: 'widgetsContainer'
+                    id
                 }
             }] // Emits publicState id to frontend
         });
 }
 
+/*
 const getWidgetContextsWithParent = (state: any, widgetContexts: any[]) => {
     return widgetContexts.map((widgetContext: any) => {
         const { id, variant } = widgetContext;
@@ -40,7 +39,8 @@ const getWidgetContextsWithParent = (state: any, widgetContexts: any[]) => {
             }
         }
     })
-}
+}*/
+
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
 
@@ -53,7 +53,8 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Updated,
-            payload: getWidgetContextsWithParent(state, widgetContexts)
+            payload: [] //@todo
+            //payload: getWidgetContextsWithParent(state, widgetContexts)
         });
 }
 const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
@@ -72,16 +73,28 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Updated,
-            payload: [{
+            payload: [] //@todo
+            /*payload: [{
                 type: commonLanguage.events.Clear, // Delete objects from display ...
                 payload: widgetIdsToRemove, // ... from these specific object ....
                 id: state.id // ... in the root object
             },
-            ]
+            ]*/
         });
 }
 const withCommandWidgetsSet: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
+    /*
+        const widgetsContextsByIds = widgetContexts.reduce((widgetsContextsByIds: any[], widgetContext: any) => {
+            const { id, ...widgetContextWithoutId } = widgetContext;
+    
+            return {
+                ...widgetsContextsByIds,
+                [id]: widgetContextWithoutId
+            }
+        }, []);*/
+    console.log('**widgets set:', widgetContexts);
+
 
     return withState(state)
         .set({
@@ -91,12 +104,19 @@ const withCommandWidgetsSet: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Updated,
-            payload: [{
+            /*payload: [{
                 type: commonLanguage.events.Clear,  // Delete objects from display ...
                 id: state.id // ... in the root object
             },
             ...getWidgetContextsWithParent(state, widgetContexts)
-            ]
+            ]*/
+
+            payload: [{
+                // Reduce root state
+                type: commonLanguage.events.Updated,
+                path: 'widgets',
+                payload: widgetContexts
+            }]
         });
 }
 
@@ -108,12 +128,11 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Reduced, // Update these fields ....
-                id, // ... in a specific object
+                type: commonLanguage.events.Reduced, // Update these fields ...
+                path: `widgets`, // ... in a specific array
+                find: { id }, // ... find a specific element in this array (full path will be "widgets.indexOfElementById")
 
-                payload: {
-                    ...initialState
-                }
+                payload: initialState
             }]
         });
 }
@@ -125,8 +144,9 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Reduced,  // Update these fields ....
-                id,// ... in a specific object
+                type: commonLanguage.events.Reduced,  // Update these fields ...
+                path: `widgets`,// ... in a specific object
+                find: { id }, // ... find a specific element in this array to reduce (full path will be "widgets.indexOfElementById")
 
                 payload: {
                     ...newWidgetState

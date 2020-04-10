@@ -1,5 +1,4 @@
 
-import io from 'socket.io-client';
 import axios from 'axios'
 import { config } from '../../config'
 import { commonLanguage as carverUserCommonLanguage } from './contexts/publicState/context'

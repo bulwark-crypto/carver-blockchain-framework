@@ -1,13 +1,36 @@
 import { Reducer, Event, Widget } from "../../interfaces";
+import * as _ from "lodash";
 
-const reducer: Reducer = (state, messages: any) => {
-    return messages.reduce((state: any, message: any) => {
-        const { type } = message;
+interface Message {
+    type: string;
+    payload: any;
+    path?: string;
+    find?: string;
+}
+
+const reducer: Reducer = (state, payload: any) => {
+    let newState = { ...state }
+
+    const getFullPath = (message: Message) => {
+        const { path, find } = message;
+
+        if (find) {
+            const data = path ? _.get(newState, path) : newState
+            const index = _.findIndex(data, find);
+            return path ? `${path}.${index}` : index
+        }
+
+        return path;
+    }
+
+    (payload as Message[]).forEach((message: Message) => {
+        const { type, payload } = message;
+        const fullPath = getFullPath(message);
 
         switch (type) {
-            case commonLanguage.events.Pushed:
+            /*case commonLanguage.events.Pushed:
                 {
-                    const { id, parent, payload } = message;
+                    const { payload } = message;
 
                     return {
                         ...state,
@@ -67,26 +90,49 @@ const reducer: Reducer = (state, messages: any) => {
                             [id]: newChildren
                         },
                     }
-                }
+                }*/
             case commonLanguage.events.Reduced:
                 {
-                    const { id, payload } = message;
+                    if (fullPath) {
+                        const currentValue = _.get(newState, fullPath);
 
-                    return {
-                        ...state,
-                        objects: {
-                            ...state.objects,
-                            [id]: {
-                                ...state.objects[id],
+                        if (Array.isArray(currentValue)) {
+                            _.set(newState, fullPath, [
+                                ...currentValue,
                                 ...payload
-                            }
+                            ]);
+                        } else {
+                            _.set(newState, fullPath, {
+                                ...currentValue,
+                                ...payload
+                            });
+                        }
+                    } else {
+                        newState = {
+                            ...newState,
+                            ...payload
                         }
                     }
-                }
-        }
-        return state
-    }, state)
 
+                    console.log('REDUCED full path:', fullPath, payload);
+                }
+                break;
+            case commonLanguage.events.Updated:
+
+                if (fullPath) {
+                    _.set(newState, fullPath, payload);
+                    console.log('UPDATED  full path:', fullPath, payload);
+                    break;
+                } else {
+                    newState = payload
+                }
+                break;
+        }
+    });
+
+    console.log('++++newState:', newState)
+
+    return newState;
 }
 // Alternative is to nest children inside object:
 /*objects: {
@@ -133,9 +179,11 @@ const commonLanguage = {
     }
 }
 const initialState = {
-    objects: {},
-    children: {},
-    root: null
+    //objects: {},
+    //children: {},
+    //root: null
+    id: null as string | null, // public id of carver user, set at load time
+    widgets: []
 }
 
 export {
