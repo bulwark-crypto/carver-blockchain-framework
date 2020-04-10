@@ -81,16 +81,8 @@ const initReservationService = ({ loggerDispatch, carverUserDispatch }: Params) 
         }*/
 
         eventSource.onmessage = function (e) {
-            const event = JSON.parse(e.data);
-            switch (event.type) {
-                case carverUserCommonLanguage.events.Updated:
-                    carverUserDispatch(event);
-
-                    break;
-                default:
-                    console.log(event);
-                    throw 'Event not found';
-            }
+            const payload = JSON.parse(e.data);
+            carverUserDispatch(payload);
         };
         eventSource.onerror = function (e) {
             console.log('**error', e)

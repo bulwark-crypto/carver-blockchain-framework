@@ -1,8 +1,6 @@
 import { Reducer, Event, Widget } from "../../interfaces";
 
-const reducer: Reducer = (state, event) => {
-    const messages = event.payload; // Messages will come in as array of events
-
+const reducer: Reducer = (state, messages: any) => {
     return messages.reduce((state: any, message: any) => {
         const { type } = message;
 

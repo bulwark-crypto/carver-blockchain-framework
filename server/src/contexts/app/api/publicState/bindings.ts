@@ -30,11 +30,12 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
     // Forward any events from public state to frontend (via nchan)
     await publicState
         .streamEvents({
-            type: '*',
+            type: publicStateContext.commonLanguage.events.Updated,
             callback: async (event) => {
+                const { payload } = event;
                 const pubEndpoint = `http://${config.nchan.host}:${config.nchan.port}/pub/${id}`;
 
-                await axiosInstance.post(pubEndpoint, event);
+                await axiosInstance.post(pubEndpoint, payload);
             }
         });
 
