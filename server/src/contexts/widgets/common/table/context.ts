@@ -3,18 +3,16 @@ import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withCommandUpdatePage: Reducer = ({ state, event }) => {
     const { page } = event.payload;
-    const { limit } = state.pageQuery;
 
     return withState(state)
-        .query(commonLanguage.queries.FindPage, { page, limit })
+        .query(commonLanguage.queries.FindPage, { ...state.pageQuery, page })
 }
 
 const withCommandUpdateLimit: Reducer = ({ state, event }) => {
     const { limit } = event.payload;
-    const { page } = state.pageQuery;
 
     return withState(state)
-        .query(commonLanguage.queries.FindPage, { page, limit })
+        .query(commonLanguage.queries.FindPage, { ...state.pageQuery, limit })
 }
 
 const withQueryFindPage: Reducer = ({ state, event }) => {

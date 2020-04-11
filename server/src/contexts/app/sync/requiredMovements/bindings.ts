@@ -103,7 +103,6 @@ const bindContexts = async (contextMap: ContextMap) => {
             });
         })
         .handleStore(requiredMovementsContext.commonLanguage.storage.FindManyByPage, async ({ page, limit, filter }) => {
-
             //@todo add caching
             let query = db
                 .collection('requiredMovements')
