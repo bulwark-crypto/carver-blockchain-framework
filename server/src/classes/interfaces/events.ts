@@ -1,7 +1,7 @@
 export interface Event {
     //id?: number;
     id?: any;
-    type: string;
+    type?: string;
     payload?: any;
     sequence?: any;
 }

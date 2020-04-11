@@ -24,22 +24,6 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         });
 }
 
-/*
-const getWidgetContextsWithParent = (state: any, widgetContexts: any[]) => {
-    return widgetContexts.map((widgetContext: any) => {
-        const { id, variant } = widgetContext;
-        return {
-            type: commonLanguage.events.Pushed, // Let frontend know that this id has a new state addition (think .push into widgets array)
-            id,
-            parent: state.id,
-
-            payload: {
-                variant,
-            }
-        }
-    })
-}*/
-
 const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
 
@@ -83,17 +67,6 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
 }
 const withCommandWidgetsSet: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
-    /*
-        const widgetsContextsByIds = widgetContexts.reduce((widgetsContextsByIds: any[], widgetContext: any) => {
-            const { id, ...widgetContextWithoutId } = widgetContext;
-    
-            return {
-                ...widgetsContextsByIds,
-                [id]: widgetContextWithoutId
-            }
-        }, []);*/
-    console.log('**widgets set:', widgetContexts);
-
 
     return withState(state)
         .set({
@@ -103,12 +76,6 @@ const withCommandWidgetsSet: Reducer = ({ state, event }) => {
         })
         .emit({
             type: commonLanguage.events.Updated,
-            /*payload: [{
-                type: commonLanguage.events.Clear,  // Delete objects from display ...
-                id: state.id // ... in the root object
-            },
-            ...getWidgetContextsWithParent(state, widgetContexts)
-            ]*/
 
             payload: [{
                 // Reduce root state

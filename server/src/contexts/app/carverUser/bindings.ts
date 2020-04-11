@@ -60,33 +60,6 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
         }
     }
 
-
-    //@todo move this into the context
-    const getVariantsOnPage = (params: any) => {
-        const { page } = params;
-        switch (page) {
-            case 'blocks':
-                return [{ variant: 'blocks' }]
-            case 'transactions':
-                return [{ variant: 'txs' }]
-            case 'stats':
-                return [{ variant: 'stats', isShared: true }]
-
-            case 'block':
-                const { height } = params;
-                return [{ variant: 'blockInfo', height }, { variant: 'txs', height }]
-            case 'address':
-                const { label } = params;
-                return [{ variant: 'addressMovementsForAddress', label }]
-            case 'tx':
-                const { txid } = params;
-                return [
-                    { variant: 'tx', txid },
-                    { variant: 'addressMovementsForTx', txid }]
-            //@todo address
-        }
-    }
-
     const createWidgetContext = async (id: string, variantParams: any) => {
         const { variant } = variantParams;
         const { bindings } = getWidgetBindings(variant);
@@ -148,8 +121,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             return widgetContextIds;
         })
 
-        .handleQuery(carverUserContext.commonLanguage.queries.FindWidgetContextsOnPage, async (params) => {
-            const variants = getVariantsOnPage(params) as any;
+        .handleQuery(carverUserContext.commonLanguage.queries.AddWidgetContexts, async (params) => {
+            const variants = params;
 
             const pageWidgetContexts = [];
             for await (const variantParams of variants) {

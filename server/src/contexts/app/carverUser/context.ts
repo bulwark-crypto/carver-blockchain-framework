@@ -3,6 +3,29 @@ import { withState, Reducer } from '../../../classes/logic/withState'
 import { RemoteContextStore, ContextMap } from '../../../classes/contexts/contextMap';
 import { RegisteredContext } from '../../../classes/contexts/registeredContext';
 
+const getVariantsOnPage = (params: any) => {
+    const { page } = params;
+    switch (page) {
+        case 'blocks':
+            return [{ variant: 'blocks' }]
+        case 'transactions':
+            return [{ variant: 'txs' }]
+        case 'stats':
+            return [{ variant: 'stats', isShared: true }]
+
+        case 'block':
+            const { height } = params;
+            return [{ variant: 'blockInfo', height }, { variant: 'txs', height }]
+        case 'address':
+            const { label } = params;
+            return [{ variant: 'addressMovementsForAddress', label }]
+        case 'tx':
+            const { txid } = params;
+            return [
+                { variant: 'tx', txid },
+                { variant: 'addressMovementsForTx', txid }]
+    }
+}
 
 interface DispatchToWidgetPayload {
     id: string;
@@ -44,7 +67,7 @@ const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
 
 }
 
-const withQueryFindWidgetContextsOnPage: Reducer = ({ state, event }) => {
+const withQueryAddWidgetContexts: Reducer = ({ state, event }) => {
     const newWidgetContexts = event.payload as WidgetContext[];
     const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);
 
@@ -60,6 +83,13 @@ const withQueryFindWidgetContextsOnPage: Reducer = ({ state, event }) => {
         })
         .query(commonLanguage.queries.InitializeWidgets, ids)
 
+}
+
+const withNavigatePage: Reducer = ({ state, event }) => {
+    const variants = getVariantsOnPage(event.payload);
+
+    return withState(state)
+        .query(commonLanguage.queries.AddWidgetContexts, variants);
 }
 
 
@@ -123,13 +153,13 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             isInitialized: true
         })
         .emit({ type: commonLanguage.events.Initialized })
-        .query(commonLanguage.queries.FindWidgetContextsOnPage, { page: 'blocks' }); // As soon as carver user initializes navigate to blocks page
+        .reduce({ callback: withNavigatePage, event: { payload: { page: 'blocks' } } }) // As soon as carver user initializes navigate to blocks page
 }
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
     const params = event.payload;
 
     return withState(state)
-        .query(commonLanguage.queries.FindWidgetContextsOnPage, params)
+        .reduce({ callback: withNavigatePage, event: { payload: params } }) // As soon as carver user initializes navigate to blocks page
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -147,7 +177,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
 
         .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
-        .reduce({ type: commonLanguage.queries.FindWidgetContextsOnPage, event, callback: withQueryFindWidgetContextsOnPage })
+        .reduce({ type: commonLanguage.queries.AddWidgetContexts, event, callback: withQueryAddWidgetContexts })
 
         ;
 }
@@ -186,7 +216,7 @@ const commonLanguage = {
 
         DispatchToWidget: 'DISPATCH_TO_WIDGET',
         InitializeWidgets: 'INITIALIZE_WIDGETS',
-        FindWidgetContextsOnPage: 'FIND_WIDGET_CONTEXTS_ON_PAGE'
+        AddWidgetContexts: 'ADD_WIDGET_CONTEXTS'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',

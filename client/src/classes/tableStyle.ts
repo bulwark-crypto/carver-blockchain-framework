@@ -8,7 +8,7 @@ const useTableStyle = makeStyles(theme => ({
         color: '#1f1f1f',
     },
     zebraRow: {
-        background: '#f8f9ff',
+        background: '#f9f9f9',
     }
 
 }));
