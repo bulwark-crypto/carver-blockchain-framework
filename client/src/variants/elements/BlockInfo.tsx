@@ -4,7 +4,7 @@ import { BasicList, BasicListOptions } from './common/BasicList'
 import dateFormat from '../helpers/dateFormat';
 import { Grid, Card, CardContent } from '@material-ui/core';
 
-const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
+const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
     const leftOptions: BasicListOptions = {
         rows: [
             {
@@ -50,14 +50,14 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds 
         <Grid item sm={6}>
             <Card>
                 <CardContent>
-                    <BasicList object={object} childrenIds={childrenIds} options={leftOptions} />
+                    <BasicList state={state} options={leftOptions} />
                 </CardContent>
             </Card>
         </Grid>
         <Grid item sm={6}>
             <Card>
                 <CardContent>
-                    <BasicList object={object} childrenIds={childrenIds} options={rightOptions} />
+                    <BasicList state={state} options={rightOptions} />
                 </CardContent>
             </Card>
         </Grid>

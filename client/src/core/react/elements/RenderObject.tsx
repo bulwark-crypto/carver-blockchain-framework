@@ -6,25 +6,22 @@ import { CarverUserContext } from '../contexts/CarverUser'
 import { variantConfigurations, Configuration } from '../../../variants/configuration';
 
 export interface RenderObjectParams {
-    objectId: string;
+    state: any;
+    variant: string; //@todo right now we pass the variant key from configurations.ts. Perhaps it's better to pass the entire object instead for more customization
 }
 
-const RenderObject: React.FC<RenderObjectParams> = ({ objectId }) => {
-    const { state } = useContext(CarverUserContext);
+const RenderObject: React.FC<RenderObjectParams> = ({ state, variant }) => {
 
-    const childrenIds = state.children[objectId];
-    const object = state.objects[objectId];
-
-    const variantConfiguration = variantConfigurations.get(object.variant)
+    const variantConfiguration = variantConfigurations.get(variant)
     if (!variantConfiguration) {
-        return <Box>Unable to find variant: {object.variant}</Box>
+        return <Box>Unable to find variant: {variant}</Box>
     }
 
     const { gridBreakpoints } = variantConfiguration;
 
     const getWidgetContents = () => {
 
-        return <variantConfiguration.element object={object} childrenIds={childrenIds} />
+        return <variantConfiguration.element state={state} />
     }
 
     return <Grid item {...gridBreakpoints}>

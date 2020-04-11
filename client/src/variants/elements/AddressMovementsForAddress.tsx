@@ -4,7 +4,7 @@ import { VariantCommonTable, VariantCommonTableOptions } from './common/Table'
 import dateFormat from '../helpers/dateFormat';
 import { Box, Card, CardContent } from '@material-ui/core';
 
-const AddressMovements: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
+const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
     const options: VariantCommonTableOptions = {
         columns: [
             {
@@ -39,7 +39,7 @@ const AddressMovements: React.FC<VariantProps> = React.memo(({ object, childrenI
 
     return <Card>
         <CardContent>
-            <VariantCommonTable object={object} childrenIds={childrenIds} options={options} />
+            <VariantCommonTable state={state} options={options} />
         </CardContent>
     </Card>
 })

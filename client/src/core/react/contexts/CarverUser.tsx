@@ -2,8 +2,11 @@ import React, { useReducer } from 'react';
 
 import { reducer as carverUserReducer, initialState as carverUserInitialState } from '../../carver/contexts/publicState/context'
 
+export interface CarverUser {
+    widgets: any[];
+}
 export interface CarverUserContextValue {
-    state: any;
+    state: CarverUser;
     dispatch: any;
 }
 

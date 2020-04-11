@@ -16,8 +16,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                // Reduce root state
-                type: commonLanguage.events.Reduced,
+                type: commonLanguage.events.Reduced, // Add/Override these fields ...
                 payload: {
                     id
                 }
@@ -114,7 +113,7 @@ const withCommandWidgetsSet: Reducer = ({ state, event }) => {
             payload: [{
                 // Reduce root state
                 type: commonLanguage.events.Updated,
-                path: 'widgets',
+                path: [{ exact: 'widgets' }],
                 payload: widgetContexts
             }]
         });
@@ -128,9 +127,11 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
         .emit({
             type: commonLanguage.events.Updated,
             payload: [{
-                type: commonLanguage.events.Reduced, // Update these fields ...
-                path: `widgets`, // ... in a specific array
-                find: { id }, // ... find a specific element in this array (full path will be "widgets.indexOfElementById")
+                type: commonLanguage.events.Reduced, // Add/Override these fields ...
+                path: [
+                    { exact: `widgets` }, /// ... find a specific widget
+                    { find: { id } } // ... with a specific widget id
+                ],
 
                 payload: initialState
             }]
@@ -145,8 +146,10 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
             type: commonLanguage.events.Updated,
             payload: [{
                 type: commonLanguage.events.Reduced,  // Update these fields ...
-                path: `widgets`,// ... in a specific object
-                find: { id }, // ... find a specific element in this array to reduce (full path will be "widgets.indexOfElementById")
+                path: [
+                    { exact: `widgets` }, /// ... find a specific widget
+                    { find: { id } } // ... with a specific widget id
+                ],
 
                 payload: {
                     ...newWidgetState

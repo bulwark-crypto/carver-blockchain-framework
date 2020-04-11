@@ -9,8 +9,7 @@ import AddressMovementsForTxElement from './elements/AddressMovementsForTx'
 import AddressMovementsForAddressElement from './elements/AddressMovementsForAddress'
 
 export interface VariantProps {
-    object: any;
-    childrenIds: string[];
+    state: any;
 }
 export interface Configuration {
     title: string;

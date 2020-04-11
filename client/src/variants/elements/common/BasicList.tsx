@@ -24,14 +24,12 @@ const commonLanguage = {
 interface Props extends VariantProps {
     options: BasicListOptions;
 }
-const BasicList: React.FC<Props> = React.memo(({ object, options }) => {
-    const widget = object;
-
+const BasicList: React.FC<Props> = React.memo(({ state, options }) => {
     const { rows } = options;
 
     const tableRows = rows.map((row: any) => {
 
-        const value = row.format ? row.format(widget) : widget[row.key];
+        const value = row.format ? row.format(state) : state[row.key];
 
         const getHeader = () => {
             if (!row.header) {

@@ -3,7 +3,7 @@ import { VariantProps } from '../configuration';
 import { BasicList, BasicListOptions } from './common/BasicList'
 import { Card, CardContent } from '@material-ui/core';
 
-const VariantTx: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
+const VariantTx: React.FC<VariantProps> = React.memo(({ state }) => {
 
     const options: BasicListOptions = {
         rows: [
@@ -26,7 +26,7 @@ const VariantTx: React.FC<VariantProps> = React.memo(({ object, childrenIds }) =
 
     return <Card>
         <CardContent>
-            <BasicList object={object} childrenIds={childrenIds} options={options} />
+            <BasicList state={state} options={options} />
         </CardContent>
     </Card>
 })

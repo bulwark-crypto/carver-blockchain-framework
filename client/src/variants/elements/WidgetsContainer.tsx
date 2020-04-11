@@ -6,7 +6,7 @@ import { Box, Grid, Button, Paper } from '@material-ui/core';
 import { commonLanguage as carverUserCommonLanguage } from '../../core/carver/contexts/publicState/context'
 import { SocketContext } from '../../core/react/contexts/Socket'
 
-const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
+const WidgetTableDisplay: React.FC<VariantProps> = ({ state }) => {
     const { socket } = useContext(SocketContext)
 
     const addWidget = (variant: string) => {
@@ -28,12 +28,9 @@ const WidgetTableDisplay: React.FC<VariantProps> = ({ childrenIds }) => {
     }
 
     const renderWidgets = () => {
-        if (!childrenIds) {
-            return null;
-        }
-
-        return childrenIds.map((childId: any) => {
-            return <RenderObject key={childId} objectId={childId} />
+        return state.map((widget: any) => {
+            const { variant } = widget;
+            return <RenderObject state={widget} variant={variant} />
             {/*<Button variant="contained" onClick={() => removeWidget(childId)}>
                         Remove
                     </Button>*/}

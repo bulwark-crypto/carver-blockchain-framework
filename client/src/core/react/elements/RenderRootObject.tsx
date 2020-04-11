@@ -57,12 +57,10 @@ const RenderRootObject: React.FC = () => {
     }, [])
 
     const renderRootObject = () => {
-        const { rootId } = carverUserState;
-
-        if (!rootId) {
+        if (!carverUserState.widgets) {
             return <Box>Loading...</Box>
         }
-        return <RenderObject objectId={rootId} />;
+        return <RenderObject state={carverUserState.widgets} variant={'widgetsContainer'} />;
     }
 
     return <>

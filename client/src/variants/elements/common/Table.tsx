@@ -29,11 +29,10 @@ interface Props extends VariantProps {
     options: VariantCommonTableOptions;
     rowMap?: (rows: any[]) => any;
 }
-const VariantCommonTable: React.FC<Props> = React.memo(({ object, options, rowMap }) => {
+const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap }) => {
     const { socket } = useContext(SocketContext)
 
-    const widget = object;
-    const { id, rows, hidePagination } = widget;
+    const { id, rows, hidePagination } = state;
 
     const { columns } = options;
 
@@ -137,9 +136,9 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ object, options, rowMa
             <TableRow>
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
-                    count={widget.count}
-                    rowsPerPage={widget.pageQuery.limit}
-                    page={widget.pageQuery.page}
+                    count={state.count}
+                    rowsPerPage={state.pageQuery.limit}
+                    page={state.pageQuery.page}
                     SelectProps={{
                         inputProps: { 'aria-label': 'rows per page' },
                         native: false,

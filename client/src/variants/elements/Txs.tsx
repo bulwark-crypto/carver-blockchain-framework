@@ -3,7 +3,7 @@ import { VariantProps } from '../configuration';
 import { VariantCommonTable, VariantCommonTableOptions } from './common/Table'
 import { Card, CardContent } from '@material-ui/core';
 
-const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
+const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
     const options: VariantCommonTableOptions = {
         columns: [
             {
@@ -37,7 +37,7 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ object, childrenIds 
 
     return <Card>
         <CardContent>
-            <VariantCommonTable object={object} childrenIds={childrenIds} options={options} />
+            <VariantCommonTable state={state} options={options} />
         </CardContent>
     </Card>
 })

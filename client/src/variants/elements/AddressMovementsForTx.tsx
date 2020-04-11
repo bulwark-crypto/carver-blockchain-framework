@@ -5,7 +5,7 @@ import { Card, CardContent, Grid, Box, makeStyles } from '@material-ui/core';
 import { useSameCardHeightStyle } from '../../classes/sameCardHeightStyle';
 
 
-const AddressMovements: React.FC<VariantProps> = React.memo(({ object, childrenIds }) => {
+const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
     const sameCardHeightStyle = useSameCardHeightStyle();
 
     const options: VariantCommonTableOptions = {
@@ -26,14 +26,14 @@ const AddressMovements: React.FC<VariantProps> = React.memo(({ object, childrenI
         <Grid item sm={6} lg={6} className={sameCardHeightStyle.gridItem}>
             <Card className={sameCardHeightStyle.card}>
                 <CardContent>
-                    <VariantCommonTable object={object} childrenIds={childrenIds} options={options} rowMap={(rows: any) => rows.from} />
+                    <VariantCommonTable state={state} options={options} rowMap={(rows: any) => rows.from} />
                 </CardContent>
             </Card>
         </Grid>
         <Grid item sm={6} lg={6} className={sameCardHeightStyle.gridItem}>
             <Card className={sameCardHeightStyle.card}>
                 <CardContent>
-                    <VariantCommonTable object={object} childrenIds={childrenIds} options={options} rowMap={(rows: any) => rows.to} />
+                    <VariantCommonTable state={state} options={options} rowMap={(rows: any) => rows.to} />
                 </CardContent>
             </Card>
         </Grid>
