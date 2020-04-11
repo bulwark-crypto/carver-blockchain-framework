@@ -6,6 +6,7 @@ import { commonLanguage as carverUserCommonLanguage } from '../../../core/carver
 import { VariantProps } from '../../configuration';
 
 import { SocketContext } from '../../../core/react/contexts/Socket'
+import { useTableStyle } from '../../../classes/tableStyle';
 
 export interface Column {
     key: string;
@@ -30,6 +31,7 @@ interface Props extends VariantProps {
     rowMap?: (rows: any[]) => any;
 }
 const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap }) => {
+    const tableStyle = useTableStyle();
     const { socket } = useContext(SocketContext)
 
     const { id, rows, hidePagination } = state;
@@ -68,15 +70,13 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap
     }
     const mappedRows = rowMap ? rowMap(rows) : rows;
 
-    const tableRows = mappedRows.map((row: any) => {
-
-
+    const tableRows = mappedRows.map((row: any, index: number) => {
         const getColumns = () => {
-            return columns.map((column, index) => {
+            return columns.map((column, columnIndex) => {
                 const value = column.format ? column.format(row) : row[column.key];
 
-                if (index === 0) {
-                    return <TableCell component="th" scope="row" key={column.key}>{value}</TableCell>
+                if (columnIndex === 0) {
+                    return <TableCell component="th" scope="row" key={column.key}>{value}</TableCell >
                 }
                 return <TableCell align="right" key={column.key}>{value}</TableCell>
             });
@@ -97,7 +97,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap
             });
         }
 
-        return <TableRow onClick={onClick} key={row.id} hover>{getColumns()}</TableRow>
+        return <TableRow onClick={onClick} key={row.id} hover className={index % 2 != 0 ? tableStyle.zebraRow : undefined}>{getColumns()}</TableRow>
     });
 
     const getTableHeader = () => {
@@ -121,7 +121,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap
                     </TableCell>*/
                 }
 
-                return <TableCell key={column.title} align={index === 0 ? 'left' : 'right'}>{column.title}</TableCell>
+                return <TableCell key={column.title} align={index === 0 ? 'left' : 'right'} className={tableStyle.headerCell}>{column.title}</TableCell>
 
             });
         }
@@ -154,7 +154,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap
 
     return <TableContainer>
         <Table aria-label="simple table" size={'small'}>
-            <TableHead>
+            <TableHead className={tableStyle.header}>
                 {getTableHeader()}
             </TableHead>
             <TableBody>

@@ -105,10 +105,15 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
             const { store, emit, query, ...stateWithoutSideEffects } = state;
 
             // Save to permanent store / event store
-            session.startTransaction();
+            // Only start transaction if there is something to store/emit
+            if (store || emit) {
+                session.startTransaction();
+            }
             await contextDispatcher.saveToPermanentStore(store);
             await contextDispatcher.saveToEventStore(emit);
-            session.commitTransaction();
+            if (store || emit) {
+                session.commitTransaction();
+            }
 
             // After successful save of both permanent/event store update the state
             stateStore.state = stateWithoutSideEffects;
