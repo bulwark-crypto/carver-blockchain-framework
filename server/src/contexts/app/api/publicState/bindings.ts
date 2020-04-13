@@ -45,6 +45,17 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
             type: '*',
             callback: async (event) => {
                 switch (event.type) {
+                    case carverUserContext.commonLanguage.events.Pages.Navigated:
+                        {
+                            const { page, widgetContexts } = event.payload;
+
+                            await publicState.dispatch({
+                                id,
+                                type: publicStateContext.commonLanguage.commands.Pages.Navigate,
+                                payload: { page, widgetContexts }
+                            });
+                        }
+                        break;
                     case carverUserContext.commonLanguage.events.Initialized:
                         {
                             await publicState.dispatch({
@@ -76,7 +87,7 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
                             });
                         }
                         break;
-                    case carverUserContext.commonLanguage.events.Widgets.Set:
+                    /*case carverUserContext.commonLanguage.events.Widgets.Set:
                         {
                             const initialWidgetsState = event.payload;
 
@@ -86,7 +97,7 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
                                 payload: initialWidgetsState
                             });
                         }
-                        break;
+                        break;*/
                     case carverUserContext.commonLanguage.events.Widgets.Emitted:
                         const { id: widgetId, type: widgetType, payload: widgetPayload } = event.payload;
 

@@ -8,37 +8,51 @@ interface Message {
     find?: string;
 }
 
-const reducer: Reducer = (state, payload: any) => {
-    let newState = { ...state }
+const emitPublicEvent = (event: Event) => {
+    console.log('*public event:', event);
 
-    const getFullPath = (message: Message) => {
-        const { path } = message;
+    switch (event.type) {
+        case commonLanguage.events.PublicEvents.PageNavigated:
+            const { title } = event.payload
+            document.title = `${title} - Carver Framework`
 
-        if (!path) {
-            return null;
+            break;
+    }
+
+    //@todo right now handling is here, add a basic EventEmitter and handle it outside
+
+}
+
+const getFullPath = (newState: any, message: Message) => {
+    const { path } = message;
+
+    if (!path) {
+        return null;
+    }
+
+    const fullPath = path.reduce((fullPath, currentPath) => {
+        const { exact, find } = currentPath
+
+        if (exact) {
+            return fullPath ? `${fullPath}.${exact}` : exact;
+        }
+        if (find) {
+            const data = fullPath ? _.get(newState, fullPath) : newState
+            const index = _.findIndex(data, find);
+            return fullPath ? `${fullPath}.${index}` : index;
         }
 
-        const fullPath = path.reduce((fullPath, currentPath) => {
-            const { exact, find } = currentPath
-
-            if (exact) {
-                return fullPath ? `${fullPath}.${exact}` : exact;
-            }
-            if (find) {
-                const data = fullPath ? _.get(newState, fullPath) : newState
-                const index = _.findIndex(data, find);
-                return fullPath ? `${fullPath}.${index}` : index;
-            }
-
-            return fullPath;
-        }, '');
-
         return fullPath;
-    }
+    }, '');
+
+    return fullPath;
+}
+const reducer: Reducer = (state, payload: any) => {
+    let newState = { ...state };
 
     (payload as Message[]).forEach((message: Message) => {
         const { type, payload } = message;
-        const fullPath = getFullPath(message);
+        const fullPath = getFullPath(newState, message);
 
         switch (type) {
             case commonLanguage.events.Reduced:
@@ -74,6 +88,8 @@ const reducer: Reducer = (state, payload: any) => {
                     newState = payload
                 }
                 break;
+            case commonLanguage.events.PublicEvents.Emit:
+                emitPublicEvent(payload);
         }
     });
 
@@ -108,6 +124,10 @@ const commonLanguage = {
         Removed: 'REMOVED',
         Reduced: 'REDUCED',
 
+        PublicEvents: {
+            Emit: 'PUBLIC:EMIT',
+            PageNavigated: 'PAGE_NAVIGATED'
+        }
 
     }
 }

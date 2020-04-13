@@ -11,7 +11,7 @@ import addressMovementsForTxWidgetBindings from '../../widgets/addressMovementsF
 
 import addressMovementsForAddressBindings from '../../widgets/addressMovementsForAddress/bindings'
 
-import carverUserContext from './context'
+import carverUserContext, { Page } from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../classes/contexts/contextMap';
@@ -121,10 +121,10 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             return widgetContextIds;
         })
 
-        .handleQuery(carverUserContext.commonLanguage.queries.AddWidgetContexts, async (params) => {
-            const variants = params;
+        .handleQuery(carverUserContext.commonLanguage.queries.AddPageWidgetContexts, async (page: Page) => {
+            const { variants } = page;
 
-            const pageWidgetContexts = [];
+            const widgetContexts = [];
             for await (const variantParams of variants) {
                 const { variant, isShared } = variantParams;
 
@@ -143,11 +143,13 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 const { id, registeredContext } = await getWidgetContext();
                 await subscribeToWidgetContext(id, registeredContext);
 
-                pageWidgetContexts.push({ id, variant, isShared });
-
+                widgetContexts.push({ id, variant, isShared });
             }
 
-            return pageWidgetContexts
+            return {
+                page,
+                widgetContexts
+            }
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
             for await (const id of widgetIds) {

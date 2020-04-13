@@ -1,6 +1,6 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
-import { WidgetContext } from '../../carverUser/context';
+import { WidgetContext, Page } from '../../carverUser/context';
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
@@ -65,6 +65,8 @@ const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
             ]*/
         });
 }
+
+/*
 const withCommandWidgetsSet: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
 
@@ -84,7 +86,7 @@ const withCommandWidgetsSet: Reducer = ({ state, event }) => {
                 payload: widgetContexts
             }]
         });
-}
+}*/
 
 const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
     const { id } = event;
@@ -102,6 +104,55 @@ const withCommandWidgetsInitialize: Reducer = ({ state, event }) => {
 
                 payload: initialState
             }]
+        });
+}
+const withCommandPagesNavigate: Reducer = ({ state, event }) => {
+    /*const page = event.payload as Page;
+    const { title } = page;
+
+    return withState(state)
+        .emit({
+            type: commonLanguage.events.Updated,
+            payload: [{
+                type: commonLanguage.events.Reduced, // Add/Override these fields ...
+
+                //@todo should the structure be "page: {widgets:[]}" ?
+
+                payload: {
+                    title
+                }
+            }]
+        });*/
+
+
+
+    const { page, widgetContexts } = event.payload
+    const { title } = page as Page;
+
+    return withState(state)
+        .set({
+            widgets: [
+                ...widgetContexts
+            ]
+        })
+        .emit({
+            type: commonLanguage.events.Updated,
+
+            payload: [
+                {
+                    type: commonLanguage.events.Reduced,
+                    payload: {
+                        title,
+                        widgets: widgetContexts
+                    }
+                }, {
+                    type: commonLanguage.events.PublicEvents.Emit,
+                    payload: {
+                        type: commonLanguage.events.PublicEvents.PageNavigated,
+                        payload: { title }
+                    }
+                }
+            ]
         });
 }
 const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
@@ -128,9 +179,12 @@ const withCommandWidgetsUpdate: Reducer = ({ state, event }) => {
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize })
+
+        .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
+
         .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
         .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
-        .reduce({ type: commonLanguage.commands.Widgets.Set, event, callback: withCommandWidgetsSet })
+        //.reduce({ type: commonLanguage.commands.Widgets.Set, event, callback: withCommandWidgetsSet })
         .reduce({ type: commonLanguage.commands.Widgets.Initialize, event, callback: withCommandWidgetsInitialize })
         .reduce({ type: commonLanguage.commands.Widgets.Update, event, callback: withCommandWidgetsUpdate });
 }
@@ -139,10 +193,13 @@ const commonLanguage = {
     type: 'PUBLIC_STATE',
     commands: {
         Initialize: 'INITIALIZE',
+        Pages: {
+            Navigate: 'PAGES:NAVIGATE'
+        },
         Widgets: {
             Add: 'WIDGETS:ADD',
             Remove: 'WIDGETS:REMOVE',
-            Set: 'WIDGETS:SET',
+            //Set: 'WIDGETS:SET',
             Initialize: 'WIDGETS:INITIALIZE',
             Update: 'WIDGETS:UPDATE',
         }
@@ -155,6 +212,12 @@ const commonLanguage = {
         Pushed: 'PUSHED', // Add to object id. Object { children:[{object},{object},{object}] }
         Reduced: 'REDUCED', // Update object by id
         Clear: 'CLEAR',
+
+        PublicEvents: {
+            Emit: 'PUBLIC:EMIT',
+
+            PageNavigated: 'PAGE_NAVIGATED' // This is used on frontend for things like title & url updates
+        }
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once'

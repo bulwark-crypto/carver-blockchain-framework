@@ -3,30 +3,6 @@ import { withState, Reducer } from '../../../classes/logic/withState'
 import { RemoteContextStore, ContextMap } from '../../../classes/contexts/contextMap';
 import { RegisteredContext } from '../../../classes/contexts/registeredContext';
 
-const getVariantsOnPage = (params: any) => {
-    const { page } = params;
-    switch (page) {
-        case 'blocks':
-            return [{ variant: 'blocks' }]
-        case 'transactions':
-            return [{ variant: 'txs' }]
-        case 'stats':
-            return [{ variant: 'stats', isShared: true }]
-
-        case 'block':
-            const { height } = params;
-            return [{ variant: 'blockInfo', height }, { variant: 'txs', height }]
-        case 'address':
-            const { label } = params;
-            return [{ variant: 'addressMovementsForAddress', label }]
-        case 'tx':
-            const { txid } = params;
-            return [
-                { variant: 'tx', txid },
-                { variant: 'addressMovementsForTx', txid }]
-    }
-}
-
 interface DispatchToWidgetPayload {
     id: string;
     payload: any;
@@ -48,6 +24,64 @@ export interface WidgetBindingParams {
     variantParams: any; // Will always contain at least { variant }
 }
 
+export interface Page {
+    title: string;
+    variants: any[];
+}
+
+const getPage = (params: any): Page => {
+    const { page } = params;
+    switch (page) {
+        case 'blocks':
+            return {
+                title: 'Blocks',
+                variants: [
+                    { variant: 'blocks' }
+                ],
+            }
+        case 'transactions':
+            return {
+                title: 'Transactions',
+                variants: [
+                    { variant: 'txs' }
+                ],
+            }
+        case 'stats':
+            return {
+                title: 'Statistics',
+                variants: [
+                    { variant: 'stats', isShared: true }
+                ]
+            }
+        case 'block':
+            const { height } = params;
+            return {
+                title: `Block #${height}`,
+                variants: [
+                    { variant: 'blockInfo', height },
+                    { variant: 'txs', height }
+                ]
+            }
+        case 'address':
+            const { label } = params;
+            return {
+                title: `Address ${label}`,
+                variants: [
+                    { variant: 'addressMovementsForAddress', label }
+                ]
+            }
+        case 'tx':
+            const { txid } = params;
+            return {
+                title: `Transaction ${txid}`,
+                variants: [
+                    { variant: 'tx', txid },
+                    { variant: 'addressMovementsForTx', txid }
+                ]
+            }
+    }
+}
+
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
     const newWidgetContexts = event.payload as WidgetContext[];
     const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);
@@ -67,18 +101,24 @@ const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
 
 }
 
-const withQueryAddWidgetContexts: Reducer = ({ state, event }) => {
-    const newWidgetContexts = event.payload as WidgetContext[];
-    const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);
+const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
+    const widgetContexts = event.payload.widgetContexts as WidgetContext[];
+    const page = event.payload.page as Page;
+
+    const ids = widgetContexts.map(widgetContext => widgetContext.id);
 
     return withState(state)
         .emit({
-            type: commonLanguage.events.Widgets.Set,
-            payload: newWidgetContexts
+            type: commonLanguage.events.Pages.Navigated,
+            payload: {
+                page,
+                widgetContexts
+            }
         })
         .set({
+            page,
             widgetContexts: [
-                ...newWidgetContexts
+                ...widgetContexts
             ]
         })
         .query(commonLanguage.queries.InitializeWidgets, ids)
@@ -86,10 +126,10 @@ const withQueryAddWidgetContexts: Reducer = ({ state, event }) => {
 }
 
 const withNavigatePage: Reducer = ({ state, event }) => {
-    const variants = getVariantsOnPage(event.payload);
+    const page = getPage(event.payload);
 
     return withState(state)
-        .query(commonLanguage.queries.AddWidgetContexts, variants);
+        .query(commonLanguage.queries.AddPageWidgetContexts, page);
 }
 
 
@@ -134,7 +174,7 @@ const withCommandConnect: Reducer = ({ state, event }) => {
     if (state.isConnected) {
         throw commonLanguage.errors.isAlreadyConnected;
     }
-
+ 
     //@todo emit 
     return withState(state)
         .set({ isConnected: true })
@@ -177,7 +217,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
 
         .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
-        .reduce({ type: commonLanguage.queries.AddWidgetContexts, event, callback: withQueryAddWidgetContexts })
+        .reduce({ type: commonLanguage.queries.AddPageWidgetContexts, event, callback: withQueryAddPageWidgetContexts })
 
         ;
 }
@@ -216,7 +256,7 @@ const commonLanguage = {
 
         DispatchToWidget: 'DISPATCH_TO_WIDGET',
         InitializeWidgets: 'INITIALIZE_WIDGETS',
-        AddWidgetContexts: 'ADD_WIDGET_CONTEXTS'
+        AddPageWidgetContexts: 'ADD_PAGE_WIDGET_CONTEXTS'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',
