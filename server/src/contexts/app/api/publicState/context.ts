@@ -1,6 +1,7 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
-import { WidgetContext, Page } from '../../carverUser/context';
+import { WidgetContext } from '../../carverUser/context';
+import { Page } from '../../carverUser/pages';
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
@@ -127,13 +128,14 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
 
 
     const { page, widgetContexts } = event.payload
-    const { title } = page as Page;
+    const { title, breadcrumbs } = page as Page;
 
     return withState(state)
         .set({
             widgets: [
                 ...widgetContexts
-            ]
+            ],
+            page: { title, breadcrumbs }
         })
         .emit({
             type: commonLanguage.events.Updated,
@@ -142,14 +144,13 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
                 {
                     type: commonLanguage.events.Reduced,
                     payload: {
-                        title,
-                        widgets: widgetContexts
+                        widgets: widgetContexts,
+                        page: { title, breadcrumbs }
                     }
                 }, {
                     type: commonLanguage.events.PublicEvents.Emit,
                     payload: {
-                        type: commonLanguage.events.PublicEvents.PageNavigated,
-                        payload: { title }
+                        type: commonLanguage.events.PublicEvents.PageNavigated
                     }
                 }
             ]

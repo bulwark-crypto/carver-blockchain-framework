@@ -11,12 +11,13 @@ import addressMovementsForTxWidgetBindings from '../../widgets/addressMovementsF
 
 import addressMovementsForAddressBindings from '../../widgets/addressMovementsForAddress/bindings'
 
-import carverUserContext, { Page } from './context'
+import carverUserContext from './context'
 
 import * as uuidv4 from 'uuid/v4'
 import { ContextMap } from '../../../classes/contexts/contextMap';
 import tableContext from '../../widgets/common/table/context'
 import { RegisteredContext } from '../../../classes/contexts/registeredContext';
+import { Page } from './pages';
 
 const getNextWidgetId = () => {
     return uuidv4(); // Each new widget gets it's own RFC4122 unique id. Makes it easy to identify unique ids across entire context network.

@@ -8,19 +8,19 @@ interface Message {
     find?: string;
 }
 
-const emitPublicEvent = (event: Event) => {
-    console.log('*public event:', event);
-
+const emitPublicEvent = (state: any, event: Event) => {
+    //@todo right now handling is here, add a basic EventEmitter and handle it outside
     switch (event.type) {
         case commonLanguage.events.PublicEvents.PageNavigated:
-            const { title } = event.payload
-            document.title = `${title} - Carver Framework`
+            if (state.page) {
+                const { title } = state.page
+                document.title = `${title} - Carver Framework`
+            } else {
+                document.title = `Carver Framework`
+            }
 
             break;
     }
-
-    //@todo right now handling is here, add a basic EventEmitter and handle it outside
-
 }
 
 const getFullPath = (newState: any, message: Message) => {
@@ -89,7 +89,7 @@ const reducer: Reducer = (state, payload: any) => {
                 }
                 break;
             case commonLanguage.events.PublicEvents.Emit:
-                emitPublicEvent(payload);
+                emitPublicEvent(newState, payload);
         }
     });
 

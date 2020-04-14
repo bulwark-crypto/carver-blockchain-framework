@@ -2,6 +2,7 @@ import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 import { RemoteContextStore, ContextMap } from '../../../classes/contexts/contextMap';
 import { RegisteredContext } from '../../../classes/contexts/registeredContext';
+import { getPage, Page } from './pages'
 
 interface DispatchToWidgetPayload {
     id: string;
@@ -22,64 +23,6 @@ export interface WidgetBindingParams {
     carverUser?: RegisteredContext;
     carverUserId?: string;
     variantParams: any; // Will always contain at least { variant }
-}
-
-export interface Page {
-    title: string;
-    variants: any[];
-}
-
-const getPage = (params: any): Page => {
-    const { page } = params;
-    switch (page) {
-        case 'blocks':
-            return {
-                title: 'Blocks',
-                variants: [
-                    { variant: 'blocks' }
-                ],
-            }
-        case 'transactions':
-            return {
-                title: 'Transactions',
-                variants: [
-                    { variant: 'txs' }
-                ],
-            }
-        case 'stats':
-            return {
-                title: 'Statistics',
-                variants: [
-                    { variant: 'stats', isShared: true }
-                ]
-            }
-        case 'block':
-            const { height } = params;
-            return {
-                title: `Block #${height}`,
-                variants: [
-                    { variant: 'blockInfo', height },
-                    { variant: 'txs', height }
-                ]
-            }
-        case 'address':
-            const { label } = params;
-            return {
-                title: `Address ${label}`,
-                variants: [
-                    { variant: 'addressMovementsForAddress', label }
-                ]
-            }
-        case 'tx':
-            const { txid } = params;
-            return {
-                title: `Transaction ${txid}`,
-                variants: [
-                    { variant: 'tx', txid },
-                    { variant: 'addressMovementsForTx', txid }
-                ]
-            }
-    }
 }
 
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {

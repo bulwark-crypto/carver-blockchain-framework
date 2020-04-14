@@ -8,6 +8,7 @@ import RenderRootObject from './core/react/elements/RenderRootObject';
 import { Container, makeStyles, Breadcrumbs, Link, Typography, Box } from '@material-ui/core';
 import { MainDrawer } from './core/react/elements/Drawer';
 import MainAppBar from './core/react/elements/MainAppBar';
+import CustomBreadcrumbs from './core/react/elements/CustomBreadcrumbs';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -41,15 +42,7 @@ const App: React.FC = () => {
             <div className={classes.appBarSpacer} />
             <Container className={classes.container}>
               <Box mb={3} mx={2}>
-                <Breadcrumbs aria-label="breadcrumb">
-                  <Link color="inherit" href="/">
-                    Blocks
-                </Link>
-                  <Link color="inherit" href="/getting-started/installation/">
-                    Block 1
-                  </Link>
-                  <Typography color="textPrimary">Transaction</Typography>
-                </Breadcrumbs>
+                <CustomBreadcrumbs />
               </Box>
               <RenderRootObject />
             </Container>
