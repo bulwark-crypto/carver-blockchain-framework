@@ -2,7 +2,7 @@ import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 import { RemoteContextStore, ContextMap } from '../../../classes/contexts/contextMap';
 import { RegisteredContext } from '../../../classes/contexts/registeredContext';
-import { getPage, Page } from './pages'
+import { getPage, Page, findPageByPathname } from './pages'
 
 interface DispatchToWidgetPayload {
     id: string;
@@ -128,7 +128,9 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
 
-    const { id } = event.payload;
+    const { id, pathname } = event.payload;
+
+    const page = findPageByPathname(pathname)
 
     return withState(state)
         .set({
@@ -136,7 +138,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             isInitialized: true
         })
         .emit({ type: commonLanguage.events.Initialized })
-        .reduce({ callback: withNavigatePage, event: { payload: { page: 'blocks' } } }) // As soon as carver user initializes navigate to blocks page
+        .reduce({ callback: withNavigatePage, event: { payload: page } }) // As soon as carver user initializes navigate to blocks page
 }
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
     const params = event.payload;

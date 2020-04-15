@@ -7,6 +7,7 @@ export interface Page {
     title: string;
     breadcrumbs?: Breadcrumb[];
     variants: any[];
+    pathname?: string;
 }
 
 const getPage = (params: any): Page => {
@@ -20,7 +21,8 @@ const getPage = (params: any): Page => {
                 ],
                 breadcrumbs: [
                     { title: 'Blocks' }
-                ]
+                ],
+                pathname: '/blocks'
             }
         case 'transactions':
             return {
@@ -30,7 +32,8 @@ const getPage = (params: any): Page => {
                 ],
                 breadcrumbs: [
                     { title: 'Transactions' }
-                ]
+                ],
+                pathname: '/transactions'
             }
         case 'stats':
             return {
@@ -40,7 +43,8 @@ const getPage = (params: any): Page => {
                 ],
                 breadcrumbs: [
                     { title: 'Statistics' }
-                ]
+                ],
+                pathname: '/stats'
             }
         case 'block':
             const { height } = params;
@@ -53,7 +57,8 @@ const getPage = (params: any): Page => {
                 breadcrumbs: [
                     { title: `Blocks` },
                     { title: `${height}` },
-                ]
+                ],
+                pathname: `/blocks/${height}`
             }
         case 'address':
             const { label } = params;
@@ -65,7 +70,8 @@ const getPage = (params: any): Page => {
                 breadcrumbs: [
                     { title: `Addresses` },
                     { title: `${label}` },
-                ]
+                ],
+                pathname: `/addresses/${label}`
             }
         case 'tx':
             const { txid } = params;
@@ -78,11 +84,29 @@ const getPage = (params: any): Page => {
                 breadcrumbs: [
                     { title: `Transactions` },
                     { title: `${txid}` },
-                ]
+                ],
+                pathname: `/transactions/${txid}`
             }
     }
 }
 
+const findPageByPathname = (pathname: string) => {
+    switch (pathname) {
+        case '/':
+        case '/blocks':
+            return { page: 'blocks' };
+        case '/transactions':
+            return { page: 'transactions' };
+        case '/stats':
+            return { page: 'stats' };
+    }
+
+    // By default always go to blocks page
+    //@todo 404?
+    return { page: 'blocks' };
+}
+
 export {
-    getPage
+    getPage,
+    findPageByPathname
 }

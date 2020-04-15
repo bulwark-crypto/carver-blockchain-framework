@@ -30,6 +30,8 @@ const RenderRootObject: React.FC = () => {
             })
 
 
+            const { pathname } = window.location
+
             addLog('Connecting to reservation service...');
             const reservationResponse = await reservationService.getNewReservation()
             const { id } = reservationResponse;
@@ -42,7 +44,7 @@ const RenderRootObject: React.FC = () => {
 
             setSocket(reservationService);
 
-            await reservationService.command({ id, type: 'INITIALIZE', payload: { id } })
+            await reservationService.command({ id, type: 'INITIALIZE', payload: { id, pathname } })
         } catch (err) {
             // @todo Proper error handling. World's greatest error handling right here.
             console.log(err);

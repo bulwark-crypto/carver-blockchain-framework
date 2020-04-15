@@ -128,14 +128,14 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
 
 
     const { page, widgetContexts } = event.payload
-    const { title, breadcrumbs } = page as Page;
+    const { title, breadcrumbs, pathname } = page as Page;
 
     return withState(state)
         .set({
             widgets: [
                 ...widgetContexts
             ],
-            page: { title, breadcrumbs }
+            page: { title, breadcrumbs, pathname }
         })
         .emit({
             type: commonLanguage.events.Updated,
@@ -145,7 +145,7 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
                     type: commonLanguage.events.Reduced,
                     payload: {
                         widgets: widgetContexts,
-                        page: { title, breadcrumbs }
+                        page: { title, breadcrumbs, pathname }
                     }
                 }, {
                     type: commonLanguage.events.PublicEvents.Emit,

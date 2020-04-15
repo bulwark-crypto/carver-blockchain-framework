@@ -3,7 +3,7 @@ import { TextField, Breadcrumbs, Link, Typography } from '@material-ui/core';
 
 import { CarverUserContext } from '../contexts/CarverUser';
 
-const CustomBreadcrumbs: React.FC = () => {
+const CustomBreadcrumbs: React.FC = React.memo(() => {
     const { state: carverUserState, dispatch: carverUserDispatch } = useContext(CarverUserContext)
 
     if (!carverUserState.page) {
@@ -24,10 +24,9 @@ const CustomBreadcrumbs: React.FC = () => {
         </Link>
     });
 
-    console.log('**breadcrumbs:', breadcrumbs);
-
     return <Breadcrumbs aria-label="breadcrumb">
         {breadcrumbsElements}
     </Breadcrumbs>
-}
+})
+
 export default CustomBreadcrumbs;
