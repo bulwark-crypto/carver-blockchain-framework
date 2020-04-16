@@ -11,6 +11,8 @@ import { initReservationService } from '../../carver/reservations'
 import { SocketContext } from '../contexts/Socket';
 import { CarverUserContext } from '../contexts/CarverUser';
 
+import { commonLanguage as carverUserCommonLanguage } from '../../../core/carver/contexts/publicState/context'
+
 const RenderRootObject: React.FC = () => {
     const { state: carverUserState, dispatch: carverUserDispatch } = useContext(CarverUserContext)
     const { setSocket } = useContext(SocketContext)
@@ -19,6 +21,7 @@ const RenderRootObject: React.FC = () => {
     const addLog = (...args: any) => {
         loggerDispatch({ type: loggerCommonLanguage.commands.Add, payload: args });
     }
+
 
     const initConnection = async () => {
         try {
@@ -42,9 +45,27 @@ const RenderRootObject: React.FC = () => {
             addLog(`Binding EventSource with reservation id: ${id}...`);
             reservationService.bindReservation(id, eventSource);
 
+            /**
+             * Listen to page url changes (history back/forth) and pass path of new url back to server
+             */
+            const bindHistoryStateListener = () => {
+                window.onpopstate = (event: any) => {
+                    const { pathname } = window.location
+
+                    reservationService.command({
+                        type: carverUserCommonLanguage.commands.Pages.NavigateByPathname,
+                        payload: {
+                            pathname,
+                            pushHistory: false // When PAGE_NAVIGATED event is called don't add new page to browser history
+                        }
+                    });
+                }
+            }
+            bindHistoryStateListener();
+
             setSocket(reservationService);
 
-            await reservationService.command({ id, type: 'INITIALIZE', payload: { id, pathname } })
+            await reservationService.command({ id, type: carverUserCommonLanguage.commands.Initialize, payload: { id, pathname } })
         } catch (err) {
             // @todo Proper error handling. World's greatest error handling right here.
             console.log(err);

@@ -100,6 +100,7 @@ const reducer: Reducer = (state, payload: any) => {
 const commonLanguage = {
     //@todo move commands to carverUser context
     commands: {
+        Initialize: 'INITIALIZE',
         Connect: 'CONNECT',
 
         Widgets: {
@@ -109,7 +110,8 @@ const commonLanguage = {
             Command: 'WIDGETS:COMMAND',
         },
         Pages: {
-            Navigate: 'NAVIGATE'
+            Navigate: 'NAVIGATE',
+            NavigateByPathname: 'NAVIGATE_BY_PATHNAME'
         },
     },
 

@@ -122,8 +122,9 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
             return widgetContextIds;
         })
 
-        .handleQuery(carverUserContext.commonLanguage.queries.AddPageWidgetContexts, async (page: Page) => {
-            const { variants } = page;
+        .handleQuery(carverUserContext.commonLanguage.queries.AddPageWidgetContexts, async (params) => {
+            const { page, pushHistory } = params
+            const { variants } = page as Page;
 
             const widgetContexts = [];
             for await (const variantParams of variants) {
@@ -149,7 +150,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
 
             return {
                 page,
-                widgetContexts
+                widgetContexts,
+                pushHistory
             }
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {

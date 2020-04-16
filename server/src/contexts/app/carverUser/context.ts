@@ -45,7 +45,10 @@ const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
 }
 
 const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
+    const { pushHistory } = event.payload
+
     const widgetContexts = event.payload.widgetContexts as WidgetContext[];
+
     const page = event.payload.page as Page;
 
     const ids = widgetContexts.map(widgetContext => widgetContext.id);
@@ -55,7 +58,8 @@ const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
             type: commonLanguage.events.Pages.Navigated,
             payload: {
                 page,
-                widgetContexts
+                widgetContexts,
+                pushHistory
             }
         })
         .set({
@@ -69,10 +73,13 @@ const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
 }
 
 const withNavigatePage: Reducer = ({ state, event }) => {
-    const page = getPage(event.payload);
+    const { page, pushHistory } = event.payload
+    const pageData = getPage(page);
+
+    console.log('navigate page:', page, pushHistory);
 
     return withState(state)
-        .query(commonLanguage.queries.AddPageWidgetContexts, page);
+        .query(commonLanguage.queries.AddPageWidgetContexts, { page: pageData, pushHistory });
 }
 
 
@@ -123,6 +130,22 @@ const withCommandConnect: Reducer = ({ state, event }) => {
         .set({ isConnected: true })
 }*/
 
+const withCommandPagesNavigate: Reducer = ({ state, event }) => {
+    const page = event.payload;
+
+    return withState(state)
+        .reduce({ callback: withNavigatePage, event: { payload: { page, pushHistory: true } } })
+}
+
+const withCommandPagesNavigateByPathname: Reducer = ({ state, event }) => {
+    const { pathname, pushHistory } = event.payload;
+
+    const page = findPageByPathname(pathname)
+
+    return withState(state)
+        .reduce({ callback: withNavigatePage, event: { payload: { page, pushHistory } } })
+}
+
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.isAlreadyInitialized;
@@ -138,13 +161,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             isInitialized: true
         })
         .emit({ type: commonLanguage.events.Initialized })
-        .reduce({ callback: withNavigatePage, event: { payload: page } }) // As soon as carver user initializes navigate to blocks page
-}
-const withCommandPagesNavigate: Reducer = ({ state, event }) => {
-    const params = event.payload;
-
-    return withState(state)
-        .reduce({ callback: withNavigatePage, event: { payload: params } }) // As soon as carver user initializes navigate to blocks page
+        .reduce({ callback: withNavigatePage, event: { payload: { page, pushHistory: false } } }) // As soon as carver user initializes navigate to blocks page
 }
 
 const reducer: Reducer = ({ state, event }) => {
@@ -160,6 +177,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
 
         .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
+        .reduce({ type: commonLanguage.commands.Pages.NavigateByPathname, event, callback: withCommandPagesNavigateByPathname })
 
         .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
         .reduce({ type: commonLanguage.queries.AddPageWidgetContexts, event, callback: withQueryAddPageWidgetContexts })
@@ -180,7 +198,8 @@ const commonLanguage = {
             Emit: 'WIDGETS:EMIT'
         },
         Pages: {
-            Navigate: 'NAVIGATE'
+            Navigate: 'NAVIGATE',
+            NavigateByPathname: 'NAVIGATE_BY_PATHNAME'
         }
     },
     events: {

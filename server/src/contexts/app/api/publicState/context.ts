@@ -127,8 +127,16 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
 
 
 
-    const { page, widgetContexts } = event.payload
+    const { page, widgetContexts, pushHistory } = event.payload
     const { title, breadcrumbs, pathname } = page as Page;
+
+    // Only emit that page changed if pushHistory is true
+    const emitPageNavigatedEvent = pushHistory ? [{
+        type: commonLanguage.events.PublicEvents.Emit,
+        payload: {
+            type: commonLanguage.events.PublicEvents.PageNavigated
+        }
+    }] : []
 
     return withState(state)
         .set({
@@ -147,12 +155,8 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
                         widgets: widgetContexts,
                         page: { title, breadcrumbs, pathname }
                     }
-                }, {
-                    type: commonLanguage.events.PublicEvents.Emit,
-                    payload: {
-                        type: commonLanguage.events.PublicEvents.PageNavigated
-                    }
-                }
+                },
+                ...emitPageNavigatedEvent
             ]
         });
 }

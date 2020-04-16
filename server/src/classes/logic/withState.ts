@@ -39,6 +39,11 @@ const withState = (state: any) => {
         return stateChain;
     }
     stateChain.emit = (event: Event) => {
+        // By checking if event is null we can do conditional event emits
+        if (!event) {
+            return stateChain;
+        }
+
         stateChain.state = {
             ...stateChain.state,
             emit: [

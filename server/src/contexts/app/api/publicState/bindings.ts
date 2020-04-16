@@ -47,12 +47,12 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
                 switch (event.type) {
                     case carverUserContext.commonLanguage.events.Pages.Navigated:
                         {
-                            const { page, widgetContexts } = event.payload;
+                            const { page, widgetContexts, pushHistory } = event.payload;
 
                             await publicState.dispatch({
                                 id,
                                 type: publicStateContext.commonLanguage.commands.Pages.Navigate,
-                                payload: { page, widgetContexts }
+                                payload: { page, widgetContexts, pushHistory }
                             });
                         }
                         break;
