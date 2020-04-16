@@ -74,9 +74,9 @@ const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
 
 const withNavigatePage: Reducer = ({ state, event }) => {
     const { page, pushHistory } = event.payload
+    console.log('navigate page:', page, pushHistory);
     const pageData = getPage(page);
 
-    console.log('navigate page:', page, pushHistory);
 
     return withState(state)
         .query(commonLanguage.queries.AddPageWidgetContexts, { page: pageData, pushHistory });

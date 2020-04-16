@@ -90,7 +90,26 @@ const getPage = (params: any): Page => {
     }
 }
 
+//@todo theortically this can be matched with named regex groups (that way we don't even need this method)
 const findPageByPathname = (pathname: string) => {
+    // Specific block (ex: /blocks/1000)
+    const blockMatch = pathname.match(/^\/blocks\/([0-9]{1,64})$/);
+    if (blockMatch) {
+        return { page: 'block', height: Number(blockMatch[1]) };
+    }
+
+    // Specific address (ex: /addresses/bSJhN1...)
+    const addressMatch = pathname.match(/^\/addresses\/([a-zA-Z0-9]{1,64})$/);
+    if (addressMatch) {
+        return { page: 'address', label: addressMatch[1] };
+    }
+
+    // Specific transaction (ex: /transactions/fe6259a...)
+    const transactionMatch = pathname.match(/^\/transactions\/([a-zA-Z0-9]{1,64})$/);
+    if (transactionMatch) {
+        return { page: 'tx', txid: transactionMatch[1] };
+    }
+
     switch (pathname) {
         case '/':
         case '/blocks':

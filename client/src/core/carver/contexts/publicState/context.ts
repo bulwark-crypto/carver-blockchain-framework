@@ -13,10 +13,14 @@ const emitPublicEvent = (state: any, event: Event) => {
     switch (event.type) {
         case commonLanguage.events.PublicEvents.PageNavigated:
             if (state.page) {
+                const { pushHistory } = event.payload;
+
                 const { title, pathname } = state.page;
                 document.title = `${title} - Carver Framework`;
 
-                window.history.pushState({ pathname }, `${title} - Carver Framework`, pathname);
+                if (pushHistory) {
+                    window.history.pushState({ pathname }, `${title} - Carver Framework`, pathname);
+                }
             } else {
                 document.title = `Carver Framework`;
             }
