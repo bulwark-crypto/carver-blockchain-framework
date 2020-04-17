@@ -8,22 +8,27 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
     const leftOptions: BasicListOptions = {
         rows: [
             {
-                key: 'height',
-                title: 'Height',
+                key: 'date',
+                title: 'Date',
+                format: (row) => dateFormat({ date: row.date })
             },
             {
-                key: 'confirmations',
-                title: 'Confirmations'
+                key: 'height',
+                title: 'Block #',
             },
             {
                 key: 'hash',
-                title: 'Hash'
+                title: 'Block Hash'
             }
         ],
         clickable: false
     }
     const rightOptions: BasicListOptions = {
         rows: [
+            {
+                key: 'confirmations',
+                title: 'Confirmations'
+            },
             {
                 key: 'difficulty',
                 title: 'Difficulty'
@@ -34,11 +39,6 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
                 format: (row) => {
                     return `${(row.size / 1024).toFixed(2)} kB`;
                 }
-            },
-            {
-                key: 'date',
-                title: 'Date',
-                format: (row) => dateFormat({ date: row.date })
             },
 
         ],

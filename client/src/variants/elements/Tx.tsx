@@ -8,17 +8,17 @@ const VariantTx: React.FC<VariantProps> = React.memo(({ state }) => {
     const options: BasicListOptions = {
         rows: [
             {
-                key: 'txid',
-                title: 'Transaction Hash',
+                key: 'time',
+                title: 'time'
             },
             {
                 key: 'confirmations',
                 title: 'Confirmations'
             },
             {
-                key: 'time',
-                title: 'time'
-            }
+                key: 'txid',
+                title: 'Transaction Hash',
+            },
         ],
         clickable: false
     }
