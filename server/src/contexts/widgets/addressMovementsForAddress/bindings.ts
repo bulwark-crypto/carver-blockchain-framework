@@ -2,7 +2,7 @@ import { withContext } from '../../../classes/logic/withContext';
 
 import tableContext from '../common/table/context'
 import addressMovementsContext from '../../app/sync/addressMovements/context'
-import { WidgetBindingParams } from '../../app/carverUser/context'
+import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
 
 interface VariantParams {
     label: string;
@@ -51,6 +51,10 @@ const bindContexts = async ({ carverUser, contextMap, id, userWidgetsContextStor
     }
 
     withContext(widget)
+        .handleQuery(tableContext.commonLanguage.queries.SelectRow, async ({ row }) => {
+            const { txid } = row;
+            await carverUser.dispatch({ type: carverUserContext.commonLanguage.commands.Pages.Navigate, payload: { page: 'tx', txid } });
+        })
         .handleQuery(tableContext.commonLanguage.queries.FindPage, async (pageQuery) => {
             const queriedAddressMovements = await addressMovements.queryStorage(addressMovementsContext.commonLanguage.storage.FindManyByPage, pageQuery);
 
