@@ -4,8 +4,26 @@ import tableContext from '../common/table/context'
 import syncRequiredMovementsContext from '../../app/sync/requiredMovements/context'
 import carverUserContext, { WidgetBindingParams } from '../../app/carverUser/context'
 
+/**
+ * [Shared] We'll ask for some data, how will it be mapped back in the response?
+ */
+export enum MapType {
+    /**
+     * These transactions are displayed on "/blocks/XXXXX"
+     */
+    Block,
+    /**
+     * These transactions are displayed on "/transactions"
+     */
+    Transactions
+}
+interface VariantParams {
+    height: number;
+    variant: string;
+    mapType?: MapType;
+}
 const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
-    const { height, variant } = variantParams;
+    const { height, variant, mapType }: VariantParams = variantParams;
 
     const { registeredContext: widget } = await userWidgetsContextStore.register({
         id,
@@ -14,7 +32,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
         inMemory: true
     });
 
-    const filter = height ? { height } : { isReward: false }
+    const filter = height ? { height } : { isReward: false } //@todo I feel like we should have an enum to represent what type of data is being passed in
     await widget.dispatch({ type: tableContext.commonLanguage.commands.SetInitialState, payload: { filter } })
 
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
@@ -23,18 +41,33 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
 
     // Only return partial getinfo information (Other known fields are not useful)
     const getRowsFromtTxs = (txs: any[]) => {
-        return txs.map(({ date, txid, height, txType, totalAmountIn, totalAmountOut, totalCountIn, totalCountOut }: any) => {
-            return {
-                id: txid, //@todo id is only temporary until you can specify which key to use for id on frontend tables
-                date,
-                txid,
-                height,
-                txType,
-                totalAmountIn,
-                totalAmountOut,
-                totalCountIn,
-                totalCountOut
-            };
+        console.log('**txs:', txs);
+        return txs.map(({ date, txid, height, txType, totalAmountIn, totalAmountOut, totalCountIn, totalCountOut, amount }: any) => {
+            switch (mapType) {
+                case MapType.Block:
+                    return {
+                        id: txid, //@todo id is only temporary until you can specify which key to use for id on frontend tables
+                        txid,
+                        txType,
+                        totalAmountIn,
+                        totalAmountOut,
+                        totalCountIn,
+                        totalCountOut,
+                        amount
+                    };
+                case MapType.Transactions:
+                    return {
+                        id: txid, //@todo id is only temporary until you can specify which key to use for id on frontend tables
+                        date,
+                        txid,
+                        height,
+                        txType,
+                        totalAmountIn,
+                        totalAmountOut,
+                        totalCountIn,
+                        totalCountOut
+                    };
+            }
         });
     }
 
@@ -60,7 +93,8 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
             return {
                 rows,
                 count,
-                pageQuery
+                pageQuery,
+                mapType
             }
         })
 

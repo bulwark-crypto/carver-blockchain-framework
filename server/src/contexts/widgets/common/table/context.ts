@@ -33,7 +33,7 @@ const withQueryFindPage: Reducer = ({ state, event }) => {
 }
 
 const withQueryFindInitialState: Reducer = ({ state, event }) => {
-    const { rows, count, pageQuery } = event.payload
+    const { rows, count, pageQuery, ...restOfState } = event.payload
 
     const { hidePagination } = state;
 
@@ -48,7 +48,8 @@ const withQueryFindInitialState: Reducer = ({ state, event }) => {
                 rows,
                 pageQuery,
                 count,
-                hidePagination
+                hidePagination,
+                ...restOfState // Allows to pass in some defining props such as mapType (to explain to client how to display data)
             }
         });
 }

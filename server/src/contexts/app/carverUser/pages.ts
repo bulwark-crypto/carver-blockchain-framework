@@ -1,3 +1,4 @@
+import { MapType as TxsMapType } from "../../widgets/txs/bindings";
 
 interface Breadcrumb {
     title: string;
@@ -28,7 +29,7 @@ const getPage = (params: any): Page => {
             return {
                 title: 'Transactions',
                 variants: [
-                    { variant: 'txs' }
+                    { variant: 'txs', mapType: TxsMapType.Transactions }
                 ],
                 breadcrumbs: [
                     { title: 'Transactions' }
@@ -52,7 +53,7 @@ const getPage = (params: any): Page => {
                 title: `Block #${height}`,
                 variants: [
                     { variant: 'blockInfo', height },
-                    { variant: 'txs', height }
+                    { variant: 'txs', height, mapType: TxsMapType.Block }
                 ],
                 breadcrumbs: [
                     { title: `Blocks` },
