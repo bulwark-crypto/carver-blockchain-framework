@@ -10,7 +10,7 @@ const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
             {
                 key: 'date',
                 title: 'Date',
-                format: (row) => dateFormat(row.date)
+                format: (row) => dateFormat({ date: row.date })
             },
             {
                 key: 'txid',
