@@ -28,7 +28,7 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
                     {
                         key: 'date',
                         title: 'Date',
-                        format: (row: any) => dateFormat({ date: row.date })
+                        format: (row: any) => dateFormat({ date: row.date, hideAgo: true })
                     },
                     {
                         key: 'height',

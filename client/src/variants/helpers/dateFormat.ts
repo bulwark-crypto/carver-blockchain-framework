@@ -9,6 +9,7 @@ import moment from 'moment';
 interface DateFormatParams {
     date?: Date;
     fmt?: string;
+    hideAgo?: boolean;
 }
 const dateFormat = (params: DateFormatParams) => {
     const options = {
@@ -16,9 +17,15 @@ const dateFormat = (params: DateFormatParams) => {
         fmt: 'YYYY-MM-DD HH:mm:ss',
         ...params
     }
+    const { hideAgo } = params;
 
     const utcMoment = moment(options.date).utc();
-    return `${utcMoment.format(options.fmt)} UTC (${utcMoment.fromNow()})`;
+
+    const date = `${utcMoment.format(options.fmt)} UTC`;
+    if (hideAgo) {
+        return date;
+    }
+    return `${date} (${utcMoment.fromNow()})`;
 };
 
 export default dateFormat
