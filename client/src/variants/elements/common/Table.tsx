@@ -135,7 +135,7 @@ const VariantCommonTable: React.FC<Props> = React.memo(({ state, options, rowMap
         return <TableFooter>
             <TableRow>
                 <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
+                    rowsPerPageOptions={state.count >= 10 ? [5, 10, 25] : []}
                     count={state.count}
                     rowsPerPage={state.pageQuery.limit}
                     page={state.pageQuery.page}
