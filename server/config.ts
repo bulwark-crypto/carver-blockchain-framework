@@ -1,3 +1,14 @@
+const api = {
+    socket: {
+        port: 5000,
+        maxConnections: 256, // @todo
+        maxReservations: 32, //@todo
+        reservationTimeoutMs: 30 * 1000 // @todo
+    },
+    rest: {
+
+    }
+}
 
 export const config = {
     rpc: {
@@ -16,17 +27,8 @@ export const config = {
 
         dbName: 'carverFramework',
     },
-    api: {
-        socket: {
-            port: 5000,
-            maxConnections: 256, // @todo
-            maxReservations: 32, //@todo
-            reservationTimeoutMs: 30 * 1000 // @todo
-        },
-        rest: {
+    api,
 
-        }
-    },
     rabbitmq: {
         url: 'amqp://172.25.0.103?heartbeat=5s' // from docker-compose.yml
     },
