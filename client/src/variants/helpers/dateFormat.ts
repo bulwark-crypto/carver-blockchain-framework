@@ -15,17 +15,20 @@ const dateFormat = (params: DateFormatParams) => {
     const options = {
         date: new Date(),
         fmt: 'YYYY-MM-DD HH:mm:ss',
+        maxDays: 31 * 3, // Stop show (xxx ago) on dates over this many days
         ...params
     }
-    const { hideAgo } = params;
+    const { date, hideAgo, maxDays } = options;
 
-    const utcMoment = moment(options.date).utc();
+    const utcMoment = moment(date).utc();
 
-    const date = `${utcMoment.format(options.fmt)} UTC`;
-    if (hideAgo) {
-        return date;
+    const dateUtc = `${utcMoment.format(options.fmt)} UTC`;
+    const daysDiff = moment().diff(utcMoment, "days");
+
+    if (hideAgo || daysDiff > maxDays) {
+        return dateUtc;
     }
-    return `${date} (${utcMoment.fromNow()})`;
+    return `${dateUtc} (${utcMoment.fromNow()})`;
 };
 
 export default dateFormat

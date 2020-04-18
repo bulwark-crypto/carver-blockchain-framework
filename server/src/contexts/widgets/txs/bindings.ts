@@ -41,7 +41,6 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
 
     // Only return partial getinfo information (Other known fields are not useful)
     const getRowsFromtTxs = (txs: any[]) => {
-        console.log('**txs:', txs);
         return txs.map(({ date, txid, height, txType, totalAmountIn, totalAmountOut, totalCountIn, totalCountOut, amount }: any) => {
             switch (mapType) {
                 case MapType.Block:
