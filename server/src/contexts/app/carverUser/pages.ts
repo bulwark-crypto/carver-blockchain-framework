@@ -1,9 +1,15 @@
 import { MapType as TxsMapType } from "../../widgets/txs/bindings";
 
+/**
+ * [Shared]
+ */
 interface Breadcrumb {
     title: string;
-    link?: string;
+    pathname?: string;
 }
+/**
+ * [Shared]
+ */
 export interface Page {
     title: string;
     breadcrumbs?: Breadcrumb[];
@@ -56,7 +62,7 @@ const getPage = (params: any): Page => {
                     { variant: 'txs', height, mapType: TxsMapType.Block }
                 ],
                 breadcrumbs: [
-                    { title: `Blocks` },
+                    { title: `Blocks`, pathname: '/blocks' },
                     { title: `${height}` },
                 ],
                 pathname: `/blocks/${height}`
@@ -69,7 +75,7 @@ const getPage = (params: any): Page => {
                     { variant: 'addressMovementsForAddress', label }
                 ],
                 breadcrumbs: [
-                    { title: `Addresses` },
+                    { title: `Addresses`, pathname: '/addresses' },
                     { title: `${label}` },
                 ],
                 pathname: `/addresses/${label}`
@@ -83,7 +89,7 @@ const getPage = (params: any): Page => {
                     { variant: 'addressMovementsForTx', txid }
                 ],
                 breadcrumbs: [
-                    { title: `Transactions` },
+                    { title: `Transactions`, pathname: '/transactions' },
                     { title: `${txid}` },
                 ],
                 pathname: `/transactions/${txid}`

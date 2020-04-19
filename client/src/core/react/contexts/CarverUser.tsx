@@ -5,7 +5,7 @@ import { reducer as carverUserReducer, initialState as carverUserInitialState } 
 interface Breadcrumb {
     title: string;
     href?: string;
-    link?: string;
+    pathname?: string;
 }
 interface Page {
     title: string;
