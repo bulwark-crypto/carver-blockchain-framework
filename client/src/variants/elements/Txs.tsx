@@ -22,6 +22,8 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
     const { mapType }: { mapType: MapType } = state
 
     const getColumns = () => {
+        // Txs can be represented in few different views. Each view will be focused around a specific area and some columns will be visible/hidden.
+        // Note that the other columns are not passed in the variant data as the logic is shared.
         switch (mapType) {
             case MapType.Transactions:
                 return [

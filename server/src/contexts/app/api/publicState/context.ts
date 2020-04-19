@@ -2,12 +2,14 @@ import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 import { WidgetContext } from '../../carverUser/context';
 import { Page } from '../../carverUser/pages';
+import { config } from '../../../../../config';
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
     const { id } = event.payload;
+    const { coin } = state;
 
     return withState(state)
         .set({
@@ -19,9 +21,10 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             payload: [{
                 type: commonLanguage.events.Reduced, // Add/Override these fields ...
                 payload: {
-                    id
+                    id,
+                    coin
                 }
-            }] // Emits publicState id to frontend
+            }] // Emits initial publicState to frontend
         });
 }
 
@@ -227,8 +230,14 @@ const commonLanguage = {
     }
 }
 
+
+const { coin } = config;
 const initialState = {
-    widgets: [] as any[]
+    widgets: [] as any[],
+    /**
+     * @todo note that coin is hardcoded in the public state (When you initialize carver user the coin is hardcoded until there is a coin selection.)
+     */
+    coin
 }
 
 export default {

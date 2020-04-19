@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@material-ui/core": "^4.9.8",
+    "@material-ui/core": "^4.9.11",
     "@material-ui/icons": "^4.9.1",
     "@types/jest": "24.0.22",
-    "@types/lodash": "^4.14.149",
+    "@types/lodash": "^4.14.150",
     "@types/node": "12.12.7",
     "@types/react": "16.9.11",
     "@types/react-dom": "16.9.4",
     "axios": "^0.19.2",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
+    "numeral": "^2.0.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.0",
@@ -41,7 +42,8 @@
     ]
   },
   "devDependencies": {
-    "ts-node": "^8.8.1",
+    "@types/numeral": "0.0.26",
+    "ts-node": "^8.8.2",
     "typescript": "^3.8.3"
   }
 }

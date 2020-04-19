@@ -25,6 +25,30 @@ export interface WidgetBindingParams {
     variantParams: any; // Will always contain at least { variant }
 }
 
+interface CoinFormat {
+    type: string;
+    format: string;
+}
+/**
+ * These are formatting suggestions. The number that is passed to a client, the client can choose to display it in this format. Each coin can have it's own set of formats.
+ */
+interface CoinFormats {
+    amount: CoinFormat, // Basic amount 
+    tooltip: CoinFormat, // Hovering over a number will show a larger percision tooltip
+}
+/**
+ * [Shared]
+ */
+export interface Coin {
+    name: string;
+    longName: string;
+    shortName: string;
+    decimals: number;
+    formats: CoinFormats;
+    websiteUrl: string;
+    masternodeCollateral: number;
+}
+
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
     const newWidgetContexts = event.payload as WidgetContext[];
     const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);

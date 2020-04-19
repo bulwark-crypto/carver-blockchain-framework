@@ -1,3 +1,5 @@
+import { Coin } from "./src/contexts/app/carverUser/context"
+
 const api = {
     socket: {
         port: 5000,
@@ -10,7 +12,25 @@ const api = {
     }
 }
 
+
+/**
+ * @todo At the moment the coin is hard-coded in the server config. The plan is to move this out during cross-coin support.
+ */
+const coin: Coin = {
+    name: 'Bulwark',
+    shortName: 'BWK',
+    decimals: 2,
+    formats: {
+        amount: { type: 'numerical', format: '0,0.00' },
+        tooltip: { type: 'numerical', format: '0,0.0000000000' },// Hovering over a number will show a larger percision tooltip
+    },
+    longName: 'Bulwark Cryptocurrency',
+    websiteUrl: 'https://bulwarkcrypto.com/',
+    masternodeCollateral: 5000 // MN ROI% gets based on this number. If your coin has multi-tiered masternodes then set this to lowest tier (ROI% will simply be higher for bigger tiers)
+}
+
 export const config = {
+    coin,
     rpc: {
         host: '172.25.0.110',
         port: '52547',
