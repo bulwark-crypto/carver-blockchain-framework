@@ -7,9 +7,14 @@ import TxsElement from './elements/Txs'
 import TxElement from './elements/Tx'
 import AddressMovementsForTxElement from './elements/AddressMovementsForTx'
 import AddressMovementsForAddressElement from './elements/AddressMovementsForAddress'
+import { Coin } from '../core/carver/sharedInterfaces'
 
 export interface VariantProps {
     state: any;
+    /**
+     * All variants have access to the currently selected coin
+     */
+    coin: Coin;
 }
 export interface Configuration {
     title: string;

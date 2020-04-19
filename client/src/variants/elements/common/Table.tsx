@@ -26,7 +26,8 @@ const commonLanguage = {
         UpdateLimit: 'UPDATE_LIMIT'
     }
 }
-interface Props extends VariantProps {
+interface Props {
+    state: any;
     options: VariantCommonTableOptions;
     rowMap?: (rows: any[]) => any;
 }

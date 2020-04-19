@@ -1,21 +1,5 @@
 import { MapType as TxsMapType } from "../../widgets/txs/bindings";
-
-/**
- * [Shared]
- */
-interface Breadcrumb {
-    title: string;
-    pathname?: string;
-}
-/**
- * [Shared]
- */
-export interface Page {
-    title: string;
-    breadcrumbs?: Breadcrumb[];
-    variants: any[];
-    pathname?: string;
-}
+import { Page } from './sharedInterfaces'
 
 const getPage = (params: any): Page => {
     const { page } = params;

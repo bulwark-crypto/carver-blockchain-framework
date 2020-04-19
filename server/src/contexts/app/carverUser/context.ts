@@ -2,7 +2,9 @@ import { Context } from '../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../classes/logic/withState'
 import { RemoteContextStore, ContextMap } from '../../../classes/contexts/contextMap';
 import { RegisteredContext } from '../../../classes/contexts/registeredContext';
-import { getPage, Page, findPageByPathname } from './pages'
+import { getPage, findPageByPathname } from './pages'
+import { config } from '../../../../config';
+import { Page } from './sharedInterfaces';
 
 interface DispatchToWidgetPayload {
     id: string;
@@ -23,30 +25,6 @@ export interface WidgetBindingParams {
     carverUser?: RegisteredContext;
     carverUserId?: string;
     variantParams: any; // Will always contain at least { variant }
-}
-
-interface CoinFormat {
-    type: string;
-    format: string;
-}
-/**
- * These are formatting suggestions. The number that is passed to a client, the client can choose to display it in this format. Each coin can have it's own set of formats.
- */
-interface CoinFormats {
-    amount: CoinFormat, // Basic amount 
-    tooltip: CoinFormat, // Hovering over a number will show a larger percision tooltip
-}
-/**
- * [Shared]
- */
-export interface Coin {
-    name: string;
-    longName: string;
-    shortName: string;
-    decimals: number;
-    formats: CoinFormats;
-    websiteUrl: string;
-    masternodeCollateral: number;
 }
 
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
@@ -184,7 +162,7 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
             id,
             isInitialized: true
         })
-        .emit({ type: commonLanguage.events.Initialized })
+        .emit({ type: commonLanguage.events.Initialized, payload: { id, coin } })
         .reduce({ callback: withNavigatePage, event: { payload: { page, pushHistory: false } } }) // As soon as carver user initializes navigate to blocks page
 }
 
@@ -252,11 +230,16 @@ const commonLanguage = {
     }
 }
 
+const { coin } = config;
 const initialState = {
     id: null as string,
     isInitialized: false,
     isConnected: false,
-    widgetContexts: [] as WidgetContext[]
+    widgetContexts: [] as WidgetContext[],
+    /**
+     * @todo note that coin is hardcoded in the carver user state (When you initialize carver user the coin is pre-selected until there is a coin selection.)
+     */
+    coin
 }
 
 export default {

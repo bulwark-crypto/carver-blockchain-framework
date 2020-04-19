@@ -4,13 +4,19 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 import { CarverUserContext } from '../contexts/CarverUser'
 import { variantConfigurations, Configuration } from '../../../variants/configuration';
+import { Coin } from '../../carver/sharedInterfaces';
 
 export interface RenderObjectParams {
     state: any;
-    variant: string; //@todo right now we pass the variant key from configurations.ts. Perhaps it's better to pass the entire object instead for more customization
+    variant: string;
+
+    /**
+     * All variants have access to the currently selected coin
+     */
+    coin: Coin;
 }
 
-const RenderObject: React.FC<RenderObjectParams> = ({ state, variant }) => {
+const RenderObject: React.FC<RenderObjectParams> = ({ state, variant, coin }) => {
 
     const variantConfiguration = variantConfigurations.get(variant)
     if (!variantConfiguration) {
@@ -21,7 +27,7 @@ const RenderObject: React.FC<RenderObjectParams> = ({ state, variant }) => {
 
     const getWidgetContents = () => {
 
-        return <variantConfiguration.element state={state} />
+        return <variantConfiguration.element state={state} coin={coin} />
     }
 
     return <Grid item {...gridBreakpoints}>

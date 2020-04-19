@@ -4,7 +4,9 @@ import { VariantCommonTable, VariantCommonTableOptions } from './common/Table'
 import { Card, CardContent } from '@material-ui/core';
 import dateFormat from '../helpers/dateFormat';
 
-const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
+import { CoinFormatType, coinFormat } from '../helpers/coinFormats';
+
+const VariantBlocks: React.FC<VariantProps> = React.memo(({ state, coin }) => {
     const options: VariantCommonTableOptions = {
         columns: [
             {
@@ -26,7 +28,14 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
             },
             {
                 key: 'moneysupply',
-                title: 'Supply'
+                title: 'Supply',
+                format: (row) => {
+                    return coinFormat({
+                        value: row.moneysupply,
+                        type: CoinFormatType.Amount,
+                        coin
+                    })
+                }
             },
         ],
         clickable: true

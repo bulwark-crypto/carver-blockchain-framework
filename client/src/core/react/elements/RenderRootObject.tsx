@@ -83,7 +83,9 @@ const RenderRootObject: React.FC = () => {
         if (!carverUserState.widgets) {
             return <Box>Loading...</Box>
         }
-        return <RenderObject state={carverUserState.widgets} variant={'widgetsContainer'} />;
+
+        //@todo I feel like we can just remove this widgetsContainer variant all together.
+        return <RenderObject state={carverUserState.widgets} coin={carverUserState.coin} variant={'widgetsContainer'} />;
     }
 
     return <>

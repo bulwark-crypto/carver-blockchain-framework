@@ -58,10 +58,12 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
                         break;
                     case carverUserContext.commonLanguage.events.Initialized:
                         {
+                            const { id, coin } = event.payload;
+
                             await publicState.dispatch({
                                 id,
                                 type: publicStateContext.commonLanguage.commands.Initialize,
-                                payload: { id }
+                                payload: { id, coin }
                             });
                         }
                         break;

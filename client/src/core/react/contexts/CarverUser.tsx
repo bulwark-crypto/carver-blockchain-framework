@@ -1,21 +1,8 @@
 import React, { useReducer } from 'react';
 
 import { reducer as carverUserReducer, initialState as carverUserInitialState } from '../../carver/contexts/publicState/context'
+import { CarverUser } from '../../carver/sharedInterfaces';
 
-interface Breadcrumb {
-    title: string;
-    href?: string;
-    pathname?: string;
-}
-interface Page {
-    title: string;
-    breadcrumbs?: Breadcrumb[];
-    variants: any[];
-}
-export interface CarverUser {
-    widgets: any[];
-    page: Page
-}
 export interface CarverUserContextValue {
     state: CarverUser;
     dispatch: any;

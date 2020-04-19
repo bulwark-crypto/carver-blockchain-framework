@@ -1,15 +1,14 @@
 import { Context } from '../../../../classes/interfaces/context'
 import { withState, Reducer } from '../../../../classes/logic/withState'
 import { WidgetContext } from '../../carverUser/context';
-import { Page } from '../../carverUser/pages';
-import { config } from '../../../../../config';
+import { Page } from '../../carverUser/sharedInterfaces';
 
 const withCommandInitialize: Reducer = ({ state, event }) => {
     if (state.isInitialized) {
         throw commonLanguage.errors.isAlreadyInitialized;
     }
-    const { id } = event.payload;
-    const { coin } = state;
+    const { id, coin } = event.payload;
+    const { interfaceShapeVersion } = state;
 
     return withState(state)
         .set({
@@ -22,7 +21,8 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
                 type: commonLanguage.events.Reduced, // Add/Override these fields ...
                 payload: {
                     id,
-                    coin
+                    coin,
+                    interfaceShapeVersion
                 }
             }] // Emits initial publicState to frontend
         });
@@ -231,13 +231,14 @@ const commonLanguage = {
 }
 
 
-const { coin } = config;
 const initialState = {
     widgets: [] as any[],
+
     /**
-     * @todo note that coin is hardcoded in the public state (When you initialize carver user the coin is hardcoded until there is a coin selection.)
+     * If you change sharedInterfaces.ts in either client or server you might need to increment the interface shape version.
+     * This version number ensures both client and server have the same shapes of data (interfaces are in sync).
      */
-    coin
+    interfaceShapeVersion: 1
 }
 
 export default {

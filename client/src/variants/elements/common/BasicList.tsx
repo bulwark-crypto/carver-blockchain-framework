@@ -21,7 +21,8 @@ const commonLanguage = {
         UpdateLimit: 'UPDATE_LIMIT'
     }
 }
-interface Props extends VariantProps {
+interface Props {
+    state: any;
     options: BasicListOptions;
 }
 const BasicList: React.FC<Props> = React.memo(({ state, options }) => {

@@ -1,4 +1,4 @@
-import { Coin } from "./src/contexts/app/carverUser/context"
+import { Coin } from "./src/contexts/app/carverUser/sharedInterfaces"
 
 const api = {
     socket: {
@@ -19,10 +19,10 @@ const api = {
 const coin: Coin = {
     name: 'Bulwark',
     shortName: 'BWK',
-    decimals: 2,
+    displayDecimals: 2,
     formats: {
-        amount: { type: 'numerical', format: '0,0.00' },
-        tooltip: { type: 'numerical', format: '0,0.0000000000' },// Hovering over a number will show a larger percision tooltip
+        amount: { fixedFormat: '0,0.00' },
+        tooltip: { fixedFormat: '0,0.0000000000' },// Hovering over a number will show a larger percision tooltip
     },
     longName: 'Bulwark Cryptocurrency',
     websiteUrl: 'https://bulwarkcrypto.com/',
