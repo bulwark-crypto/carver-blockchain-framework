@@ -68,11 +68,11 @@ const createGlobalRpcInstance = () => {
 }
 
 
-//const globalInstance = createGlobalRpcInstance()
+const globalInstance = createGlobalRpcInstance()
 const createRpcInstance = () => {
-    const rpc = createGlobalRpcInstance()
-    return rpc
-    //return globalInstance;
+    //const rpc = createGlobalRpcInstance()
+    //return rpc
+    return globalInstance;
 }
 //const rpc = createRpcInstance()
 
