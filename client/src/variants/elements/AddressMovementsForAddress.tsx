@@ -3,8 +3,16 @@ import { VariantProps } from '../configuration';
 import { VariantCommonTable, VariantCommonTableOptions } from './common/Table'
 import dateFormat from '../helpers/dateFormat';
 import { Box, Card, CardContent } from '@material-ui/core';
+import { coinFormat, CoinFormatType } from '../helpers/coinFormats';
 
-const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
+const AddressMovements: React.FC<VariantProps> = React.memo(({ state, coin }) => {
+    const formatAmount = (value: number) => {
+        return coinFormat({
+            value,
+            type: CoinFormatType.Amount,
+            coin
+        })
+    }
     const options: VariantCommonTableOptions = {
         columns: [
             {
@@ -21,17 +29,20 @@ const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
                 title: 'Amount',
                 format: (row) => {
                     if (row.amountIn && row.AmountOut) {
-                        return `-${row.amountOut} / +${row.amountIn}`;
+                        return `-${formatAmount(row.amountOut)} / +${formatAmount(row.amountIn)}`;
                     } else if (row.amountIn) {
-                        return `+${row.amountIn}`;
+                        return `+${formatAmount(row.amountIn)}`;
                     } else if (row.amountOut) {
-                        return `-${row.amountOut}`;
+                        return `-${formatAmount(row.amountOut)}`;
                     }
                 }
             },
             {
                 key: 'balance',
                 title: 'Balance',
+                format: (row) => {
+                    return formatAmount(row.balance);
+                }
             }
         ],
         clickable: true

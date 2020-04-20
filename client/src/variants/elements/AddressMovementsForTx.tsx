@@ -3,9 +3,10 @@ import { VariantProps } from '../configuration';
 import { VariantCommonTable, VariantCommonTableOptions } from './common/Table'
 import { Card, CardContent, Grid, Box, makeStyles } from '@material-ui/core';
 import { useSameCardHeightStyle } from '../../classes/sameCardHeightStyle';
+import { coinFormat, CoinFormatType } from '../helpers/coinFormats';
 
 
-const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
+const AddressMovements: React.FC<VariantProps> = React.memo(({ state, coin }) => {
     const sameCardHeightStyle = useSameCardHeightStyle();
 
     const options: VariantCommonTableOptions = {
@@ -16,7 +17,14 @@ const AddressMovements: React.FC<VariantProps> = React.memo(({ state }) => {
             },
             {
                 key: 'amount',
-                title: 'Amount'
+                title: 'Amount',
+                format: (row: any) => {
+                    return coinFormat({
+                        value: row.amount,
+                        type: CoinFormatType.Amount,
+                        coin
+                    })
+                }
             }
         ],
         clickable: true

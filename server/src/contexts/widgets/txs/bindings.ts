@@ -22,6 +22,8 @@ interface VariantParams {
     variant: string;
     mapType?: MapType;
 }
+
+//@todo rename context from txs to blockTxs?
 const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidgetsContextStore, variantParams }: WidgetBindingParams) => {
     const { height, variant, mapType }: VariantParams = variantParams;
 
@@ -32,7 +34,7 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
         inMemory: true
     });
 
-    const filter = height ? { height } : { isReward: false } //@todo I feel like we should have an enum to represent what type of data is being passed in
+    const filter = height ? { height } : { isReward: false } //@todo I feel like we should have an enum to represent what type of data is being filtered
     await widget.dispatch({ type: tableContext.commonLanguage.commands.SetInitialState, payload: { filter } })
 
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });

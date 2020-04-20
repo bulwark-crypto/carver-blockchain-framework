@@ -3,6 +3,7 @@ import { VariantProps } from '../configuration';
 import { VariantCommonTable, VariantCommonTableOptions } from './common/Table'
 import { Card, CardContent } from '@material-ui/core';
 import dateFormat from '../helpers/dateFormat';
+import { coinFormat, CoinFormatType } from '../helpers/coinFormats';
 
 /**
  * [Shared] We'll ask for some data, how will it be mapped back in the response?
@@ -18,7 +19,7 @@ enum MapType {
     Transactions
 }
 
-const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
+const VariantBlocks: React.FC<VariantProps> = React.memo(({ state, coin }) => {
     const { mapType }: { mapType: MapType } = state
 
     const getColumns = () => {
@@ -49,8 +50,15 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
                         title: 'Out'
                     },
                     {
-                        key: 'totalAmountOut',
-                        title: 'Amount'
+                        key: 'totalAmountIn',
+                        title: 'Amount',
+                        format: (row: any) => {
+                            return coinFormat({
+                                value: row.totalAmountIn,
+                                type: CoinFormatType.Amount,
+                                coin
+                            })
+                        }
                     },
                 ]
             case MapType.Block:
@@ -69,7 +77,14 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
                     },
                     {
                         key: 'totalAmountIn',
-                        title: 'Amount'
+                        title: 'Amount',
+                        format: (row: any) => {
+                            return coinFormat({
+                                value: row.totalAmountIn,
+                                type: CoinFormatType.Amount,
+                                coin
+                            })
+                        }
                     }
                 ]
         }
