@@ -1,26 +1,22 @@
 
 import { config } from '../../../config'
+import * as async from 'async';
+
+interface RpcQueueTask {
+    fn: string;
+    params: any[];
+    resolve: any;
+    reject: any;
+}
 
 const createGlobalRpcInstance = () => {
     const rpcLib = require('node-bitcoin-rpc')
     rpcLib.init(config.rpc.host, config.rpc.port, config.rpc.username, config.rpc.password);
 
-    let callsQueue: any[] = []
-    let processing = false;
-
-
-    const callNext = () => {
-        if (callsQueue.length === 0) {
-            return;
-        }
-
-        const { fn, params, resolve, reject } = callsQueue.shift();
-
-        processing = true;
+    const rpcQueue = async.queue<RpcQueueTask>((task, callback) => {
+        const { fn, params, resolve, reject } = task;
 
         rpcLib.call(fn, params, (err: any, data: any) => {
-            processing = false;
-
             if (err || !!data.error) {
                 console.log('Call failed', fn, err || data.error);
 
@@ -31,11 +27,9 @@ const createGlobalRpcInstance = () => {
             } else {
                 resolve(data.result);
             }
-
-            callNext();
+            callback();
         });
-    }
-
+    });
 
     return {
         call: (fn: string, params: any[] = []) => {
@@ -47,21 +41,8 @@ const createGlobalRpcInstance = () => {
                 params = [];
             }
 
-            const addCallToQueue = (resolve: any, reject: any) => {
-                const queueItem = { fn, params, resolve, reject }
-
-                callsQueue.push(queueItem);
-
-                if (processing) {
-                    return;
-                }
-
-                callNext();
-
-            }
-
             return new Promise((resolve, reject) => {
-                addCallToQueue(resolve, reject);
+                rpcQueue.push({ fn, params, resolve, reject })
             });
         }
     }
@@ -70,11 +51,13 @@ const createGlobalRpcInstance = () => {
 
 const globalInstance = createGlobalRpcInstance()
 const createRpcInstance = () => {
-    //const rpc = createGlobalRpcInstance()
-    //return rpc
-    return globalInstance;
+    if (config.rpc.useSingleInstance) {
+        return globalInstance;
+    }
+
+    const rpcInstance = createGlobalRpcInstance()
+    return rpcInstance
 }
-//const rpc = createRpcInstance()
 
 export {
     createRpcInstance

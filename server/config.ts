@@ -29,15 +29,19 @@ const coin: Coin = {
     masternodeCollateral: 5000 // MN ROI% gets based on this number. If your coin has multi-tiered masternodes then set this to lowest tier (ROI% will simply be higher for bigger tiers)
 }
 
+const rpc = {
+    host: '172.25.0.110',
+    port: '52547',
+    username: process.env.RPC_USER, // Comes from .env file
+    password: process.env.RPC_PASSWORD, // Comes from .env file
+    timeoutMs: 8 * 1000, // 8 seconds
+
+    useSingleInstance: true  // If RPC stats to time out because of concurrency, set this to true
+}
+
 export const config = {
     coin,
-    rpc: {
-        host: '172.25.0.110',
-        port: '52547',
-        username: process.env.RPC_USER, // Comes from .env file
-        password: process.env.RPC_PASSWORD, // Comes from .env file
-        timeoutMs: 8 * 1000, // 8 seconds
-    },
+    rpc,
     db: {
         //@todo use env
         url: 'mongodb://172.25.0.102:27017',
@@ -65,16 +69,5 @@ export const config = {
              */
             maxLength: 10000
         }
-    },
-
-
-    /**
-     * Default node-ipc settings
-     * @todo remove
-     */
-    ipc: {
-        networkHost: '127.0.0.1',
-        networkPort: 8000,
-        silent: false // set to false for debugging (both server and client)
     },
 }
