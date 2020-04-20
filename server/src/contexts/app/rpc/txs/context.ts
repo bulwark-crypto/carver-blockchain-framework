@@ -20,11 +20,14 @@ const withFetchNextTx: Reducer = ({ state, event }) => {
 const withHandleRequestGetTx: Reducer = ({ state, event }) => {
     const { rpcTx, height, sequence } = event.payload;
 
+    const date = new Date(rpcTx.time * 1000);
+
     return withState(state)
         .store(commonLanguage.storage.InsertOne, {
             ...rpcTx,
             height,
-            sequence
+            sequence,
+            date
         })
         .emit({
             type: commonLanguage.events.NewTxFound,

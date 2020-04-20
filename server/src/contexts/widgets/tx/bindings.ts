@@ -20,9 +20,9 @@ const bindContexts = async ({ carverUser, carverUserId, contextMap, id, userWidg
     withContext(widget)
         .handleQuery(basicListContext.commonLanguage.queries.FindInitialState, async () => {
 
-            const { confirmations, time } = await rpcTxs.queryStorage(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid); //@todo fetch from page params
+            const { confirmations, time, date } = await rpcTxs.queryStorage(rpcTxsContext.commonLanguage.storage.FindOneByTxId, txid); //@todo fetch from page params
 
-            return { txid, confirmations, time }
+            return { txid, confirmations, time, date }
         })
 
 

@@ -15,7 +15,7 @@ export interface DateFormatParams {
 const dateFormat = (params: DateFormatParams) => {
     const options = {
         date: new Date(),
-        fmt: 'YYYY-MM-DD HH:mm:ss',
+        fmt: 'YYYY/MM/DD HH:mm:ss',
         maxDays: 31 * 3, // Stop show (xxx ago) on dates over this many days
 
         ...config.variants.helpers.dateFormat, // Allows override of defaults from global config
@@ -25,7 +25,7 @@ const dateFormat = (params: DateFormatParams) => {
 
     const utcMoment = moment(date).utc();
 
-    const dateUtc = `${utcMoment.format(options.fmt)} UTC`;
+    const dateUtc = `${utcMoment.format(options.fmt)}`;
     const daysDiff = moment().diff(utcMoment, "days");
 
     if (hideAgo || daysDiff > maxDays) {

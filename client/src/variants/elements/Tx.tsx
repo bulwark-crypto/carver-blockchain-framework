@@ -2,14 +2,16 @@ import React from 'react';
 import { VariantProps } from '../configuration';
 import { BasicList, BasicListOptions } from './common/BasicList'
 import { Card, CardContent } from '@material-ui/core';
+import dateFormat from '../helpers/dateFormat';
 
 const VariantTx: React.FC<VariantProps> = React.memo(({ state }) => {
 
     const options: BasicListOptions = {
         rows: [
             {
-                key: 'time',
-                title: 'time'
+                key: 'date',
+                title: 'Date',
+                format: (row) => dateFormat({ date: row.date })
             },
             {
                 key: 'confirmations',
