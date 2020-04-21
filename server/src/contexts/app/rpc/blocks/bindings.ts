@@ -1,6 +1,6 @@
 import { dbStore } from '../../../../classes/adapters/mongodb/mongoDbInstance'
 
-import { createRpcInstance } from '../../../../classes/libs/rpcInstance'
+import { createRpcInstance, RpcBlockResponse } from '../../../../classes/libs/rpcInstance'
 import { withContext } from '../../../../classes/logic/withContext';
 
 import rpcGetInfoContext from '../getInfo/context'
@@ -8,9 +8,14 @@ import rpcBlocksContext from './context'
 import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 import { initCache } from '../../../../classes/logic/cache'
+import { Cursor } from 'mongodb';
 
 const rpc = createRpcInstance();
 
+/**
+ * Use rpc "getinfo" shape to find current height and then call rpc "getblock" to get a specific block.
+ * This information is stored in "blocks" mongo table.
+ */
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
@@ -61,8 +66,8 @@ const bindContexts = async (contextMap: ContextMap) => {
         .handleQuery(rpcBlocksContext.commonLanguage.queries.GetByHeight, async (height) => {
             //@todo we can split this up into two differnet contexts (RPC:BLOCKHASH, RPC:BLOCK)
             //The current way might throw an exception on either call
-            const hash = await rpc.call('getblockhash', [height]);
-            const block = await rpc.call('getblock', [hash]);
+            const hash = await rpc.call<string>('getblockhash', [height]);
+            const block = await rpc.call<RpcBlockResponse>('getblock', [hash]);
 
             console.log('get block', height);
 
@@ -75,6 +80,7 @@ const bindContexts = async (contextMap: ContextMap) => {
             cache.insert({ data: rpcBlock, keys: [{ height }] }); // Pre-cache by height
         })
         .handleStore(rpcBlocksContext.commonLanguage.storage.FindOneByHeight, async (height) => {
+            //@todo perhaps we should search by block hash? Revisit after unreconciliation.
             return await cache.find({
                 key: { height }, miss: async () => {
                     return await db.collection('blocks').findOne({ height });

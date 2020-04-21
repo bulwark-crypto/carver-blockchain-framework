@@ -32,7 +32,7 @@ const createGlobalRpcInstance = () => {
     });
 
     return {
-        call: (fn: string, params: any[] = []) => {
+        call: <T>(fn: string, params: any[] = []) => {
             if (!fn) {
                 return Promise.reject(new Error('Please provide a rpc method name.'));
             }
@@ -41,7 +41,7 @@ const createGlobalRpcInstance = () => {
                 params = [];
             }
 
-            return new Promise((resolve, reject) => {
+            return new Promise<T>((resolve, reject) => {
                 rpcQueue.push({ fn, params, resolve, reject })
             });
         }
@@ -57,6 +57,16 @@ const createRpcInstance = () => {
 
     const rpcInstance = createGlobalRpcInstance()
     return rpcInstance
+}
+
+// The RPC interfaces below is the mininmum required supported shape for Carver Framework. 
+// If your getinfo looks different, you will have to modify functionality in the framework.
+
+export interface RpcGetinfoResponse {
+    blocks: number;
+}
+export interface RpcBlockResponse {
+    height: number;
 }
 
 export {

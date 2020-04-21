@@ -9,6 +9,10 @@ import { initCache } from '../../../../classes/logic/cache';
 
 const rpc = createRpcInstance();
 
+/**
+ * Use rpc "getblock" shape to find current height and then call rpc "getblock" to get a specific block.
+ * This information is stored in "blocks" mongo table.
+ */
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
@@ -44,6 +48,8 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const resumeState = async () => {
         const height = !!lastTx ? lastTx.height : 0;
+
+        //@todo FIXSYNC! currently if you abrupt during sync in a block with multiple txs we'll skip all the other txs
 
         // Initialize context with the most recent height (So we can resume at next height)
         await rpcTxs.dispatch({

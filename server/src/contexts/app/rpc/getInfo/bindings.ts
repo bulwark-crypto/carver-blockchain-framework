@@ -1,5 +1,5 @@
 import { withContext } from '../../../../classes/logic/withContext';
-import { createRpcInstance } from '../../../../classes/libs/rpcInstance';
+import { createRpcInstance, RpcGetinfoResponse } from '../../../../classes/libs/rpcInstance';
 
 import appContext from '../../context'
 import rpcGetInfoContext from './context'
@@ -7,6 +7,10 @@ import { ContextMap } from '../../../../classes/contexts/contextMap';
 
 const rpc = createRpcInstance();
 
+/**
+ * Use rpc "getinfo" command to find current details. See "getblockchaininfo" for shape details
+ * This rpc information is not retained in permanent store. However it might be useful to store later for time spanshot analytics.
+ */
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
 
@@ -17,11 +21,10 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const app = await appContextStore.getRemote({ context: appContext, replyToContext: rpcGetInfo });
 
-
     // Queries to handle
     withContext(rpcGetInfo)
         .handleQuery(rpcGetInfoContext.commonLanguage.queries.GetLatestRpcGetInfo, async () => {
-            const info: any = await rpc.call('getinfo');
+            const info = await rpc.call<RpcGetinfoResponse>('getinfo');
             console.log('Fetched rpc getinfo:', info.blocks);
             return info;
         })
