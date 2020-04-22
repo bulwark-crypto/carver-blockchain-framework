@@ -34,7 +34,7 @@ const rpc = {
     port: '52547',
     username: process.env.RPC_USER, // Comes from .env file
     password: process.env.RPC_PASSWORD, // Comes from .env file
-    timeoutMs: 8 * 1000, // 8 seconds
+    timeoutMs: 30 * 1000, // 1 minute as the rpc call might be locked
 
     useSingleInstance: true  // If RPC stats to time out because of concurrency, set this to true
 }
@@ -67,7 +67,7 @@ export const config = {
              * Default size of cached items in queue. Contexts can specify their own cache sizes but most will default to this max size. (ex: cache max 10,000 blocks)
              * Uses npm "double-ended-queue" internally
              */
-            maxLength: 10000
+            maxLength: 1000
         }
     },
 }

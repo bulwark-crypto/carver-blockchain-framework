@@ -7,11 +7,6 @@ import appBindings from './contexts/app/bindings'
 import apiRestContext from './contexts/app/api/rest/context'
 import apiRestBindings from './contexts/app/api/rest/bindings'
 
-import apiSocketContext from './contexts/app/api/socket/context'
-import apiSessionBindings from './contexts/app/api/session/bindings'
-
-import apiSocketBindings from './contexts/app/api/socket/bindings'
-
 import rpcGetInfoContext from './contexts/app/rpc/getInfo/context'
 import rpcGetInfoBindings from './contexts/app/rpc/getInfo/bindings'
 
@@ -33,7 +28,6 @@ import addressesBindings from './contexts/app/sync/addresses/bindings'
 import addressMovementsContext from './contexts/app/sync/addressMovements/context'
 import addressMovementBindings from './contexts/app/sync/addressMovements/bindings'
 
-import apiSessionContext from './contexts/app/api/session/context'
 
 import { createContextMap } from './classes/contexts/contextMap'
 
@@ -44,36 +38,6 @@ const startNamespace = async (namespace: string) => {
   await dbStore.initialize(config.db.url, config.db.dbName);
   console.log('Connected to database!');
 
-  /*
-  const getNamespaceContexts = () => {
-    switch (namespace) {
-        return {
-          serveNet: false, // Do not serve these via node-ipc (they will be created locally)
-          contexts: [
-            {
-              context: apiRestContext,
-              bindings: apiRestBindings,
-              id: 'API_REST'
-            },
-            {
-              context: apiSessionContext,
-              bindings: apiSessionBindings,
-              id: 'API_SESSION'
-            },
-            {
-              context: apiSocketContext,
-              bindings: apiSocketBindings,
-              id: 'API_SOCKET'
-            },
-            
-          ]
-        }
-    }
-
-    throw 'Unknown namespace';
-  }
-
-*/
 
   const contextMap = await createContextMap(); // Initialized map with default RabbitMQ channel (from config)
 
@@ -98,7 +62,6 @@ const startNamespace = async (namespace: string) => {
         await appBindings.bindContexts(contextMap);
 
         await apiRestBindings.bindContexts(contextMap);
-        await apiSessionBindings.bindContexts(contextMap);
       }
       break;
   }

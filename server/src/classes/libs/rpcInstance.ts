@@ -1,39 +1,54 @@
 
 import { config } from '../../../config'
 import * as async from 'async';
+import * as uuidv4 from 'uuid/v4'
 
 interface RpcQueueTask {
-    fn: string;
+    method: string;
     params: any[];
     resolve: any;
     reject: any;
 }
 
+import axios from "axios";
+
 const createGlobalRpcInstance = () => {
-    const rpcLib = require('node-bitcoin-rpc')
-    rpcLib.init(config.rpc.host, config.rpc.port, config.rpc.username, config.rpc.password);
+    const axiosInstance = axios.create();
+    const { host, port, username, password } = config.rpc
 
-    const rpcQueue = async.queue<RpcQueueTask>((task, callback) => {
-        const { fn, params, resolve, reject } = task;
+    const id = uuidv4() // Each instantce will get it's own unique id for rpc calls
 
-        rpcLib.call(fn, params, (err: any, data: any) => {
-            if (err || !!data.error) {
-                console.log('Call failed', fn, err || data.error);
+    const rpcEndpoint = `http://${host}:${port}/`;
+    const auth = { username, password }
 
-                const errorResult = err || data.error;
-                const errorResponse = typeof errorResult === 'object' ? JSON.stringify(errorResult) : errorResult;
+    const rpcQueue = async.queue<RpcQueueTask>(async (task, callback) => {
+        const { method, params, resolve, reject } = task;
 
-                reject(new Error(errorResponse));
-            } else {
-                resolve(data.result);
-            }
-            callback();
-        });
+        try {
+            const postData = JSON.stringify({
+                method,
+                params,
+                id
+            })
+            const response = await axiosInstance.post(rpcEndpoint, postData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': postData.length
+                },
+                auth
+            });
+            resolve(response.data.result);
+        } catch (err) {
+            reject(err);
+        }
+        callback();
+
+        //@todo timeout
     });
 
     return {
-        call: <T>(fn: string, params: any[] = []) => {
-            if (!fn) {
+        call: <T>(method: string, params: any[] = []) => {
+            if (!method) {
                 return Promise.reject(new Error('Please provide a rpc method name.'));
             }
 
@@ -42,7 +57,7 @@ const createGlobalRpcInstance = () => {
             }
 
             return new Promise<T>((resolve, reject) => {
-                rpcQueue.push({ fn, params, resolve, reject })
+                rpcQueue.push({ method, params, resolve, reject })
             });
         }
     }

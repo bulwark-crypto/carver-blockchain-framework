@@ -61,27 +61,6 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     await registerSharedWidget({ variant: 'stats', widgetBindings: widgetStatsBindings });
 
-    /*
-    const reserveNewSession = async ({ id, ip }: Reservation) => {
-        const payload = {
-            id,
-            ip // We need to uniquely identify sources so we can rate limit new connections per-ip and prevent spamming reservations
-        }
-
-        // If this succeeds then we reseved a new socket. A new session would be added to apiSession state
-        console.log(`Request new session: ${id}!`);
-
-        //@todo add rate limiting
-        // Create and return a new session with a specific id
-        await apiSession.dispatch({ type: apiSessionContext.commonLanguage.commands.ReserveNewSession, payload })
-
-        //const newSession = await apiSession.queryStorage(apiSessionContext.commonLanguage.storage.FindSessionById, id)
-        // console.log('session by id:', newSession, id);
-
-        return id;
-    }
-*/
-
     /**
      * Start the "reservation server".
      * 
