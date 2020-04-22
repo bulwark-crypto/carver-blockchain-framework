@@ -64,9 +64,12 @@ const createGlobalRpcInstance = () => {
 }
 
 
-const globalInstance = createGlobalRpcInstance()
+let globalInstance: ReturnType<typeof createGlobalRpcInstance> = null
 const createRpcInstance = () => {
     if (config.rpc.useSingleInstance) {
+        if (globalInstance == null) {
+            globalInstance = createGlobalRpcInstance()
+        }
         return globalInstance;
     }
 
