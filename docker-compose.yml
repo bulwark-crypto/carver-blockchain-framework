@@ -50,6 +50,7 @@ services:
       - rabbitmq
     ports:
       - "3001:3001" # reservation api
+      - "4001:9229" # Debugging Port
     command: tail -f /dev/null # For debugging if you comment the line above (to run server manually)
     networks:
       agent:
@@ -66,6 +67,8 @@ services:
       - NODE_ENV=development
       - RPC_USER=${RPC_USER}
       - RPC_PASSWORD=${RPC_PASSWORD}
+    ports:
+      - "4002:9229" # Debugging Port
     depends_on:
       - mongo
       - rabbitmq
