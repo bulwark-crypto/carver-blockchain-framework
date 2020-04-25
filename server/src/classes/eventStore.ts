@@ -13,6 +13,13 @@ interface CreateEventStoreParams {
     storeEvents: boolean;
 }
 
+const localConfig = {
+    /**
+     * How many events to fetch from the event store at a time
+     */
+    batchSize: 100
+}
+
 //@todo remove emitter from here
 const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStoreParams): Promise<EventStore> => {
     //const storedEvents: StoredEvent[] = [];
@@ -127,11 +134,13 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
                     const query = getQuery();
 
                     //@todo look into cursors. Worried that it'll have some sort of internal MB memory limit. This approach might be a bit slower but won't have memory limitation.
-                    const eventsToReplay = await db.collection(eventsCollectionName).find(query).limit(100).toArray(); // batch size of 100
+                    const eventsToReplay = await db.collection(eventsCollectionName).find(query).limit(localConfig.batchSize).toArray(); // batch size of 100
 
                     if (eventsToReplay.length === 0) {
                         break;
                     }
+
+                    const { sequence: lastSequence } = eventsToReplay[eventsToReplay.length - 1];
 
                     // Replay new events
                     for await (const eventToReplay of eventsToReplay) {
@@ -139,7 +148,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
                             throw `Invalid event replay sequence: ${type} ${id}`
                         }
 
-                        await callback(eventToReplay);
+                        await callback(eventToReplay, eventToReplay.sequence === lastSequence);
 
                         subscriber.sequence = eventToReplay.sequence;
                     }
@@ -151,8 +160,10 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
                         break;
                     }
 
+                    const { sequence: lastSequence } = memoryEvents[memoryEvents.length - 1];
+
                     const eventToReplay = memoryEvents.shift();
-                    await callback(eventToReplay);
+                    await callback(eventToReplay, eventToReplay.sequence === lastSequence);
 
                     subscriber.sequence = eventToReplay.sequence;
                 }
@@ -163,6 +174,7 @@ const createEventStore = async ({ emitter, id, storeEvents }: CreateEventStorePa
 
         // Once new event of this type comes to our context, replay all events that occured since the last time it was played
         const stream = (eventToReplay: any) => {
+            //@todo there is probably a good "async" lib pattern for this
             if (storeEvents) {
                 replayEvents();
             } else {

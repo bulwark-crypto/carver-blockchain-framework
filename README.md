@@ -6,12 +6,13 @@ The framework currently features the world's most advanced Masternode / Proof Of
 
 # Installation
 
-- Modify `.env` file and replace all "CHANGEME" lines with a random password. (This will be automated via a script in the future)
-- Install docker and run: `docker compose up -d`. 
+- Modify `.env` file and replace all "CHANGEME" lines with a random password. (This will be automated via a script in the future and there will be some safeguards to ensure you can't install with default passwords)
+- Install Docker and run: `docker compose up -d`. 
 - At the moment you will also need to run `docker-compose exec api bash -c "npm start API"` to start api server. (This will not be required in the future)
+- Carver Framework ships with Bulwark Coin as default. Ensure it's synced up to the tip by running `docker-compose exec bwk bash -c "bulwark-cli -rpcconnect=172.25.0.110 getinfo"`
 - Afer the api server above is loaded run `docker-compose exec sync bash -c "npm start SYNC"` to start sync server. (This will not be required in the future)
 
-You can access frontend on http://localhost:3000/ (this is automatically ran in "client" Docker container). You can see check out [Development & Commands](docs/development.md) for quick start.
+You can access frontend on http://localhost:3000/ (this is automatically ran in Docker "client" container). You can see check out [Development & Commands](docs/development.md) for quick start.
 
 # Help & Documentation
 

@@ -10,7 +10,7 @@ export interface EventStore {
 export interface ReplayEventsParams {
     type?: string;
     sequence?: number;
-    callback: (event: Event) => Promise<void>;
+    callback: (event: Event, isLatest: Boolean) => Promise<void>;
     /**
      * If set to true only stream events that occured after the app was started
      */
