@@ -23,7 +23,10 @@ enum QueueType {
     EventStreamResponse = 'EventStreamResponse',
 
     QueryRequest = 'QueryRequest',
-    QueryResponse = 'QueryResponse'
+    QueryResponse = 'QueryResponse',
+
+    CheckpointRequest = 'CheckpointRequest',
+    CheckpointResponse = 'CheckpointResponse',
 }
 
 interface RemoteRegisteredContext {
@@ -57,11 +60,19 @@ export interface ContextMap {
 
 const localConfig = {
     /**
-     * Only transmit events in batches if it is the latest event OR if the queue is of this size.
+     * Only transmit events in batches if it is the latest event OR if the queue is of this size. (So you'll never get more than this many events but it might just be 1 if it's the latest)
      */
     batchQueueSize: 20,
+
     /**
-     * If we have a lot of events queued up for processing you need to update your logic as your reducer isn't consuming them faster enough.
+     * After this many events we'll create a promise that needs to be resolved. No other events will be sent to the event stream request.
+     * The source of the event stream request must respond to the checkpoint (this will resolve the promise) so more events can be sent.
+     * This is done to avoid flooding the event stream request source with thousands of events that haven't been processed.
+     */
+    checkpointSize: 50,
+
+    /**
+     * If we have a lot of events queued up for processing you need to update your logic as your reducer isn't consuming them fast enough.
      * You will most likely need to update your logic as you shouldn't have this many events in queue to be processed (this events are in memory and most likely need to be in RabbitMQ queue)
      */
     warnQueueLength: 100
@@ -103,6 +114,20 @@ const createContextMap = async (): Promise<ContextMap> => {
     const createContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
+        /**
+         * Contains callbacks for both queries and event streams.
+         * When the remote context replies to the RegisteredContext queue it'll contain a correlationId that we'll call.
+         */
+        const correlationIdCallbacks = new Map<string, any>();
+
+        const getCallbackByCorrelationId = (correlationId: string) => {
+            if (!correlationIdCallbacks.has(correlationId)) {
+                console.log('Correlation id not found:', correlationId);
+                throw commonLanguage.errors.CorrelationIdNotFound;
+            }
+
+            return correlationIdCallbacks.get(correlationId);
+        }
 
         const getNetworkId = (context: Context, contextId: string) => {
             if (!context) {
@@ -120,6 +145,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
 
+
             registeredContexts.add(registeredContext);
             registeredContextsById.set(id, registeredContext);
 
@@ -128,11 +154,29 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                 const eventStreamQueues = new Map<string, AsyncQueue<any>>();
 
+                const performCheckpoint = async (replyTo: string) => {
+
+                    const correlationId = uuidv4();
+
+                    const checkpointPromise = new Promise(() => {
+                        console.log('Checkpoint hit!')
+                    });
+
+                    if (!channel.sendToQueue(replyTo, bufferObject({}), {
+                        correlationId,
+                        type: QueueType.CheckpointRequest
+                    })) {
+                        throw commonLanguage.errors.CheckpointRequestQueueFailed
+                    }
+
+                    await checkpointPromise;
+                }
+
                 await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
                 await channel.consume(queueName, async (msg) => {
-                    const { correlationId, replyTo } = msg.properties;
+                    const { correlationId, replyTo, type } = msg.properties;
 
-                    switch (msg.properties.type) {
+                    switch (type) {
                         // Event stream requests queue (someone will ask for a set of events from a certain position)
                         case QueueType.EventStreamRequest:
                             const replayEventsParams = unbufferObject<ReplayEventsParams>(msg);
@@ -143,26 +187,35 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                                 let eventsQueue: Event[] = []
 
+                                // Every
+                                let checkpointCounter = 0;
+
                                 await registeredContext.streamEvents({
                                     ...replayEventsParams,
                                     callback: async (event, isLatest) => {
                                         eventsQueue.push(event);
 
+                                        //@todo checkpoint system here (require a promise to be filled before continuing to stream more events.)
+
+                                        checkpointCounter++;
+
                                         // Send out events to RabbitMQ if we reached our 
                                         if (eventsQueue.length >= localConfig.batchQueueSize || isLatest) {
-                                            if (!isLatest) {
-                                                console.log('*batch reached:', event.type)
-                                            }
-                                            const queueConfirmation = channel.sendToQueue(replyTo, bufferObject(eventsQueue), {
+                                            if (!channel.sendToQueue(replyTo, bufferObject(eventsQueue), {
                                                 correlationId,
                                                 type: QueueType.EventStreamResponse
-                                            });
-
-                                            if (!queueConfirmation) {
-                                                throw 'Could not queue event response'
+                                            })) {
+                                                throw commonLanguage.errors.EventStreamResponseQueueFailed
                                             }
                                             eventsQueue = [];
 
+                                            // Hold off on sending any more events if checkpoint is required
+                                            if (checkpointCounter >= localConfig.checkpointSize) {
+
+                                                console.log('**checkpointCounter:', checkpointCounter)
+                                                checkpointCounter = 0;
+                                                await performCheckpoint(replyTo);
+                                            }
                                         }
                                     }
                                 })
@@ -177,10 +230,8 @@ const createContextMap = async (): Promise<ContextMap> => {
                             }
                             break;
                         case QueueType.EventStreamResponse:
-                            if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
-                                console.log(correlationId);
-                                throw 'Event Stream Correlation Id Not Found';
-                            }
+
+                            const correlationIdCallback = getCallbackByCorrelationId(correlationId);
 
                             const events = unbufferObject<Event[]>(msg);
                             //channel.ack(msg);
@@ -190,8 +241,6 @@ const createContextMap = async (): Promise<ContextMap> => {
                                 // We don't want to await for each message (as an event can query so it'll deadlock waiting for a query as the event can't finish). We'll add it to queue and process one at a time.
                                 if (!eventStreamQueues.has(event.type)) {
                                     const eventStreamQueue = async.queue(async (event, callback) => {
-
-                                        const correlationIdCallback = registeredContext.correlationIdCallbacks.get(correlationId);
 
                                         //@todo what to do when the event we're streaming throws an exception? We need some form of a retry mechanic.
                                         await correlationIdCallback(event);
@@ -236,19 +285,23 @@ const createContextMap = async (): Promise<ContextMap> => {
                             const reply = unbufferObject<any>(msg);
                             //channel.ack(msg);
 
-                            if (!registeredContext.correlationIdCallbacks.has(correlationId)) {
-                                console.log(correlationId);
-                                throw 'Query Response Correlation Id Not Found';
-                            }
-                            const callbacks = registeredContext.correlationIdCallbacks.get(correlationId);
+                            const callbacks = getCallbackByCorrelationId(correlationId);
 
                             //@todo callbacks.reject(reply) with nack?
-                            registeredContext.correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
-                            callbacks.resolve(reply);
+                            correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
 
+                            callbacks.resolve(reply);
                             break;
+
+                        case QueueType.CheckpointRequest:
+                            break;
+
+                        case QueueType.CheckpointResponse:
+                            break;
+
                         default:
-                            throw 'Unknown queue type';
+                            console.log('Message type not found:', msg.properties.type)
+                            throw commonLanguage.errors.UnknownMessageType;
                     }
 
                 }, { noAck: true });
@@ -286,7 +339,7 @@ const createContextMap = async (): Promise<ContextMap> => {
             const streamEvents = async (params: ReplayEventsParams) => {
                 const correlationId = uuidv4();
 
-                replyToContext.correlationIdCallbacks.set(correlationId, params.callback);
+                correlationIdCallbacks.set(correlationId, params.callback);
 
                 const { type, sequence, sessionOnly } = params;
                 const message = { type, sequence, sessionOnly };
@@ -300,8 +353,9 @@ const createContextMap = async (): Promise<ContextMap> => {
 
             const queryStorage = async (query: string, payload: any) => {
                 const correlationId = uuidv4();
+
                 const queryPromise = new Promise((resolve, reject) => {
-                    replyToContext.correlationIdCallbacks.set(correlationId, { resolve, reject });
+                    correlationIdCallbacks.set(correlationId, { resolve, reject });
                 });
 
                 // Convert to Event and send to queue
@@ -338,6 +392,15 @@ const createContextMap = async (): Promise<ContextMap> => {
 
     return {
         getContextStore
+    }
+}
+
+const commonLanguage = {
+    errors: {
+        CorrelationIdNotFound: 'Query Response Correlation Id Not Found',
+        UnknownMessageType: 'Unknown queue type',
+        EventStreamResponseQueueFailed: 'Failed queueing event stream response',
+        CheckpointRequestQueueFailed: 'Failed queueing checkpoint request'
     }
 }
 
