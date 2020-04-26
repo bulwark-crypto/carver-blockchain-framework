@@ -25,7 +25,6 @@ enum QueueType {
     QueryRequest = 'QueryRequest',
     QueryResponse = 'QueryResponse',
 
-    CheckpointRequest = 'CheckpointRequest',
     CheckpointResponse = 'CheckpointResponse',
 }
 
@@ -152,25 +151,8 @@ const createContextMap = async (): Promise<ContextMap> => {
             const bindRabbitMQ = async () => {
                 const queueName = id;
 
-                const eventStreamQueues = new Map<string, AsyncQueue<any>>();
+                const eventStreamQueues = new Map<string, AsyncQueue<any>>(); // string is the correlationId
 
-                const performCheckpoint = async (replyTo: string) => {
-
-                    const correlationId = uuidv4();
-
-                    const checkpointPromise = new Promise(() => {
-                        console.log('Checkpoint hit!')
-                    });
-
-                    if (!channel.sendToQueue(replyTo, bufferObject({}), {
-                        correlationId,
-                        type: QueueType.CheckpointRequest
-                    })) {
-                        throw commonLanguage.errors.CheckpointRequestQueueFailed
-                    }
-
-                    await checkpointPromise;
-                }
 
                 await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
                 await channel.consume(queueName, async (msg) => {
@@ -199,23 +181,47 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                                         checkpointCounter++;
 
-                                        // Send out events to RabbitMQ if we reached our 
+                                        // Send out events to RabbitMQ if we reached our batch mixe size (or it's most recent event)
                                         if (eventsQueue.length >= localConfig.batchQueueSize || isLatest) {
-                                            if (!channel.sendToQueue(replyTo, bufferObject(eventsQueue), {
-                                                correlationId,
-                                                type: QueueType.EventStreamResponse
-                                            })) {
-                                                throw commonLanguage.errors.EventStreamResponseQueueFailed
-                                            }
-                                            eventsQueue = [];
+
+                                            let checkpointCorrelationId: string = null;
 
                                             // Hold off on sending any more events if checkpoint is required
                                             if (checkpointCounter >= localConfig.checkpointSize) {
+                                                checkpointCorrelationId = uuidv4();
 
-                                                console.log('**checkpointCounter:', checkpointCounter)
+                                                // Push in additional event that event checkpoint was hit. 
+                                                // When the stream requester is parsing events and gets to this event type, he'll reply back with the matching correlationId
+                                                eventsQueue.push({
+                                                    type: commonLanguage.events.CheckpointHit,
+                                                    payload: {
+                                                        correlationId: checkpointCorrelationId,
+                                                        replyTo
+                                                    }
+                                                });
+
+                                                console.log('**checkpoin required:', event.type, replyTo)
                                                 checkpointCounter = 0;
-                                                await performCheckpoint(replyTo);
                                             }
+
+                                            if (!channel.sendToQueue(replyTo, bufferObject(eventsQueue), {
+                                                correlationId,
+                                                type: QueueType.EventStreamResponse
+
+                                            })) {
+                                                throw commonLanguage.errors.EventStreamResponseQueueFailed
+                                            }
+
+                                            eventsQueue = [];
+
+                                            // If we need to perform an event checkpoint, we'll create a promise that needs to be filled by correlationid
+                                            if (checkpointCorrelationId) {
+                                                const checkpointPromise = new Promise((resolve) => {
+                                                    correlationIdCallbacks.set(checkpointCorrelationId, { resolve });
+                                                });
+                                                await checkpointPromise;
+                                            }
+
                                         }
                                     }
                                 })
@@ -236,21 +242,41 @@ const createContextMap = async (): Promise<ContextMap> => {
                             const events = unbufferObject<Event[]>(msg);
                             //channel.ack(msg);
 
-                            // Response will come in as an array of events
-                            for (const event of events) {
+                            if (!eventStreamQueues.has(correlationId)) {
                                 // We don't want to await for each message (as an event can query so it'll deadlock waiting for a query as the event can't finish). We'll add it to queue and process one at a time.
-                                if (!eventStreamQueues.has(event.type)) {
-                                    const eventStreamQueue = async.queue(async (event, callback) => {
+                                const eventStreamQueue = async.queue(async (event: Event, callback) => {
 
-                                        //@todo what to do when the event we're streaming throws an exception? We need some form of a retry mechanic.
-                                        await correlationIdCallback(event);
+                                    // For checkpoints 
+                                    if (event.type === commonLanguage.events.CheckpointHit) {
+                                        const { correlationId: checkpointCorrelationId, replyTo } = event.payload;
+
+                                        if (!channel.sendToQueue(replyTo, bufferObject({
+                                            correlationId: checkpointCorrelationId
+                                        }), {
+                                            correlationId,
+                                            type: QueueType.CheckpointResponse
+
+                                        })) {
+                                            throw commonLanguage.errors.CheckpointResponseQueueFailed
+                                        }
 
                                         callback();
-                                    });
-                                    eventStreamQueues.set(event.type, eventStreamQueue);
-                                }
+                                        return;
+                                    }
 
-                                const asyncQueueByType = eventStreamQueues.get(event.type);
+
+                                    //@todo what to do when the event we're streaming throws an exception? We need some form of a retry mechanic.
+                                    await correlationIdCallback(event);
+
+                                    callback();
+                                });
+                                eventStreamQueues.set(correlationId, eventStreamQueue);
+                            }
+
+                            const asyncQueueByType = eventStreamQueues.get(correlationId);
+
+                            // Response will come in as an array of events
+                            for (const event of events) {
                                 asyncQueueByType.push(event);
 
                                 if (asyncQueueByType.length() > localConfig.warnQueueLength) {
@@ -293,10 +319,16 @@ const createContextMap = async (): Promise<ContextMap> => {
                             callbacks.resolve(reply);
                             break;
 
-                        case QueueType.CheckpointRequest:
-                            break;
 
                         case QueueType.CheckpointResponse:
+                            const checkpointResponseEvent = unbufferObject<any>(msg);
+                            const { correlationId: checkpointCorrelationId } = checkpointResponseEvent;
+
+                            const checkpointCallback = getCallbackByCorrelationId(checkpointCorrelationId)
+                            checkpointCallback.resolve();
+
+                            correlationIdCallbacks.delete(checkpointCorrelationId); // Queries are removed when they are completed
+
                             break;
 
                         default:
@@ -396,11 +428,14 @@ const createContextMap = async (): Promise<ContextMap> => {
 }
 
 const commonLanguage = {
+    events: {
+        CheckpointHit: 'CHECKPOINT_HIT',
+    },
     errors: {
         CorrelationIdNotFound: 'Query Response Correlation Id Not Found',
         UnknownMessageType: 'Unknown queue type',
         EventStreamResponseQueueFailed: 'Failed queueing event stream response',
-        CheckpointRequestQueueFailed: 'Failed queueing checkpoint request'
+        CheckpointResponseQueueFailed: 'Failed queueing checkpoint response'
     }
 }
 
