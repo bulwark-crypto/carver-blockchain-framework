@@ -36,7 +36,7 @@ const rpc = {
     password: process.env.RPC_PASSWORD, // Comes from .env file
     timeoutMs: 30 * 1000, // 1 minute as the rpc call might be locked
 
-    useSingleInstance: false  // If RPC stats to time out because of concurrency, set this to true
+    useSingleInstance: true  // If RPC stats to time out because of concurrency, set this to true (false is experimental)
 }
 
 export const config = {

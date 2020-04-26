@@ -97,6 +97,11 @@ const createContextMap = async (): Promise<ContextMap> => {
     }
 
     const contextStores = new Map<string, RemoteContextStore>();
+    /**
+     * Contains callbacks for both queries and event streams.
+     * When the remote context replies to the RegisteredContext queue it'll contain a correlationId that we'll call.
+     */
+    const correlationIdCallbacks = new Map<string, any>();
 
     const getContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
 
@@ -113,15 +118,10 @@ const createContextMap = async (): Promise<ContextMap> => {
     const createContextStore = async ({ id: contextStoreId }: ContextMapParams): Promise<RemoteContextStore> => {
         const channel = defaultChannel; //@todo this can be specified on per-context store basis
 
-        /**
-         * Contains callbacks for both queries and event streams.
-         * When the remote context replies to the RegisteredContext queue it'll contain a correlationId that we'll call.
-         */
-        const correlationIdCallbacks = new Map<string, any>();
 
-        const getCallbackByCorrelationId = (correlationId: string) => {
+        const getCallbackByCorrelationId = (correlationId: string, type: string) => {
             if (!correlationIdCallbacks.has(correlationId)) {
-                console.log('Correlation id not found:', correlationId);
+                console.log('Correlation id not found:', correlationId, type);
                 throw commonLanguage.errors.CorrelationIdNotFound;
             }
 
@@ -169,7 +169,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                                 let eventsQueue: Event[] = []
 
-                                // Every
+                                // Track how many events were replied back to requester
                                 let checkpointCounter = 0;
 
                                 await registeredContext.streamEvents({
@@ -177,11 +177,9 @@ const createContextMap = async (): Promise<ContextMap> => {
                                     callback: async (event, isLatest) => {
                                         eventsQueue.push(event);
 
-                                        //@todo checkpoint system here (require a promise to be filled before continuing to stream more events.)
-
                                         checkpointCounter++;
 
-                                        // Send out events to RabbitMQ if we reached our batch mixe size (or it's most recent event)
+                                        // Send out events to RabbitMQ if we reached our batch max size or it's the most recent event
                                         if (eventsQueue.length >= localConfig.batchQueueSize || isLatest) {
 
                                             let checkpointCorrelationId: string = null;
@@ -192,6 +190,7 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                                                 // Push in additional event that event checkpoint was hit. 
                                                 // When the stream requester is parsing events and gets to this event type, he'll reply back with the matching correlationId
+                                                //@todo maybe this should be the first event in the batch? That way the response is sent early on while other events are processing.
                                                 eventsQueue.push({
                                                     type: commonLanguage.events.CheckpointHit,
                                                     payload: {
@@ -200,7 +199,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                                                     }
                                                 });
 
-                                                console.log('**checkpoin required:', event.type, replyTo)
+                                                console.log('**checkpoint required:', event.type, replyTo)
                                                 checkpointCounter = 0;
                                             }
 
@@ -237,7 +236,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                             break;
                         case QueueType.EventStreamResponse:
 
-                            const correlationIdCallback = getCallbackByCorrelationId(correlationId);
+                            const correlationIdCallback = getCallbackByCorrelationId(correlationId, msg.properties.type);
 
                             const events = unbufferObject<Event[]>(msg);
                             //channel.ack(msg);
@@ -311,12 +310,12 @@ const createContextMap = async (): Promise<ContextMap> => {
                             const reply = unbufferObject<any>(msg);
                             //channel.ack(msg);
 
-                            const callbacks = getCallbackByCorrelationId(correlationId);
+                            const queryCallback = getCallbackByCorrelationId(correlationId, msg.properties.type);
 
                             //@todo callbacks.reject(reply) with nack?
                             correlationIdCallbacks.delete(correlationId); // Queries are removed when they are completed
 
-                            callbacks.resolve(reply);
+                            queryCallback.resolve(reply);
                             break;
 
 
@@ -324,7 +323,7 @@ const createContextMap = async (): Promise<ContextMap> => {
                             const checkpointResponseEvent = unbufferObject<any>(msg);
                             const { correlationId: checkpointCorrelationId } = checkpointResponseEvent;
 
-                            const checkpointCallback = getCallbackByCorrelationId(checkpointCorrelationId)
+                            const checkpointCallback = getCallbackByCorrelationId(checkpointCorrelationId, msg.properties.type)
                             checkpointCallback.resolve();
 
                             correlationIdCallbacks.delete(checkpointCorrelationId); // Queries are removed when they are completed
@@ -432,7 +431,7 @@ const commonLanguage = {
         CheckpointHit: 'CHECKPOINT_HIT',
     },
     errors: {
-        CorrelationIdNotFound: 'Query Response Correlation Id Not Found',
+        CorrelationIdNotFound: 'Correlation Id Not Found',
         UnknownMessageType: 'Unknown queue type',
         EventStreamResponseQueueFailed: 'Failed queueing event stream response',
         CheckpointResponseQueueFailed: 'Failed queueing checkpoint response'
