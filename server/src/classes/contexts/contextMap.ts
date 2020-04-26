@@ -190,14 +190,17 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                                                 // Push in additional event that event checkpoint was hit. 
                                                 // When the stream requester is parsing events and gets to this event type, he'll reply back with the matching correlationId
-                                                //@todo maybe this should be the first event in the batch? That way the response is sent early on while other events are processing.
-                                                eventsQueue.push({
-                                                    type: commonLanguage.events.CheckpointHit,
-                                                    payload: {
-                                                        correlationId: checkpointCorrelationId,
-                                                        replyTo
-                                                    }
-                                                });
+                                                // This should be the first event in the batch. That way the response is sent early on while other events are processing.
+                                                eventsQueue = [
+                                                    {
+                                                        type: commonLanguage.events.CheckpointHit,
+                                                        payload: {
+                                                            correlationId: checkpointCorrelationId,
+                                                            replyTo
+                                                        }
+                                                    },
+                                                    ...eventsQueue
+                                                ];
 
                                                 console.log('**checkpoint required:', event.type, replyTo)
                                                 checkpointCounter = 0;
@@ -241,26 +244,34 @@ const createContextMap = async (): Promise<ContextMap> => {
                             const events = unbufferObject<Event[]>(msg);
                             //channel.ack(msg);
 
+                            const isCheckpointPerformed = (event: Event) => {
+                                if (event.type === commonLanguage.events.CheckpointHit) {
+                                    const { correlationId: checkpointCorrelationId, replyTo } = event.payload;
+
+                                    if (!channel.sendToQueue(replyTo, bufferObject({
+                                        correlationId: checkpointCorrelationId
+                                    }), {
+                                        correlationId,
+                                        type: QueueType.CheckpointResponse
+
+                                    })) {
+                                        throw commonLanguage.errors.CheckpointResponseQueueFailed
+                                    }
+
+                                    return true;
+                                }
+
+                                return false;
+                            }
+
                             if (!eventStreamQueues.has(correlationId)) {
                                 // We don't want to await for each message (as an event can query so it'll deadlock waiting for a query as the event can't finish). We'll add it to queue and process one at a time.
                                 const eventStreamQueue = async.queue(async (event: Event, callback) => {
 
-                                    // For checkpoints 
-                                    if (event.type === commonLanguage.events.CheckpointHit) {
-                                        const { correlationId: checkpointCorrelationId, replyTo } = event.payload;
-
-                                        if (!channel.sendToQueue(replyTo, bufferObject({
-                                            correlationId: checkpointCorrelationId
-                                        }), {
-                                            correlationId,
-                                            type: QueueType.CheckpointResponse
-
-                                        })) {
-                                            throw commonLanguage.errors.CheckpointResponseQueueFailed
-                                        }
-
+                                    // If event was a checkpoint, reply back to checkpoint requester
+                                    if (isCheckpointPerformed(event)) {
                                         callback();
-                                        return;
+                                        return true;
                                     }
 
 
