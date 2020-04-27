@@ -141,6 +141,7 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
             return;
         }
 
+        //@todo update to async.queue
         // Keep dispatching until there is no futher response from the context
         while (true) {
             event = await dispatchNext(event)

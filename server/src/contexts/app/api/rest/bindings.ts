@@ -35,7 +35,7 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     const carverUserContexts = new Map<string, RegisteredContext>();
 
-    const createContexts = async (id: string, privateKey: string) => {
+    const createCarverUserContexts = async (id: string, privateKey: string) => {
         const carverUser = await carverUserBindings.bindContexts({ contextMap, id, sharedWidgets });
         await publicStateBindings.bindContexts(contextMap, id);
 
@@ -43,7 +43,11 @@ const bindContexts = async (contextMap: ContextMap) => {
     }
     withContext(apiRest)
         .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async ({ id, privateKey }) => {
-            await createContexts(id, privateKey);
+            await createCarverUserContexts(id, privateKey);
+
+            return {
+                id
+            }
         })
         .handleStore(apiRestContext.commonLanguage.storage.FindStats, async () => {
             const { reservations } = apiRestStateStore.state
@@ -53,6 +57,9 @@ const bindContexts = async (contextMap: ContextMap) => {
         });
 
 
+    /**
+     * Shared widgets can be added to multiple carverUsers. They're removed from page but won't be removed from memory.
+     */
     const registerSharedWidget = async ({ variant, widgetBindings }: RegisterShareWidgetParams) => {
         const id = uuidv4();
         const registeredContext = await widgetBindings.bindContexts({ contextMap: contextMap, id, userWidgetsContextStore, variantParams: { variant } })

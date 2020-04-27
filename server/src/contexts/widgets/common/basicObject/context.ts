@@ -1,16 +1,16 @@
 import { withState, Reducer } from '../../../../classes/logic/withState'
 
 const withQueryFindInitialState: Reducer = ({ state, event }) => {
-    const { usersOnline } = event.payload
+    const stats = event.payload
 
     return withState(state)
         .set({
-            usersOnline
+            ...stats
         })
         .emit({
             type: commonLanguage.events.PublicState.Initialized, // Initial public state
             payload: {
-                usersOnline
+                ...stats
             }
         });
 }

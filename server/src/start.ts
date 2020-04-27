@@ -1,31 +1,24 @@
 import { dbStore } from './classes/adapters/mongodb/mongoDbInstance'
 import { config } from '../config'
 
-import appContext from './contexts/app/context'
 import appBindings from './contexts/app/bindings'
 
-import apiRestContext from './contexts/app/api/rest/context'
 import apiRestBindings from './contexts/app/api/rest/bindings'
 
-import rpcGetInfoContext from './contexts/app/rpc/getInfo/context'
+import apiUserStatsBindings from './contexts/app/api/userAnalytics/bindings'
+
 import rpcGetInfoBindings from './contexts/app/rpc/getInfo/bindings'
 
-import rpcBlocksContext from './contexts/app/rpc/blocks/context'
 import rpcBlocksBindings from './contexts/app/rpc/blocks/bindings'
 
-import rpcTxsContext from './contexts/app/rpc/txs/context'
 import rpcTxsBindings from './contexts/app/rpc/txs/bindings'
 
-import utxosContext from './contexts/app/sync/utxos/context'
 import utxosBindings from './contexts/app/sync/utxos/bindings'
 
-import requiredMovementsContext from './contexts/app/sync/requiredMovements/context'
 import requiredMovementsBindings from './contexts/app/sync/requiredMovements/bindings'
 
-import addressesContext from './contexts/app/sync/addresses/context'
 import addressesBindings from './contexts/app/sync/addresses/bindings'
 
-import addressMovementsContext from './contexts/app/sync/addressMovements/context'
 import addressMovementBindings from './contexts/app/sync/addressMovements/bindings'
 
 
@@ -62,6 +55,7 @@ const startNamespace = async (namespace: string) => {
         await appBindings.bindContexts(contextMap);
 
         await apiRestBindings.bindContexts(contextMap);
+        await apiUserStatsBindings.bindContexts(contextMap);
       }
       break;
   }

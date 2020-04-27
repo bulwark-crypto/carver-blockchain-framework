@@ -20,10 +20,15 @@ const withCommandReserveSocket: Reducer = ({ state, event }) => {
                 reservation
             ]
         })
-        .emit({ type: commonLanguage.events.ChannelReserved })
         .query(commonLanguage.queries.CreateSessionContext, { id, privateKey })
 }
 
+const withQueryCreateSessionContext: Reducer = ({ state, event }) => {
+    const { id } = event.payload
+
+    return withState(state)
+        .emit({ type: commonLanguage.events.ChannelReserved, payload: { id } })
+}
 const withCommandAuthorizeSubscriber: Reducer = ({ state, event }) => {
     console.log('*** auth subscriber:')
     console.log(event);
@@ -39,6 +44,7 @@ const withCommandCarverUser: Reducer = ({ state, event }) => {
 }
 const reducer: Reducer = ({ state, event }) => {
     return withState(state)
+        .reduce({ type: commonLanguage.queries.CreateSessionContext, event, callback: withQueryCreateSessionContext })
         .reduce({ type: commonLanguage.commands.ReserveSocket, event, callback: withCommandReserveSocket })
         .reduce({ type: commonLanguage.commands.AuthorizeSubscriber, event, callback: withCommandAuthorizeSubscriber })
         .reduce({ type: commonLanguage.commands.CommandCarverUser, event, callback: withCommandCarverUser });
@@ -60,6 +66,7 @@ const commonLanguage = {
         CommandCarverUser: 'COMMAND_CARVER_USER',
     },
     storage: {
+        //@todo online user count will be moved into userAnalytics
         FindStats: 'FIND_STATS'
     },
     errors: {

@@ -5,13 +5,21 @@ import { BasicList, BasicListOptions } from './common/BasicList'
 import moment from 'moment';
 import { Card, CardContent } from '@material-ui/core';
 
-const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
+const VariantStats: React.FC<VariantProps> = React.memo(({ state }) => {
 
     const options: BasicListOptions = {
         rows: [
             {
                 key: 'usersOnline',
                 title: 'Users Online'
+            },
+            {
+                key: 'pageNavigationsCount',
+                title: 'Session Page Views'
+            },
+            {
+                key: 'currentWidgetContextsCount',
+                title: 'Current Active Widgets'
             }
 
         ],
@@ -26,4 +34,4 @@ const VariantBlocks: React.FC<VariantProps> = React.memo(({ state }) => {
     </Card>
 })
 
-export default VariantBlocks
+export default VariantStats

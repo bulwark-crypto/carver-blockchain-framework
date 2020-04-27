@@ -8,6 +8,10 @@ import { RegisteredContext } from '../../../../classes/contexts/registeredContex
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { config } from '../../../../../config'
 
+/**
+ * Consume carverUser events into a set of frontend updates in form of events. 
+ * The frontend will use JavaScript EventStore to consume these events into a "public state"
+ */
 const bindContexts = async (contextMap: ContextMap, id: string) => {
     const publicStateContextStore = await contextMap.getContextStore({ id: 'PUBLIC_STATES' });
 
