@@ -30,10 +30,25 @@ const withQueryCreateSessionContext: Reducer = ({ state, event }) => {
         .emit({ type: commonLanguage.events.ChannelReserved, payload: { id } })
 }
 const withCommandAuthorizeSubscriber: Reducer = ({ state, event }) => {
-    console.log('*** auth subscriber:')
     console.log(event);
 
+    const { id } = event.payload;
+    console.log('*** auth subscriber:', id)
+
+    //@todo check if id is in list of reservations and mark them as connected
+
     return state;
+}
+const withCommandUnsubscribe: Reducer = ({ state, event }) => {
+    console.log(event);
+
+    const { id } = event.payload;
+    console.log('*** unsubscribe:', id)
+
+    //@todo check if id is in list of reservations
+
+    return withState(state)
+        .query(commonLanguage.queries.RemoveSessionContext, { id })
 }
 const withCommandCarverUser: Reducer = ({ state, event }) => {
     console.log('*** command carver user:', event)
@@ -47,13 +62,15 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.queries.CreateSessionContext, event, callback: withQueryCreateSessionContext })
         .reduce({ type: commonLanguage.commands.ReserveSocket, event, callback: withCommandReserveSocket })
         .reduce({ type: commonLanguage.commands.AuthorizeSubscriber, event, callback: withCommandAuthorizeSubscriber })
+        .reduce({ type: commonLanguage.commands.Unsubscribe, event, callback: withCommandUnsubscribe })
         .reduce({ type: commonLanguage.commands.CommandCarverUser, event, callback: withCommandCarverUser });
 }
 
 const commonLanguage = {
     type: 'API_REST',
     queries: {
-        CreateSessionContext: 'CREATE_SESSION_CONTEXT'
+        CreateSessionContext: 'CREATE_SESSION_CONTEXT',
+        RemoveSessionContext: 'REMOVE_SESSION_CONTEXT',
     },
     events: {
         ChannelReserved: 'CHANNEL_RESERVED',
@@ -62,6 +79,7 @@ const commonLanguage = {
     commands: {
         ReserveSocket: 'RESERVE_SOCKET',
         AuthorizeSubscriber: 'AUTHORIZE_SUBSCRIBER', // Called by nchan
+        Unsubscribe: 'UNSUBSCRIBE', // Called by nchan
 
         CommandCarverUser: 'COMMAND_CARVER_USER',
     },

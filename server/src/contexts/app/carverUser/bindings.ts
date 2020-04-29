@@ -28,6 +28,9 @@ interface BindContextParams {
     id: string;
     sharedWidgets: Map<string, any>;
 }
+/**
+ * Each connected user to the network is represented as a "Carver User". They have a public state (see app/api/publicState context) which represents this user on the frontend.
+ */
 const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams) => {
     const usersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });
     const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });

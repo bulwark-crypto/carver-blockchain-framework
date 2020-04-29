@@ -1,6 +1,8 @@
 server {
+	# Having default page allows for quick check to make sure server is up
 	listen 80 default_server;
 	listen [::]:80 default_server; #ipv6
+	more_clear_headers Server; # Remove Server header
 
 	root /var/www/html;
 
@@ -8,8 +10,9 @@ server {
 
 	server_name nchan;
 
-	location = /authSubscriber {
-		proxy_pass http://172.25.0.100:3001/authSubscriber; # ip/port comes from docker-compose
+	# When user successfully connects to nchan forward request to api reservation server where we'll validate if this subscriber can connect
+	location = /upstream/sub {
+		proxy_pass http://172.25.0.100:3001/subscribers/sub; # ip/port comes from docker-compose
 	
 		proxy_pass_request_body off;
 		proxy_set_header Content-Length "";
@@ -20,19 +23,36 @@ server {
 		proxy_set_header X-Original-URI $request_uri;
 		proxy_set_header X-Forwarded-For $remote_addr;
 	}
+
+	# When user disconnects (ex: close tab) disconnect the current subscriber (this will remove things like RabbitMQ queue)
+	location = /upstream/unsub {
+		proxy_pass http://172.25.0.100:3001/subscribers/unsub; # ip/port comes from docker-compose
+		proxy_ignore_client_abort on;  #!!!important!!!!
+		proxy_set_header X-Subscriber-Type $nchan_subscriber_type;
+		proxy_set_header X-Channel-Id $nchan_channel_id;
+		proxy_set_header X-Original-URI $request_uri;
+	} 
+
+	# /sub will call the two proxies above
 	location ~/sub/([\w\-]+)$ {
 		nchan_channel_id $1;
 		nchan_access_control_allow_origin *;
-    	nchan_authorize_request /authSubscriber;
+    	nchan_authorize_request /upstream/sub;
+    	nchan_unsubscribe_request /upstream/unsub;
 		nchan_subscriber;
 	}
 
+	# Publishing for all messages on nchan
+	# THIS MUST BE SECURE AND NOT ACCESSIBLE TO PUBLIC.
 	location ~ /pub/([\w\-]+)$ {
-		allow 127.0.0.1; # For development (so you can send messages manually. Ex: curl --request POST --data "test message" http://127.0.0.1:8013/pub/test
+		allow 127.0.0.1; # For development so you can send messages manually. Ex: curl --request POST --data "test message" http://127.0.0.1:8013/pub/test 
 		allow 172.25.0.100; # Allow reservation api ip
 		deny all;
 		
 		nchan_channel_id $1;
 		nchan_publisher;
 	}
+
+		
+
 }

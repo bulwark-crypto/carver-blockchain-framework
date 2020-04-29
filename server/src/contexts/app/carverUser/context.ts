@@ -74,16 +74,6 @@ const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
 
 }
 
-const withNavigatePage: Reducer = ({ state, event }) => {
-    const { page, pushHistory } = event.payload
-
-    const pageData = getPage(page);
-
-
-    return withState(state)
-        .query(commonLanguage.queries.AddPageWidgetContexts, { page: pageData, pushHistory });
-}
-
 
 const withCommandWidgetsEmit: Reducer = ({ state, event }) => {
     //@todo add rate limit. We can also queue events and emit them as a batch
@@ -98,6 +88,7 @@ const withCommandWidgetsCommand: Reducer = ({ state, event }) => {
     return withState(state)
         .query(commonLanguage.queries.DispatchToWidget, event.payload as DispatchToWidgetPayload);
 }
+/*
 
 const withCommandWidgetsRemove: Reducer = ({ state, event }) => {
     const { id } = event.payload;
@@ -120,6 +111,7 @@ const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
             isShared
         }])
 }
+*/
 
 /*
 const withCommandConnect: Reducer = ({ state, event }) => {
@@ -131,6 +123,19 @@ const withCommandConnect: Reducer = ({ state, event }) => {
     return withState(state)
         .set({ isConnected: true })
 }*/
+const withNavigatePage: Reducer = ({ state, event }) => {
+    const { page, pushHistory } = event.payload
+
+    const pageData = getPage(page);
+    console.log('page:', pageData);
+
+
+    return withState(state)
+        //@todo removeWidgets
+
+        //.query(commonLanguage.queries.RemoveWidgetContexts, { page: pageData, pushHistory });
+        .query(commonLanguage.queries.AddPageWidgetContexts, { page: pageData, pushHistory });
+}
 
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
     const page = event.payload;
@@ -173,8 +178,8 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Initialize, event, callback: withCommandInitialize }) // This will be called by frontend
         //.reduce({ type: commonLanguage.commands.Connect, event, callback: withCommandConnect })
 
-        .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
-        .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
+        //.reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
+        //.reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
         .reduce({ type: commonLanguage.commands.Widgets.Command, event, callback: withCommandWidgetsCommand })
         .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
 
@@ -190,17 +195,29 @@ const reducer: Reducer = ({ state, event }) => {
 const commonLanguage = {
     type: 'CARVER_USER',
     commands: {
+        /**
+         * Called from the frontend. This will be called first to initialize a user.
+         */
         Initialize: 'INITIALIZE',
-        Connect: 'CONNECT',
+        //Connect: 'CONNECT',
 
         Widgets: {
-            Add: 'WIDGETS:ADD',
-            Remove: 'WIDGETS:REMOVE',
+
+            //@todo adding/removing widgets manually is disabled for now
+            //Add: 'WIDGETS:ADD',
+            //Remove: 'WIDGETS:REMOVE',
+
             Command: 'WIDGETS:COMMAND',
             Emit: 'WIDGETS:EMIT'
         },
         Pages: {
+            /**
+             * Navigate by specific page name
+             */
             Navigate: 'NAVIGATE',
+            /**
+             * Navigate by url pathname (ex: /transactions)
+             */
             NavigateByPathname: 'NAVIGATE_BY_PATHNAME'
         }
     },

@@ -8,6 +8,9 @@ import * as express from 'express'
 import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 
+import carverUserContext from '../../carverUser/context'
+import publicStateContext from '../../api/publicState/context'
+
 import carverUserBindings from '../../carverUser/bindings'
 import publicStateBindings from '../publicState/bindings'
 import { RegisteredContext } from '../../../../classes/contexts/registeredContext';
@@ -21,29 +24,57 @@ interface RegisterShareWidgetParams {
 
 const bindContexts = async (contextMap: ContextMap) => {
     const appContextStore = await contextMap.getContextStore({ id: 'APP' });
+    const usersContextStore = await contextMap.getContextStore({ id: 'CARVER_USERS' });
+    const publicStateContextStore = await contextMap.getContextStore({ id: 'PUBLIC_STATES' });
 
     const { registeredContext: apiRest, stateStore: apiRestStateStore } = await appContextStore.register({
         context: apiRestContext,
         storeEvents: false
     });
 
-    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
-
 
     const sharedWidgets = new Map<string, any>();
 
-
+    //@todo these two maps are not necessary. the /command should dispatch to apiRest context (to check if id is registered)
     const carverUserContexts = new Map<string, RegisteredContext>();
+    const publicStateContexts = new Map<string, RegisteredContext>();
 
-    const createCarverUserContexts = async (id: string, privateKey: string) => {
+    const createCarverUserContext = async (id: string) => {
+
         const carverUser = await carverUserBindings.bindContexts({ contextMap, id, sharedWidgets });
-        await publicStateBindings.bindContexts(contextMap, id);
+        carverUserContexts.set(id, carverUser);
 
-        carverUserContexts.set(id, carverUser); //@todo add privateKey to map
+        const publicState = await publicStateBindings.bindContexts(contextMap, id);
+        publicStateContexts.set(id, publicState);
     }
+
+    const removeCarverUserContext = async (id: string) => {
+        // Disconnect user
+        if (carverUserContexts.has(id)) {
+            await usersContextStore.unregister({ context: carverUserContext, id });
+
+            carverUserContexts.delete(id);
+        }
+
+        // Disconnect public state
+        if (publicStateContexts.has(id)) {
+            await publicStateContextStore.unregister({ context: publicStateContext, id });
+
+            publicStateContexts.delete(id);
+        }
+    }
+
     withContext(apiRest)
         .handleQuery(apiRestContext.commonLanguage.queries.CreateSessionContext, async ({ id, privateKey }) => {
-            await createCarverUserContexts(id, privateKey);
+            await createCarverUserContext(id);
+
+            return {
+                id
+            }
+        })
+        .handleQuery(apiRestContext.commonLanguage.queries.RemoveSessionContext, async ({ id }) => {
+
+            await removeCarverUserContext(id);
 
             return {
                 id
@@ -59,7 +90,10 @@ const bindContexts = async (contextMap: ContextMap) => {
 
     /**
      * Shared widgets can be added to multiple carverUsers. They're removed from page but won't be removed from memory.
+     * @todo move this to sharedWidgets.ts - registerSharedWidgets(contextMap,sharedWidgets)
      */
+    const userWidgetsContextStore = await contextMap.getContextStore({ id: 'USER_WIDGETS' });
+
     const registerSharedWidget = async ({ variant, widgetBindings }: RegisterShareWidgetParams) => {
         const id = uuidv4();
         const registeredContext = await widgetBindings.bindContexts({ contextMap: contextMap, id, userWidgetsContextStore, variantParams: { variant } })
@@ -126,15 +160,13 @@ const bindContexts = async (contextMap: ContextMap) => {
         server.post('/command', async (req, res) => {
             const { id, privateKey, type, payload } = req.body;
 
-            const carverUserKey = id;
-
-            if (!carverUserContexts.has(carverUserKey)) {
+            if (!carverUserContexts.has(id)) {
                 res.status(500).json({ type: apiRestContext.commonLanguage.errors.IdNotFound });
                 return;
             }
 
             try {
-                const carverUser = carverUserContexts.get(carverUserKey); //@todo add private key to id
+                const carverUser = carverUserContexts.get(id); //@todo add private key to id
                 await carverUser.dispatch({ type, payload });
                 res.json(true);
             } catch (err) {
@@ -142,7 +174,10 @@ const bindContexts = async (contextMap: ContextMap) => {
             }
         });
 
-        server.get('/authSubscriber', async (req, res) => {
+        /**
+         * Called when user connects to nchan channel (after POST /reserveChannel)
+         */
+        server.get('/subscribers/sub', async (req, res) => {
             // These are useful for looking at auth headers
             //console.log(request.method);
             //console.log(request.url);
@@ -161,7 +196,25 @@ const bindContexts = async (contextMap: ContextMap) => {
                 });
                 res.json(true);
             } catch (err) {
-                console.log('athorization error:');
+                console.log('sub error:');
+                console.log(err);
+                res.status(500).json({ type: apiRestContext.commonLanguage.errors.UnknownSubscriptionError });
+            }
+        });
+
+        server.get('/subscribers/unsub', async (req, res) => {
+            try {
+                const id = req.headers['x-channel-id'];
+
+                await apiRest.dispatch({
+                    type: apiRestContext.commonLanguage.commands.Unsubscribe,
+                    payload: {
+                        id
+                    }
+                });
+                res.json(true);
+            } catch (err) {
+                console.log('unsub error:');
                 console.log(err);
                 res.status(500).json({ type: apiRestContext.commonLanguage.errors.UnknownSubscriptionError });
             }

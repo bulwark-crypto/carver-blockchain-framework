@@ -132,6 +132,8 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
 
             }
         })
+
+    return publicState;
 }
 
 export default {

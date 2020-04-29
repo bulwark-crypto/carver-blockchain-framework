@@ -54,8 +54,8 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
 
     const eventStore = await createEventStore({ emitter, id, storeEvents });
 
-    var client = dbStore.getClient();
-    const session = client.startSession();
+    const client = dbStore.getClient();
+    const session = client.startSession(); //@todo at the moment each context has a session that starts. This should be optional per context (ex: inMemory won't be saved.)
 
     //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
@@ -168,7 +168,9 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     }
 
     const disconnect = async () => {
-        eventStore.unbindAllListeners();
+        await eventStore.unbindAllListeners();
+        emitter.removeAllListeners();
+        session.endSession();
     }
 
     const registeredContext = {

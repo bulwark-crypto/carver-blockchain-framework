@@ -13,6 +13,7 @@ import { config } from '../../../config';
 
 import * as async from 'async';
 import { AsyncQueue } from 'async';
+import { Replies } from 'amqplib';
 
 interface ContextMapParams {
     id: string;
@@ -46,11 +47,15 @@ interface RemoteContextStoreParams {
      */
     replyToContext: RegisteredContext;
 }
+interface UnregisterParams {
+    context: any;
+    id?: string;
+}
 export interface RemoteContextStore {
     getRemote: (params: RemoteContextStoreParams) => Promise<RemoteRegisteredContext>;
     getLocal: (params: GetLocalParams) => Promise<RegisteredContext>;
     register: ({ id, context }: RegisterContextParams, options?: any) => Promise<RegisterContextResponse>;
-    unregister: (params: RemoteContextStoreParams) => Promise<void>;
+    unregister: (params: UnregisterParams) => Promise<void>;
 }
 
 export interface ContextMap {
@@ -138,9 +143,10 @@ const createContextMap = async (): Promise<ContextMap> => {
 
         const registeredContexts = new Set<RegisteredContext>();
         const registeredContextsById = new Map<string, RegisteredContext>(); // Allows quick access to a context by it's id
+        const consumersById = new Map<string, Replies.Consume>(); // Store each .consume RabbitMQ subscription so we can remove it 
 
         const register = async ({ id: contextId, storeEvents, context, inMemory }: RegisterContextParams) => {
-            const id = getNetworkId(context, contextId);
+            const id = getNetworkId(context, contextId);//@todo rename to networkId?
 
             const { registeredContext, stateStore } = await createRegisteredContext({ id, storeEvents, context });
 
@@ -153,9 +159,8 @@ const createContextMap = async (): Promise<ContextMap> => {
 
                 const eventStreamQueues = new Map<string, AsyncQueue<any>>(); // string is the correlationId
 
-
                 await channel.assertQueue(queueName, { exclusive: true }); // this queue will be deleted after socket ends
-                await channel.consume(queueName, async (msg) => {
+                const consumeTag = await channel.consume(queueName, async (msg) => {
                     const { correlationId, replyTo, type } = msg.properties;
 
                     switch (type) {
@@ -349,10 +354,15 @@ const createContextMap = async (): Promise<ContextMap> => {
                 }, { noAck: true });
 
                 console.log('RabbitMQ Queue Bound:', queueName);
+
+                return consumeTag;
             }
 
             if (!inMemory) {
-                await bindRabbitMQ();
+                const consumeTag = await bindRabbitMQ();
+
+                // Store the .consume of the queue so we can dispose of it properly on disconnect
+                consumersById.set(id, consumeTag);
             }
 
 
@@ -418,10 +428,24 @@ const createContextMap = async (): Promise<ContextMap> => {
             }
         }
 
-        const unregister = async ({ context, id: contextId }: RemoteContextStoreParams) => {
+        const unregister = async ({ context, id: contextId }: UnregisterParams) => {
             const id = getNetworkId(context, contextId);
 
-            console.log('@todo unregister:', id)
+            if (consumersById.has(id)) {
+
+                console.log('Cancelling consumer:', id);
+                const consumer = consumersById.get(id);
+                await channel.cancel(consumer.consumerTag);
+
+                console.log('Deleting queue:', id);
+                await channel.deleteQueue(id);
+
+                consumersById.delete(id);
+            }
+
+            await registeredContextsById.get(id).disconnect();
+
+            console.log('Removed context:', id)
         }
 
         return {

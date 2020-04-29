@@ -71,7 +71,6 @@ const bindContexts = async (contextMap: ContextMap) => {
 
                         break;
                 }
-                console.log(event);
             }
         });
 
