@@ -48,30 +48,30 @@ const bindContextDispatcher = ({ emitter, storeHandlers, queryHandlers, eventSto
             emitter.emit('*', event);
         });
     }
-    const emitQueries = async (queries: any) => {
-        if (!queries) {
+    const query = async (query: any) => {
+        if (!query) {
             return;
         }
 
+        const { type, payload } = query;
+
         // For each .query object find the appropritate handler and forward the payload there.
-        for await (const { type, payload } of queries) {
-            if (!queryHandlers.has(type)) {
-                throw commonLanguage.errors.UnhandledQuery
-            }
-
-            const queryHandler = queryHandlers.get(type);
-            const queryResponse = await queryHandler(payload);
-
-            // Return on the very first query response (there shouldn't be multiple query handlers for same type)
-            return { type, payload: queryResponse }
+        if (!queryHandlers.has(type)) {
+            throw commonLanguage.errors.UnhandledQuery
         }
+
+        const queryHandler = queryHandlers.get(type);
+        const queryResponse = await queryHandler(payload);
+
+        // Return on the very first query response (there shouldn't be multiple query handlers for same type)
+        return { type, payload: queryResponse }
     }
 
     return {
         saveToPermanentStore,
         saveToEventStore,
         emitEvents,
-        emitQueries
+        query
     }
 }
 

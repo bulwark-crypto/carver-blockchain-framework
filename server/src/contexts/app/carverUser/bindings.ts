@@ -64,6 +64,10 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
         }
     }
 
+    /**
+     * All active widget contexts (for this user)
+     */
+    const widgetContexts = new Map<string, RegisteredContext>();
     const createWidgetContext = async (id: string, variantParams: any) => {
         const { variant } = variantParams;
         const { bindings } = getWidgetBindings(variant);
@@ -116,20 +120,33 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
 
             return newWidgetContexts
         })
-        .handleQuery(carverUserContext.commonLanguage.queries.RemoveWidgetContexts, async (widgetContextIds) => {
-            for await (const widgetContextId of widgetContextIds) {
+        .handleQuery(carverUserContext.commonLanguage.queries.RemoveWidgetContexts, async ({ ids }: { ids: string[] }) => {
+            for await (const widgetContextId of ids) {
                 console.log('remove widget:', widgetContextId);
                 //await userWidgetsContextStore.unregister({ id: widgetContextId })
             }
 
-            return widgetContextIds;
         })
 
-        .handleQuery(carverUserContext.commonLanguage.queries.AddPageWidgetContexts, async (params) => {
-            const { page, pushHistory } = params
+        .handleQuery(carverUserContext.commonLanguage.queries.ReplacePageWidgetContexts, async (params) => {
+            const { page, pushHistory, widgetContextIdsToRemove } = params
             const { variants } = page as Page;
 
-            const widgetContexts = [];
+            if (widgetContextIdsToRemove && widgetContextIdsToRemove.length > 0) {
+                for (const id of widgetContextIdsToRemove) {
+                    if (widgetContexts.has(id)) {
+                        const registeredContext = widgetContexts.get(id);
+
+                        //@todo .unbindContexts on widgets
+
+                        //await userWidgetsContextStore.unregister({ id, context: 'WIDGET' }) // This removal doesn't work because we need widget context
+                        //widgetContexts.delete(id);
+                    }
+
+                }
+            }
+
+            const newWidgetContexts = [];
             for await (const variantParams of variants) {
                 const { variant, isShared } = variantParams;
 
@@ -140,6 +157,8 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                     } else {
                         const id = getNextWidgetId()
                         const registeredContext = await createWidgetContext(id, variantParams);
+                        widgetContexts.set(id, registeredContext);
+
                         return { id, registeredContext }
 
                     }
@@ -148,12 +167,12 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 const { id, registeredContext } = await getWidgetContext();
                 await subscribeToWidgetContext(id, registeredContext);
 
-                widgetContexts.push({ id, variant, isShared });
+                newWidgetContexts.push({ id, variant, isShared });
             }
 
             return {
                 page,
-                widgetContexts,
+                widgetContexts: newWidgetContexts,
                 pushHistory
             }
         })

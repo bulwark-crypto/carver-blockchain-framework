@@ -117,12 +117,22 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
             // After saving / changing state emit events & queries
             await contextDispatcher.emitEvents(emit);
 
-            //@todo this might be a good place to add timer. Dispatch an event with stats of how many queries were ran & how long they it took them to execute (For analytics and performance tuning)
-            const response = await contextDispatcher.emitQueries(query);
+            // You should not be doing two queries at once on a side effect. Instead name your query REMOVE_AND_INSERT vs two queries.
+            // This simplifies concurrency on queries.
+            if (query) {
+                if (query.length > 1) {
+                    throw commonLanguage.errors.MultiplieQueriesDetected;
+                }
 
-            if (!!response) {
-                dispatchQueue.push(response);
+                //@todo this might be a good place to add timer. Dispatch an event with stats of how many queries were ran & how long they it took them to execute (For analytics and performance tuning)
+                const response = await contextDispatcher.query(query[0]);
+
+                if (!!response) {
+                    // If there is a query that this context wants to execute a query, prepend it (so it's next to be executed). This allows chaining of query->response->query
+                    dispatchQueue.unshift(response);
+                }
             }
+
         } catch (err) {
             console.log(`${id} exception:`);
             console.log(err);
@@ -155,7 +165,10 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
         //dispatchQueue.
         await eventStore.unbindAllListeners();
         emitter.removeAllListeners();
-        session.endSession();
+
+        if (session) {
+            session.endSession();
+        }
     }
 
     const registeredContext = {
@@ -182,6 +195,8 @@ const commonLanguage = {
         UnhandledQuery: 'UNHANDLED_QUERY',
         QueryAlreadyRegistered: 'QUERY_ALREADY_REGISTERED',
         StoreAlreadyRegistered: 'STORE_ALREADY_REGISTERED',
+
+        MultiplieQueriesDetected: 'MULTIPLE_QUERIES_DETECTED'
     }
 }
 

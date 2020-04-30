@@ -46,7 +46,7 @@ const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
 
 }
 
-const withQueryAddPageWidgetContexts: Reducer = ({ state, event }) => {
+const withQueryReplacePageWidgetContexts: Reducer = ({ state, event }) => {
     const { pushHistory } = event.payload
 
     const widgetContexts = event.payload.widgetContexts as WidgetContext[];
@@ -127,14 +127,12 @@ const withNavigatePage: Reducer = ({ state, event }) => {
     const { page, pushHistory } = event.payload
 
     const pageData = getPage(page);
-    console.log('page:', pageData);
 
+    const widgetContextIdsToRemove = state.widgetContexts.map((widgetContext: WidgetContext) => widgetContext.id);
 
     return withState(state)
-        //@todo removeWidgets
-
-        //.query(commonLanguage.queries.RemoveWidgetContexts, { page: pageData, pushHistory });
-        .query(commonLanguage.queries.AddPageWidgetContexts, { page: pageData, pushHistory });
+        //.query(commonLanguage.queries.RemoveWidgetContexts, { ids: widgetsIdsToRemove })
+        .query(commonLanguage.queries.ReplacePageWidgetContexts, { page: pageData, pushHistory, widgetContextIdsToRemove });
 }
 
 const withCommandPagesNavigate: Reducer = ({ state, event }) => {
@@ -187,7 +185,7 @@ const reducer: Reducer = ({ state, event }) => {
         .reduce({ type: commonLanguage.commands.Pages.NavigateByPathname, event, callback: withCommandPagesNavigateByPathname })
 
         .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
-        .reduce({ type: commonLanguage.queries.AddPageWidgetContexts, event, callback: withQueryAddPageWidgetContexts })
+        .reduce({ type: commonLanguage.queries.ReplacePageWidgetContexts, event, callback: withQueryReplacePageWidgetContexts })
 
         ;
 }
@@ -239,7 +237,7 @@ const commonLanguage = {
 
         DispatchToWidget: 'DISPATCH_TO_WIDGET',
         InitializeWidgets: 'INITIALIZE_WIDGETS',
-        AddPageWidgetContexts: 'ADD_PAGE_WIDGET_CONTEXTS'
+        ReplacePageWidgetContexts: 'ADD_PAGE_WIDGET_CONTEXTS'
     },
     errors: {
         isAlreadyInitialized: 'You can only initialize state once',
