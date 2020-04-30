@@ -62,6 +62,7 @@ const bindContextDispatcher = ({ emitter, storeHandlers, queryHandlers, eventSto
             const queryHandler = queryHandlers.get(type);
             const queryResponse = await queryHandler(payload);
 
+            // Return on the very first query response (there shouldn't be multiple query handlers for same type)
             return { type, payload: queryResponse }
         }
     }

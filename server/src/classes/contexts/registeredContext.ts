@@ -7,6 +7,8 @@ import { bindContextDispatcher } from './contextDispatcher'
 
 import { ReplayEventsParams } from '../interfaces/eventStore';
 import { dbStore } from '../adapters/mongodb/mongoDbInstance'
+import * as async from 'async';
+import { ClientSession } from 'mongodb'
 
 export interface RegisterContextParams {
     context: any;
@@ -54,9 +56,6 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
 
     const eventStore = await createEventStore({ emitter, id, storeEvents });
 
-    const client = dbStore.getClient();
-    const session = client.startSession(); //@todo at the moment each context has a session that starts. This should be optional per context (ex: inMemory won't be saved.)
-
     //@todo the binding of context dispatcher needs to be moved down (subscrieToRequest,dispatch() should not be here)
 
     const storeHandlers = new Map<string, ((payload: any) => Promise<any>)>();
@@ -81,12 +80,11 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
         storeHandlers.set(type, callback)
     }
 
-    const dispatchQueue = [] as any[];
-    let startedDispatching = false;
 
-    //@todo look into async.queue for this exact pattern
-    const dispatchNext = async (event: Event) => {
-        startedDispatching = true;
+    // If something needs to get stored to permanent store or events need to be stored in 
+    let session: ClientSession = null;
+
+    const dispatchQueue = async.queue(async (event: Event, callback) => {
 
         try {
             // Note that his can throw (Notice that state chain is built into expected emit state return)
@@ -98,19 +96,23 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
             const { store, emit, query, ...stateWithoutSideEffects } = state;
 
             // Save to permanent store / event store
-            // Only start transaction if there is something to store/emit
-            if (store || emit) {
+            if (store || emit && storeEvents) {
+                // Only start transaction if there is something to store/emit
+                if (!session) {
+                    const client = dbStore.getClient();
+                    session = client.startSession();
+                }
+
                 session.startTransaction();
             }
             await contextDispatcher.saveToPermanentStore(store);
             await contextDispatcher.saveToEventStore(emit);
-            if (store || emit) {
+            if (store || emit && storeEvents) {
                 session.commitTransaction();
             }
 
             // After successful save of both permanent/event store update the state
             stateStore.state = stateWithoutSideEffects;
-            startedDispatching = false;
 
             // After saving / changing state emit events & queries
             await contextDispatcher.emitEvents(emit);
@@ -118,38 +120,20 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
             //@todo this might be a good place to add timer. Dispatch an event with stats of how many queries were ran & how long they it took them to execute (For analytics and performance tuning)
             const response = await contextDispatcher.emitQueries(query);
 
-            // Utilize the queue if there are no additional queries to emit
-            if (!response) {
-                if (dispatchQueue.length > 0) {
-                    return dispatchQueue.shift();
-                }
+            if (!!response) {
+                dispatchQueue.push(response);
             }
-
-            // If response is returned that means there are is a pending query. It'll be dispatch()'ed again to the context
-            return response
         } catch (err) {
             console.log(`${id} exception:`);
             console.log(err);
             throw err
         }
 
-    }
+        callback();
+    });
 
     const dispatch = async (event: Event) => {
-        if (startedDispatching) {
-            dispatchQueue.push(event);
-            return;
-        }
-
-        //@todo update to async.queue
-        // Keep dispatching until there is no futher response from the context
-        while (true) {
-            event = await dispatchNext(event)
-            if (!event) {
-                break;
-            }
-        }
-
+        dispatchQueue.push(event);
     }
 
     const query = async (query: string, payload: any) => {
@@ -168,6 +152,7 @@ const createRegisteredContext = async ({ id, storeEvents, context }: RegisterCon
     }
 
     const disconnect = async () => {
+        //dispatchQueue.
         await eventStore.unbindAllListeners();
         emitter.removeAllListeners();
         session.endSession();
