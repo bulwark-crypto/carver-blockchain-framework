@@ -39,7 +39,7 @@ const reducer: Reducer = ({ state, event }) => {
 }
 
 const commonLanguage = {
-    type: 'WIDGET',
+    type: 'WIDGET_COMMON_BASIC_LIST',
     commands: {
         Initialize: 'INITIALIZE',
     },

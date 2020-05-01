@@ -51,6 +51,8 @@ const bindContexts = async (contextMap: ContextMap) => {
     const removeCarverUserContext = async (id: string) => {
         // Disconnect user
         if (carverUserContexts.has(id)) {
+            //@todo when user disconnects we need to issue an event so userAnalytics picks it up and removes users online/active widgets.
+            //@todo This can be a global event for all contexts when they are unregistered (that way we can remove event streams) !!
             await usersContextStore.unregister({ context: carverUserContext, id });
 
             carverUserContexts.delete(id);
