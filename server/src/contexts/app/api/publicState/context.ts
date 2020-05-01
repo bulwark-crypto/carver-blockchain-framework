@@ -28,15 +28,12 @@ const withCommandInitialize: Reducer = ({ state, event }) => {
         });
 }
 
-const withCommandWidgetsAdd: Reducer = ({ state, event }) => {
+const withCommandWidgetsReplace: Reducer = ({ state, event }) => {
     const widgetContexts = event.payload
 
     return withState(state)
         .set({
-            widgets: [
-                ...state.widgets,
-                ...widgetContexts
-            ]
+            widgets: widgetContexts
         })
         .emit({
             type: commonLanguage.events.Updated,
@@ -135,9 +132,7 @@ const withCommandPagesNavigate: Reducer = ({ state, event }) => {
 
     return withState(state)
         .set({
-            widgets: [
-                ...widgetContexts
-            ],
+            widgets: widgetContexts,
             page: { title, breadcrumbs, pathname }
         })
         .emit({
@@ -188,8 +183,9 @@ const reducer: Reducer = ({ state, event }) => {
 
         .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
 
-        .reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
-        .reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
+        .reduce({ type: commonLanguage.commands.Widgets.Replace, event, callback: withCommandWidgetsReplace })
+        //.reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
+        //.reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
         //.reduce({ type: commonLanguage.commands.Widgets.Set, event, callback: withCommandWidgetsSet })
         .reduce({ type: commonLanguage.commands.Widgets.Initialize, event, callback: withCommandWidgetsInitialize })
         .reduce({ type: commonLanguage.commands.Widgets.Update, event, callback: withCommandWidgetsUpdate });
@@ -203,6 +199,7 @@ const commonLanguage = {
             Navigate: 'PAGES:NAVIGATE'
         },
         Widgets: {
+            Replace: 'WIDGETS:REPLACE',
             Add: 'WIDGETS:ADD',
             Remove: 'WIDGETS:REMOVE',
             //Set: 'WIDGETS:SET',

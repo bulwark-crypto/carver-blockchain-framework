@@ -26,7 +26,7 @@ export interface WidgetBindingParams {
     carverUserId?: string;
     variantParams: any; // Will always contain at least { variant }
 }
-
+/*
 const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
     const newWidgetContexts = event.payload as WidgetContext[];
     const ids = newWidgetContexts.map(newWidgetContext => newWidgetContext.id);
@@ -44,10 +44,10 @@ const withQueryInsertNewWidgetContexts: Reducer = ({ state, event }) => {
         })
         .query(commonLanguage.queries.InitializeWidgets, ids)
 
-}
+}*/
 
 const withQueryReplacePageWidgetContexts: Reducer = ({ state, event }) => {
-    const { pushHistory } = event.payload
+    const { pushHistory, removedIds } = event.payload
 
     const widgetContexts = event.payload.widgetContexts as WidgetContext[];
 
@@ -61,14 +61,13 @@ const withQueryReplacePageWidgetContexts: Reducer = ({ state, event }) => {
             payload: {
                 page,
                 widgetContexts,
-                pushHistory
+                pushHistory,
+                removedIds
             }
         })
         .set({
             page,
-            widgetContexts: [
-                ...widgetContexts
-            ]
+            widgetContexts
         })
         .query(commonLanguage.queries.InitializeWidgets, ids)
 
@@ -178,13 +177,14 @@ const reducer: Reducer = ({ state, event }) => {
 
         //.reduce({ type: commonLanguage.commands.Widgets.Add, event, callback: withCommandWidgetsAdd })
         //.reduce({ type: commonLanguage.commands.Widgets.Remove, event, callback: withCommandWidgetsRemove })
+        //.reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
+
         .reduce({ type: commonLanguage.commands.Widgets.Command, event, callback: withCommandWidgetsCommand })
         .reduce({ type: commonLanguage.commands.Widgets.Emit, event, callback: withCommandWidgetsEmit })
 
         .reduce({ type: commonLanguage.commands.Pages.Navigate, event, callback: withCommandPagesNavigate })
         .reduce({ type: commonLanguage.commands.Pages.NavigateByPathname, event, callback: withCommandPagesNavigateByPathname })
 
-        .reduce({ type: commonLanguage.queries.InsertNewWidgetContexts, event, callback: withQueryInsertNewWidgetContexts })
         .reduce({ type: commonLanguage.queries.ReplacePageWidgetContexts, event, callback: withQueryReplacePageWidgetContexts })
 
         ;
@@ -222,7 +222,7 @@ const commonLanguage = {
     events: {
         Initialized: 'INITIALIZED',
         Widgets: {
-            Added: 'WIDGETS:ADDED',
+            Replaced: 'WIDGETS:REPLACED',
             Set: 'WIDGETS:SET',
             Emitted: 'WIDGETS:EMITTED',
             Removed: 'WIDGETS:REMOVED',

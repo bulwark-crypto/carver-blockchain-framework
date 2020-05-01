@@ -71,13 +71,13 @@ const bindContexts = async (contextMap: ContextMap, id: string) => {
                             });
                         }
                         break;
-                    case carverUserContext.commonLanguage.events.Widgets.Added:
+                    case carverUserContext.commonLanguage.events.Widgets.Replaced:
                         {
                             const initialWidgetsState = event.payload;
 
                             await publicState.dispatch({
                                 id,
-                                type: publicStateContext.commonLanguage.commands.Widgets.Add,
+                                type: publicStateContext.commonLanguage.commands.Widgets.Replace,
                                 payload: initialWidgetsState
                             });
                         }

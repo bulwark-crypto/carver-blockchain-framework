@@ -20,6 +20,7 @@ const bindContexts = async ({ contextMap, id, userWidgetsContextStore, variantPa
     const userAnalytics = await appContextStore.getRemote({ context: userAnalyticsContext, replyToContext: widget });
 
     //@todo this will be moved in favor of userAnalytics
+    //@todo these events are not disconnected properly yet !!
     apiRest.streamEvents({
         type: '*',
         callback: async ({ type, payload }) => {

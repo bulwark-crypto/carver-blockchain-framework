@@ -57,9 +57,9 @@ const bindContexts = async (contextMap: ContextMap) => {
                                 callback: async (event) => {
                                     switch (event.type) {
                                         case carverUserContext.commonLanguage.events.Pages.Navigated:
-                                            const { page, widgetContexts } = event.payload;
+                                            const { page, widgetContexts, removedIds } = event.payload;
 
-                                            await userAnalytics.dispatch({ type: userAnalyticsContext.commonLanguage.commands.TrackPageNavigated, payload: { page, widgetContexts } })
+                                            await userAnalytics.dispatch({ type: userAnalyticsContext.commonLanguage.commands.TrackPageNavigated, payload: { page, widgetContexts, removedIds } })
 
                                             break;
                                     }

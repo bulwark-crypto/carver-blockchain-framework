@@ -67,7 +67,7 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
     /**
      * All active widget contexts (for this user)
      */
-    const widgetContexts = new Map<string, RegisteredContext>();
+    const widgetContexts = new Map<string, any>();
     const createWidgetContext = async (id: string, variantParams: any) => {
         const { variant } = variantParams;
         const { bindings } = getWidgetBindings(variant);
@@ -104,21 +104,21 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
 
     withContext(carverUser)
         .handleQuery(carverUserContext.commonLanguage.queries.DispatchToWidget, async ({ id, type, payload }) => {
-            const userWidget = await userWidgetsContextStore.getLocal({ context: commonTableWidgetContext, id });
-            await userWidget.dispatch({ type, payload })
+            const { registeredContext } = widgetContexts.get(id)
+            await registeredContext.dispatch({ type, payload })
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InsertNewWidgetContexts, async (newWidgets) => {
-
-            const newWidgetContexts = [];
-            for await (const { variant, isShared } of newWidgets) {
-                const id = getNextWidgetId()
-                const registeredContext = await createWidgetContext(id, { variant });
-                await subscribeToWidgetContext(id, registeredContext);
-
-                newWidgetContexts.push({ id, variant });
-            }
-
-            return newWidgetContexts
+            /*
+                        const newWidgetContexts = [];
+                        for await (const { variant, isShared } of newWidgets) {
+                            const id = getNextWidgetId()
+                            const registeredContext = await createWidgetContext(id, { variant });
+                            await subscribeToWidgetContext(id, registeredContext);
+            
+                            newWidgetContexts.push({ id, variant });
+                        }
+            
+                        return newWidgetContexts*/
         })
         .handleQuery(carverUserContext.commonLanguage.queries.RemoveWidgetContexts, async ({ ids }: { ids: string[] }) => {
             for await (const widgetContextId of ids) {
@@ -134,14 +134,12 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
 
             if (widgetContextIdsToRemove && widgetContextIdsToRemove.length > 0) {
                 for (const id of widgetContextIdsToRemove) {
-                    if (widgetContexts.has(id)) {
-                        const registeredContext = widgetContexts.get(id);
+                    const { registeredContext, isShared } = widgetContexts.get(id);
 
-                        //@todo .unbindContexts on widgets
-
-                        //await userWidgetsContextStore.unregister({ id, context: 'WIDGET' }) // This removal doesn't work because we need widget context
-                        //widgetContexts.delete(id);
+                    if (!isShared) {
+                        await userWidgetsContextStore.unregister({ id, context: registeredContext.context })
                     }
+                    widgetContexts.delete(id);
 
                 }
             }
@@ -157,7 +155,6 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                     } else {
                         const id = getNextWidgetId()
                         const registeredContext = await createWidgetContext(id, variantParams);
-                        widgetContexts.set(id, registeredContext);
 
                         return { id, registeredContext }
 
@@ -167,21 +164,27 @@ const bindContexts = async ({ contextMap, id, sharedWidgets }: BindContextParams
                 const { id, registeredContext } = await getWidgetContext();
                 await subscribeToWidgetContext(id, registeredContext);
 
+                widgetContexts.set(id, { registeredContext, isShared });
+
                 newWidgetContexts.push({ id, variant, isShared });
             }
 
             return {
                 page,
                 widgetContexts: newWidgetContexts,
-                pushHistory
+                pushHistory,
+                removedIds: widgetContextIdsToRemove
             }
         })
         .handleQuery(carverUserContext.commonLanguage.queries.InitializeWidgets, async (widgetIds: string[]) => {
             for await (const id of widgetIds) {
-                const userWidget = await userWidgetsContextStore.getLocal({ context: tableContext, id });
-                userWidget.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+                if (widgetContexts.has(id)) {
+                    const { registeredContext } = widgetContexts.get(id)
+                    registeredContext.dispatch({ type: 'INITIALIZE', payload: { id } }) // 'INITIALIZE' is called on each widget it is assumed to be be handled on each context
+                }
             }
         })
+
 
     return carverUser;
 }

@@ -138,6 +138,11 @@ const createContextMap = async (): Promise<ContextMap> => {
                 return `${contextStoreId}_${contextId}`;
             }
 
+            if (!context.commonLanguage.type) {
+                console.log(context);
+                console.log(contextId);
+                throw commonLanguage.errors.ContextMissingType;
+            }
             return `${contextStoreId}_${context.commonLanguage.type}${!!contextId ? `_${contextId}` : ''}`
         }
 
@@ -469,7 +474,9 @@ const commonLanguage = {
         CorrelationIdNotFound: 'Correlation Id Not Found',
         UnknownMessageType: 'Unknown queue type',
         EventStreamResponseQueueFailed: 'Failed queueing event stream response',
-        CheckpointResponseQueueFailed: 'Failed queueing checkpoint response'
+        CheckpointResponseQueueFailed: 'Failed queueing checkpoint response',
+
+        ContextMissingType: 'Each context must have a type for network hints'
     }
 }
 

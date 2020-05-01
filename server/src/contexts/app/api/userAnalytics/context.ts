@@ -1,21 +1,24 @@
 import { Reducer, withState } from "../../../../classes/logic/withState";
 
 const withCommandTrackPageNavigated: Reducer = ({ state, event }) => {
-    const { page, widgetContexts } = event.payload;
+    const { page, widgetContexts, removedIds } = event.payload;
 
     //@todo the page contains breadcrumb/title so it can be useful for analyitcs
     //@todo the widgetContexts contain variant / isShared. This can be useful for identifying what variants are most commonly used
 
+    const pageNavigationsCount = state.pageNavigationsCount + 1
+    const currentWidgetContextsCount = state.currentWidgetContextsCount + widgetContexts.length - removedIds.length;
+
     return withState(state)
         .set({
-            pageNavigationsCount: state.pageNavigationsCount + 1,
-            currentWidgetContextsCount: state.currentWidgetContextsCount + widgetContexts.length
+            pageNavigationsCount,
+            currentWidgetContextsCount
         })
         .emit({
             type: commonLanguage.events.PageStatsUpdated,
             payload: {
-                pageNavigationsCount: state.pageNavigationsCount,
-                currentWidgetContextsCount: state.currentWidgetContextsCount
+                pageNavigationsCount,
+                currentWidgetContextsCount
             }
         })
 }
